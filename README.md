@@ -1,1 +1,2 @@
 # bot
+Bot LaPrimaire.org
