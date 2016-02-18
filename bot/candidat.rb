@@ -70,7 +70,6 @@ END
 	end
 
 	def candidat_you_candidat(msg,user,screen)
-		puts "callback:you_candidat"
 		@users.update(
 			user[:id],
 			{
@@ -83,7 +82,6 @@ END
 	end
 
 	def candidat_you_candidat_confirm(msg,user,screen)
-		puts "callback:you_candidat_confirm"
 		candidat=user[:buffer]
 		user_update={
 			:buffer=>"",

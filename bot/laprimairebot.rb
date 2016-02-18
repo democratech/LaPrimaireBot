@@ -10,16 +10,50 @@ module Democratech
 			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token
 		end
 
-		post '/' do
-			update = Telegram::Bot::Types::Update.new(params)
-			update_id = update.update_id
-			message = update.message
-			message_id = message.message_id
-			msg,ans=@@nav.get(message)
-			LaPrimaireBot.tg_client.api.send_message(chat_id: message.chat.id, text: msg, reply_markup:ans) unless msg.nil?
-		end
-
 		helpers do
+			def send_msg(id,msg,kbd=nil,groupsend=false)
+				kbd = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) if kbd.nil?
+				lines=msg.split("\n")
+				buffer=""
+				max=lines.length
+				idx=0
+				image=false
+				lines.each do |l|
+					next if l.empty?
+					idx+=1
+					image=(l.start_with?("image:") && (['.jpg','.png','.gif','.jpeg'].include? File.extname(l)))
+					if image && !buffer.empty? then # flush buffer before sending image
+						writing_time=buffer.length/TYPINGSPEED
+						LaPrimaireBot.tg_client.api.send_chat_action(chat_id: id, action: "typing")
+						sleep(writing_time)
+						LaPrimaireBot.tg_client.api.sendMessage(chat_id: id, text: buffer)
+						buffer=""
+					end
+					if image then # sending image
+						LaPrimaireBot.tg_client.api.send_chat_action(chat_id: id, action: "upload_photo")
+						LaPrimaireBot.tg_client.api.send_photo(chat_id: id, photo: File.new(l.split(":")[1]))
+					elsif groupsend # grouping lines into 1 single message
+						buffer+=l
+						if (idx==max) then # flush buffer
+							writing_time=l.length/TYPINGSPEED
+							LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
+							sleep(writing_time)
+							LaPrimaireBot.tg_client.api.sendMessage(chat_id: id, text: buffer, reply_markup:kbd)
+							buffer=""
+						end
+					else # sending 1 msg for every line
+						writing_time=l.length/TYPINGSPEED
+						LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
+						sleep(writing_time)
+						if (kbd.nil? || idx<max) then
+							LaPrimaireBot.tg_client.api.sendMessage(chat_id: id, text: l)
+						elsif (idx==max)
+							LaPrimaireBot.tg_client.api.sendMessage(chat_id: id, text: l, reply_markup:kbd)
+						end
+					end
+				end
+			end
+
 			def slack_notification(msg,channel="supporteurs",icon=":ghost:",from="democratech",attachment=nil)
 				uri = URI.parse(SLCKHOST)
 				http = Net::HTTP.new(uri.host, uri.port)
@@ -68,6 +102,15 @@ module Democratech
 					slack_notification(v,k,":bell:","democratech")
 				end
 			end
+		end
+
+		post '/' do
+			update = Telegram::Bot::Types::Update.new(params)
+			update_id = update.update_id
+			message = update.message
+			message_id = message.message_id
+			msg,ans=@@nav.get(message)
+			send_msg(message.chat.id,msg,ans) unless msg.nil?
 		end
 	end
 end
