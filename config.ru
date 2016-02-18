@@ -9,10 +9,10 @@ use Rack::Cors do
 end
 
 Mongo::Logger.logger.level = Logger::WARN
-Democratech::Bot.mg_client=Mailgun::Client.new(MGUNKEY)
-Democratech::Bot.mandrill=Mandrill::API.new(MANDRILLKEY)
-Democratech::Bot.db=Mongo::Client.new(DBURL)
-Democratech::Bot.tg_client=Telegram::Bot::Client.new(TOKEN)
+Democratech::LaPrimaireBot.mg_client=Mailgun::Client.new(MGUNKEY)
+Democratech::LaPrimaireBot.mandrill=Mandrill::API.new(MANDRILLKEY)
+Democratech::LaPrimaireBot.db=Mongo::Client.new(DBURL)
+Democratech::LaPrimaireBot.tg_client=Telegram::Bot::Client.new(TOKEN)
 Stripe.api_key=STRTEST
 
-run Democratech::Bot
+run Democratech::LaPrimaireBot

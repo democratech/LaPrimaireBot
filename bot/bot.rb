@@ -1,79 +1,97 @@
 # encoding: utf-8
 
-module Democratech
-	class Bot < Grape::API
-		format :json
-		class << self
-			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token
-		end
+module Bot
+	@@botname="Victoire"
+	@@name="La Primaire"
+	@@emoticons={
+		:blush=>"\u{1F60A}",
+		:crying_face=>"\u{1F622}",
+		:face_sunglasses=>"\u{1F60E}",
+		:megaphone=>"\u{1F4E3}",
+		:memo=>"\u{1F4DD}",
+		:speech_balloon=>"\u{1F4AC}",
+		:finger_up=>"\u{261D}",
+		:french_flag=>"\u{1F1EB}",
+		:finger_right=>"\u{1F449}",
+		:house=>"\u{1F3E0}",
+		:thumbs_up=>"\u{1F44D}",
+		:thumbs_down=>"\u{1F44E}",
+		:search=>"\u{1F50D}",
+		:disappointed=>"\u{1F629}"
+	}
+	@@messages={
+		:fr=>{
+			:home=>{
+				:welcome=><<-END,
+Bonjour %{first_name} !
+Je suis #{@@botname}, votre guide pour #{@@name} #{@@emoticons[:blush]}
+Mon rôle est de vous accompagner et de vous informer tout au long du déroulement de La Primaire.
+A tout moment, si vous avez des questions n'hésitez à me les poser, j'essaierais d'y répondre au mieux de mes capacités.
+Mais assez parlé, commençons !
+			END
+			:intro=><<-END,
+Que voulez-vous faire ?
+				END
+				:not_implemented=><<-END,
+Désolée, je n'ai pas encore reçu les instructions pour vous guider dans ce choix #{@@emoticons[:crying_face]}
+			END
+			:pas_compris=><<-END,
+Aïe, désolé %{first_name} j'ai peur de ne pas avoir compris ce que vous me demandez #{@@emoticons[:crying_face]}
+			END
+			}
+		}
+	}
+	@@screens={
+		:home=>{
+			:welcome=>{
+				:answer=>"/start",
+				:text=>@@messages[:fr][:home][:welcome],
+				  :callback=>:home,
+				  :context=>:home,
+				  :jump_to=>"home/intro"
+			},
+			:intro=>{
+				:answer=>"#{@@emoticons[:home]} Accueil",
+				:text=>@@messages[:fr][:home][:intro],
+				:callback=>:home,
+				:context=>:home,
+				:kbd=>["home/memo"],
+				:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+			},
+			:memo=>{
+				:answer=>"#{@@emoticons[:memo]} Vous faire un retour",
+				:text=>@@messages[:fr][:home][:not_implemented],
+				:callback=>:sorry,
+				:jump_to=>"home/intro"
+			},
+			:wtf=>{
+				:text=>@@messages[:fr][:home][:pas_compris],
+				:callback=>:wtf,
+				:jump_to=>"home/intro"
+			}
+		}
+	}
+	def self.screens
+		@@screens
+	end
 
-		post '/' do
-			update = Telegram::Bot::Types::Update.new(params)
-			update_id = update.update_id
-			message = update.message
-			message_id = message.message_id
+	def self.updateScreens(screens)
+		@@screens=@@screens.merge(screens)
+	end
 
-			# echo-server, just for test purpose
-			case message.text
-			when /.+/
-				text = "#{message.from.first_name}:#{message.text}"
-				chat_id = message.chat.id
+	def self.messages
+		@@messages
+	end
 
-				# send echo tu user 
-				Bot.tg_client.api.send_message(chat_id: chat_id, text: text)
-				puts "#{self.class.name}:#{text}"
-			end
-		end
+	def self.updateMessages(messages)
+		@@messages=@@messages.merge(messages)
+	end
 
-		helpers do
-			def slack_notification(msg,channel="supporteurs",icon=":ghost:",from="democratech",attachment=nil)
-				uri = URI.parse(SLCKHOST)
-				http = Net::HTTP.new(uri.host, uri.port)
-				http.use_ssl = true
-				http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-				request = Net::HTTP::Post.new(SLCKPATH)
-				msg={
-					"channel"=> channel,
-					"username"=> from,
-					"text"=> msg,
-					"icon_emoji"=>icon
-				}
-				if attachment then
-					msg["attachments"]=[{
-						"fallback"=>attachment["fallback"]
-					}]
-					msg["attachments"][0]["color"]=attachment["color"] if attachment["color"]
-					msg["attachments"][0]["pretext"]=attachment["pretext"] if attachment["pretext"]
-					msg["attachments"][0]["title"]=attachment["title"] if attachment["title"]
-					msg["attachments"][0]["title_link"]=attachment["title_link"] if attachment["title_link"]
-					msg["attachments"][0]["text"]=attachment["text"] if attachment["text"]
-					msg["attachments"][0]["image_url"]=attachment["image_url"] if attachment["image_url"]
-					msg["attachments"][0]["thumb_url"]=attachment["image_url"] if attachment["thumb_url"]
-				end
-				request.body = "payload="+JSON.dump(msg)
-				res=http.request(request)
-				if not res.kind_of? Net::HTTPSuccess then
-					puts "An error occurred trying to send a Slack notification\n"
-				end
-			end
+	def self.emoticons
+		@@emoticons
+	end
 
-			def slack_notifications(notifs)
-				channels={}
-				notifs.each do |n|
-					msg=n[0] || ""
-					chann=n[1] || "errors"
-					icon=n[2] || ":warning:"
-					from=n[3] || "democratech"
-					if channels[chann].nil? then
-						channels[chann]="%s *%s* %s" % [icon,from,msg]
-					else
-						channels[chann]+="\n%s *%s* %s" % [icon,from,msg]
-					end
-				end
-				channels.each do |k,v|
-					slack_notification(v,k,":bell:","democratech")
-				end
-			end
-		end
+	def self.updateEmoticons(emoticons)
+		@@emoticons=@@emoticons.merge(emoticons)
 	end
 end
