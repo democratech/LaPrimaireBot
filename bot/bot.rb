@@ -29,13 +29,13 @@ Mon rôle est de vous accompagner et de vous informer tout au long du dérouleme
 A tout moment, si vous avez des questions n'hésitez à me les poser, j'essaierais d'y répondre au mieux de mes capacités.
 Mais assez parlé, commençons !
 			END
-			:intro=><<-END,
+				:intro=><<-END,
 Que voulez-vous faire ?
 				END
 				:not_implemented=><<-END,
 Désolée, je n'ai pas encore reçu les instructions pour vous guider dans ce choix #{@@emoticons[:crying_face]}
 			END
-			:pas_compris=><<-END,
+				:pas_compris=><<-END,
 Aïe, désolé %{first_name} j'ai peur de ne pas avoir compris ce que vous me demandez #{@@emoticons[:crying_face]}
 			END
 			}
@@ -46,27 +46,22 @@ Aïe, désolé %{first_name} j'ai peur de ne pas avoir compris ce que vous me de
 			:welcome=>{
 				:answer=>"/start",
 				:text=>@@messages[:fr][:home][:welcome],
-				  :callback=>:home,
-				  :context=>:home,
-				  :jump_to=>"home/intro"
+				:callback=>"home/welcome",
+				:jump_to=>"home/intro"
 			},
 			:intro=>{
 				:answer=>"#{@@emoticons[:home]} Accueil",
 				:text=>@@messages[:fr][:home][:intro],
-				:callback=>:home,
-				:context=>:home,
 				:kbd=>["home/memo"],
 				:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 			},
 			:memo=>{
 				:answer=>"#{@@emoticons[:memo]} Vous faire un retour",
 				:text=>@@messages[:fr][:home][:not_implemented],
-				:callback=>:sorry,
 				:jump_to=>"home/intro"
 			},
 			:wtf=>{
 				:text=>@@messages[:fr][:home][:pas_compris],
-				:callback=>:wtf,
 				:jump_to=>"home/intro"
 			}
 		}

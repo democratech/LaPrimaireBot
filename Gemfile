@@ -2,6 +2,7 @@ source 'https://rubygems.org'
 gem 'telegram-bot-ruby', '0.3.9'
 gem 'google-api-client', '0.9.pre3'
 gem 'fastimage'
+gem 'representable', '2.3.0'
 
 # dev dependencies
 gem 'bundler'

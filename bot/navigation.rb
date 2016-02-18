@@ -1,6 +1,7 @@
 # encoding: utf-8
 require_relative 'users.rb'
 require_relative 'search.rb'
+require_relative 'candidat.rb'
 
 module Bot
 	class Navigation
@@ -16,7 +17,6 @@ module Bot
 						@keyboards[self.path([k,k1])]=[]
 					end
 					if (!v1[:answer].nil?) then
-						#@answers[self.path([k,v1[:answer]])]=self.path([k,k1])
 						@answers[v1[:answer]]={} if @answers[v1[:answer]].nil?
 						@answers[v1[:answer]][k]=k1
 					end
@@ -40,8 +40,8 @@ module Bot
 							t=[]
 						end
 					end
-
 				end
+				@keyboards[k].push(t) if not (t.nil? or t.empty?)
 			end
 		end
 
@@ -55,6 +55,10 @@ module Bot
 
 		def context(path)
 			path.split('/',2)[0]
+		end
+
+		def to_callback(path)
+			path.split('/',2).join('_')
 		end
 
 		def get(msg)
@@ -74,14 +78,14 @@ module Bot
 					jump_to=next_screen[:jump_to]
 				end
 			elsif input==:free_text then
-				callback="cb_"+user[:cb].to_s
+				callback=self.to_callback(user[:callback].to_s)
 				if self.respond_to?(callback) then
 					if user[:expected_input_size]>0 then
 						input_size=user[:expected_input_size]-1
 						buffer=user[:buffer]+msg.text
-						screen=self.find_by_name(user[:cb])
+						screen=self.find_by_name(user[:callback])
 						user_update={:expected_input_size=>input_size,:buffer=>buffer}
-						user_update[:cb]=nil if input_size==0
+						user_update[:callback]=nil if input_size==0
 						@users.update(user[:id],user_update)
 						res,ans=self.method(callback).call(msg,user,screen) if input_size==0
 						screen=self.find_by_name(user[:current])
@@ -105,7 +109,7 @@ module Bot
 		def get_screen(screen,user,msg)
 			res,ans=nil
 			return nil,nil if screen.nil?
-			callback="cb_"+screen[:callback].to_s unless screen[:callback].nil?
+			callback=self.to_callback(screen[:callback].to_s) unless screen[:callback].nil?
 			previous=caller_locations(1,1)[0].label
 			@users.update(user[:id],{:current=>screen[:id]})
 			if !callback.nil? && previous!=callback && self.respond_to?(callback)
@@ -123,10 +127,17 @@ module Bot
 			return screen
 		end
 
-		def find_by_answer(answer,ctx)
-			screen_id=@answers[answer][ctx.to_sym]
+		def find_by_answer(answer,ctx=nil)
+			tmp=@answers[answer]
+			return nil if tmp.nil?
+			if tmp.length==1
+				ctx,screen_id=tmp.flatten
+			else
+				screen_id=tmp[ctx.to_sym]
+			end
+			STDERR.puts "Something looks wrong here" if screen_id.nil?
 			screen=@screens[ctx.to_sym][screen_id] 
-			screen[:id]=screen_id unless screen.nil?
+			screen[:id]=self.path([ctx,screen_id]) unless screen.nil?
 			return screen
 		end
 
@@ -140,6 +151,13 @@ module Bot
 			)
 			return res,ans
 		end
+
+		def home_welcome(msg,user,screen)
+			puts "cb:welcome"
+			@users.update(user[:id],{:new=>false})
+			return self.get_screen(screen,user,msg)
+		end
+
+		include Candidat
 	end
 end
-
