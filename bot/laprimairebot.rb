@@ -3,11 +3,9 @@ require_relative 'navigation.rb'
 
 module Democratech
 	class LaPrimaireBot < Grape::API
-		@@nav=Bot::Navigation.new()
-
 		format :json
 		class << self
-			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token
+			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token, :nav
 		end
 
 		helpers do
@@ -109,7 +107,7 @@ module Democratech
 			update_id = update.update_id
 			message = update.message
 			message_id = message.message_id
-			msg,ans=@@nav.get(message)
+			msg,ans=Democratech::LaPrimaireBot.nav.get(message)
 			send_msg(message.chat.id,msg,ans) unless msg.nil?
 		end
 	end

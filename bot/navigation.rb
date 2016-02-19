@@ -1,10 +1,21 @@
 # encoding: utf-8
 require_relative 'users.rb'
 require_relative 'search.rb'
-require_relative 'candidat.rb'
+require_relative 'bot.rb'
+require_relative 'you_candidat.rb'
+require_relative 'me_candidat.rb'
+
+TYPINGSPEED=80
 
 module Bot
 	class Navigation
+		# loads all screens
+		def self.load_addons
+			include Home
+			include YouCandidat
+			include MeCandidat
+		end
+
 		def initialize
 			@users = Bot::Users.new()
 			@search = Bot::Search.new()
@@ -24,11 +35,11 @@ module Bot
 			end
 			@keyboards.each do |k,v|
 				t=nil
-				n1,n2=self.nodes(k)
+				n1,n2=self.nodes(k).map &:to_sym
 				size=@screens[n1][n2][:kbd].length
 				t=[] if size>2
 				@screens[n1][n2][:kbd].each_with_index do |u,i|
-					m1,m2=self.nodes(u)
+					m1,m2=self.nodes(u).map &:to_sym
 					item=@screens[m1][m2][:answer]
 					if t.nil? then
 						@keyboards[k].push(item)
@@ -153,11 +164,8 @@ module Bot
 		end
 
 		def home_welcome(msg,user,screen)
-			puts "cb:welcome"
 			@users.update(user[:id],{:new=>false})
 			return self.get_screen(screen,user,msg)
 		end
-
-		include Candidat
 	end
 end
