@@ -1,9 +1,4 @@
 # encoding: utf-8
-require_relative 'users.rb'
-require_relative 'search.rb'
-require_relative 'bot.rb'
-require_relative 'you_candidat.rb'
-require_relative 'me_candidat.rb'
 
 TYPINGSPEED=80
 
@@ -11,9 +6,9 @@ module Bot
 	class Navigation
 		# loads all screens
 		def self.load_addons
-			include Home
-			include YouCandidat
-			include MeCandidat
+			Dir[File.expand_path('../../bot/addons/*.rb', __FILE__)].sort.each do |f|
+				require f
+			end
 		end
 
 		def initialize

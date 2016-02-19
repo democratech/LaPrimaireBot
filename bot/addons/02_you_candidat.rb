@@ -1,5 +1,4 @@
 # encoding: utf-8
-require_relative 'bot'
 
 module YouCandidat
 	# is being called when the module is included
@@ -91,3 +90,5 @@ END
 		return self.get_screen(self.find_by_name("you_candidat/you_candidat_confirm"),user,msg)
 	end
 end
+
+include YouCandidat

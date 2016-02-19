@@ -1,5 +1,4 @@
 # encoding: utf-8
-require_relative 'bot'
 
 module MeCandidat
 	def self.included(base)
@@ -22,3 +21,5 @@ module MeCandidat
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"me_candidat/menu"}}})
 	end
 end
+
+include MeCandidat
