@@ -91,7 +91,7 @@ module Bot
 			input=user[:expected_input]
 			if input==:answer then
 				screen=self.find_by_answer(msg.text,self.context(user[:current]))
-				screen=self.find_by_name("home/wtf") if screen.nil?
+				screen=self.find_by_name("system/dont_understand") if screen.nil?
 				res,ans=get_screen(screen,user,msg)
 				jump_to=screen[:jump_to]
 				while !jump_to.nil? do
@@ -166,7 +166,7 @@ module Bot
 		end
 
 		def format_answer(screen,user)
-			res=screen[:text] % [first_name: user[:first_name],last_name: user[:last_name],id: user[:id],username: user[:username],media:screen[:media]] unless screen.nil?
+			res=screen[:text] % {first_name: user[:first_name],last_name: user[:last_name],id: user[:id],username: user[:username]} unless screen.nil?
 			ans=@keyboards[screen[:id]].nil? ? nil : Telegram::Bot::Types::ReplyKeyboardMarkup.new(
 				keyboard:@keyboards[screen[:id]],
 				resize_keyboard:screen[:kbd_options][:resize_keyboard],
@@ -174,11 +174,6 @@ module Bot
 				selective:screen[:kbd_options][:selective]
 			)
 			return res,ans
-		end
-
-		def home_welcome(msg,user,screen)
-			@users.update(user[:id],{:new=>false})
-			return self.get_screen(screen,user,msg)
 		end
 	end
 end

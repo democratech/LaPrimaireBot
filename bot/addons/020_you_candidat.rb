@@ -104,7 +104,7 @@ END
 		output_img='image'+user[:id].to_s+"."+type
 		open(output_img,'wb') { |file| file << open(img.link).read }
 		screen=self.find_by_name("you_candidat/you_candidat_confirm")
-		screen[:media]="image:"+output_img
+		screen[:text]=screen[:text] % {media:"image:"+output_img}
 		return self.get_screen(self.find_by_name("you_candidat/you_candidat_confirm"),user,msg)
 	end
 end

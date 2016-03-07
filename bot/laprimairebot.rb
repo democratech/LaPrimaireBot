@@ -28,7 +28,7 @@ module Democratech
 		end
 
 		helpers do
-			def send_msg(id,msg,kbd=nil,groupsend=false)
+			def send_msg(id,msg,kbd,options)
 				kbd = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) if kbd.nil?
 				lines=msg.split("\n")
 				buffer=""
@@ -49,23 +49,17 @@ module Democratech
 					if image then # sending image
 						LaPrimaireBot.tg_client.api.send_chat_action(chat_id: id, action: "upload_photo")
 						LaPrimaireBot.tg_client.api.send_photo(chat_id: id, photo: File.new(l.split(":")[1]))
-					elsif groupsend # grouping lines into 1 single message
-						buffer+=l
-						if (idx==max) then # flush buffer
-							writing_time=l.length/TYPINGSPEED
-							LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
-							sleep(writing_time)
-							LaPrimaireBot.tg_client.api.sendMessage(chat_id: id, text: buffer, reply_markup:kbd)
-							buffer=""
-						end
 					else # sending 1 msg for every line
 						writing_time=l.length/TYPINGSPEED
 						LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
 						sleep(writing_time)
+						options[:chat_id]=id
+						options[:text]=l
 						if (kbd.nil? || idx<max) then
-							LaPrimaireBot.tg_client.api.sendMessage(chat_id: id, text: l)
+							LaPrimaireBot.tg_client.api.sendMessage(options)
 						elsif (idx==max)
-							LaPrimaireBot.tg_client.api.sendMessage(chat_id: id, text: l, reply_markup:kbd)
+							options[:reply_markup]=kbd
+							LaPrimaireBot.tg_client.api.sendMessage(options)
 						end
 					end
 				end
@@ -127,7 +121,7 @@ module Democratech
 			message = update.message
 			message_id = message.message_id
 			msg,ans=Democratech::LaPrimaireBot.nav.get(message)
-			send_msg(message.chat.id,msg,ans) unless msg.nil?
+			send_msg(message.chat.id,msg,ans,disable_web_page_preview:true) unless msg.nil?
 		end
 	end
 end

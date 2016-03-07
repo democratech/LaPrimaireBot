@@ -33,10 +33,36 @@ module Bot
 		:thumbs_up=>"\u{1F44D}",
 		:thumbs_down=>"\u{1F44E}",
 		:search=>"\u{1F50D}",
-		:disappointed=>"\u{1F629}"
+		:very_disappointed=>"\u{1F629}",
+		:disappointed=>"\u{1F61E}",
+		:rocket=>"\u{1F680}",
+		:smile=>"\u{1F603}",
+		:confused=>"\u{1F615}"
 	}
-	@@messages={}
-	@@screens={}
+	@@messages={
+		:fr=>{
+			:system=>{
+				:default=><<-END,
+Aucun programme n'est actuellement chargé dans ce bot, ses capacités sont donc très limitées... mais vous pouvez toujours essayer :)
+END
+				:dont_understand=><<-END
+Aïe, désolé %{first_name} j'ai peur de ne pas avoir compris ce que vous me demandez #{@@emoticons[:crying_face]}
+END
+			}
+		}
+
+	}
+	@@screens={
+		:system=>{
+			:default=>{
+				:text=>@@messages[:fr][:system][:default],
+			},
+			:dont_understand=>{
+				:text=>@@messages[:fr][:system][:dont_understand],
+				:jump_to=>"system/default"
+			}
+		}
+	}
 
 	def self.mergeHash(old_path,new_path)
 		return old_path.merge(new_path) do |key,oldval,newval| 

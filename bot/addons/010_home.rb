@@ -43,6 +43,12 @@ END
 			}
 		}
 		screens={
+			:system=>{
+				:dont_understand=>{
+					:text=>messages[:fr][:home][:pas_compris],
+					:jump_to=>"home/menu"
+				}
+			},
 			:home=>{
 				:welcome=>{
 					:answer=>"/start",
@@ -58,11 +64,7 @@ END
 				},
 				:memo=>{
 					:answer=>"#{Bot.emoticons[:memo]} Vous faire un retour",
-					:text=>messages[:fr][:home][:not_implemented],
-					:jump_to=>"home/menu"
-				},
-				:wtf=>{
-					:text=>messages[:fr][:home][:pas_compris],
+					:text=>messages[:fr][:home][:not_implementerd],
 					:jump_to=>"home/menu"
 				}
 			}
@@ -70,6 +72,11 @@ END
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"home/memo"}}})
+	end
+
+	def home_welcome(msg,user,screen)
+		@users.update(user[:id],{:new=>false})
+		return self.get_screen(screen,user,msg)
 	end
 end
 

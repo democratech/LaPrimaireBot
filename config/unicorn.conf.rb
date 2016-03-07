@@ -16,7 +16,7 @@ working_directory APP_ROOT # available in 0.94.0+
 
 # listen on both a Unix domain socket and a TCP port,
 # we use a shorter backlog for quicker failover when busy
-listen 9876, :tcp_nopush => true
+listen 8080, :tcp_nopush => true
 
 # nuke workers after 30 seconds instead of 60 seconds (the default)
 timeout 30
@@ -25,16 +25,23 @@ timeout 30
 preload_app true
 
 # feel free to point this anywhere accessible on the filesystem
-pid "/var/run/unicorn/bot.democratech/pid"
+# pid "/var/run/unicorn/bot.democratech/pid"
 
 # By default, the Unicorn logger will write to stderr.
 # Additionally, ome applications/frameworks log to stderr or stdout,
 # so prevent them from going to /dev/null when daemonized here:
-stderr_path "/var/log/unicorn/bot.democratech.err.log"
-stdout_path "/var/log/unicorn/bot.democratech.log"
-
-# The user/group to run unicorn as
-user 'www-data', 'www-data'
+if ENV['RACK_ENV']=='production' then
+	stderr_path "/var/log/unicorn/bot.democratech.err.log"
+	stdout_path "/var/log/unicorn/bot.democratech.log"
+	user 'www-data', 'www-data'
+	pid "/var/run/unicorn/bot.democratech/pid"
+	old_pid = "/var/run/unicorn/bot.democratech/pid.oldbin"
+else
+	stderr_path APP_ROOT+"/log/bot.democratech.err.log"
+	stdout_path APP_ROOT+"/log/unicorn/bot.democratech.log"
+	pid APP_ROOT+"/pid/pid"
+	old_pid = APP_ROOT+"/pid/pid.oldbin"
+end
 
 if GC.respond_to?(:copy_on_write_friendly=)
   GC.copy_on_write_friendly = true
@@ -46,7 +53,6 @@ end
 
 before_fork do |server, worker|
   defined?(ActiveRecord::Base) && ActiveRecord::Base.connection.disconnect!
-  old_pid = "/var/run/unicorn/bot.democratech/pid.oldbin"
   if File.exists?(old_pid) && server.pid != old_pid
     begin
       Process.kill('QUIT', File.read(old_pid).to_i)
