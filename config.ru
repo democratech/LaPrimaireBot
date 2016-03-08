@@ -13,10 +13,10 @@ Democratech::LaPrimaireBot.mg_client=Mailgun::Client.new(MGUNKEY)
 Democratech::LaPrimaireBot.mandrill=Mandrill::API.new(MANDRILLKEY)
 Democratech::LaPrimaireBot.db=Mongo::Client.new(DBURL)
 Democratech::LaPrimaireBot.pg=PG.connect(:dbname=>PGNAME,"user"=>PGUSER,"sslmode"=>"require","password"=>PGPWD,"host"=>PGHOST)
-Democratech::LaPrimaireBot.tg_client=Telegram::Bot::Client.new(TOKEN)
+Democratech::LaPrimaireBot.tg_client=Telegram::Bot::Client.new(TG_LIVE_TOKEN)
 Democratech::LaPrimaireBot.tg_client.enable_botan!(BOTAN_TOKEN)
 Bot::Navigation.load_addons()
 Democratech::LaPrimaireBot.nav=Bot::Navigation.new()
-Stripe.api_key=STRTEST
+Stripe.api_key=STRLIVE
 
 run Democratech::LaPrimaireBot
