@@ -30,11 +30,13 @@ preload_app true
 # By default, the Unicorn logger will write to stderr.
 # Additionally, ome applications/frameworks log to stderr or stdout,
 # so prevent them from going to /dev/null when daemonized here:
-stderr_path "%s/logs/bot.err.log" % [APP_ROOT]
-stdout_path "%s/logs/bot.log" % [APP_ROOT]
-user 'www-data', 'www-data'
-pid "%s/pid/pid" % [APP_ROOT]
-old_pid = "%s/pid.oldbin" % [APP_ROOT]
+if ENV['RACK_ENV']=='production' then
+	stderr_path "%s/logs/bot.err.log" % [APP_ROOT]
+	stdout_path "%s/logs/bot.log" % [APP_ROOT]
+	user 'www-data', 'www-data'
+	pid "%s/pid/pid" % [APP_ROOT]
+	old_pid = "%s/pid.oldbin" % [APP_ROOT]
+end
 
 if GC.respond_to?(:copy_on_write_friendly=)
   GC.copy_on_write_friendly = true
