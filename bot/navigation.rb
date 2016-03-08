@@ -132,7 +132,7 @@ module Bot
 		end
 
 		def get_screen(screen,user,msg)
-			Democratech::LaPrimaireBot.tg_client.track(screen[:id],user[:id],screen)
+			Democratech::LaPrimaireBot.tg_client.track(screen[:id],user[:id],screen) if ENV['RACK_ENV']=='production'
 			res,options=nil
 			return nil,nil if screen.nil?
 			callback=self.to_callback(screen[:callback].to_s) unless screen[:callback].nil?
