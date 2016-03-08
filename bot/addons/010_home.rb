@@ -58,7 +58,7 @@ END
 				},
 				:memo=>{
 					:answer=>"#{Bot.emoticons[:memo]} Vous faire un retour",
-					:text=>messages[:fr][:home][:not_implementerd],
+					:text=>messages[:fr][:home][:not_implemented],
 					:jump_to=>"home/menu"
 				}
 			}

@@ -116,12 +116,12 @@ END
 				:no_pb=>{
 					:answer=>"Oui, avec plaisir !",
 					:text=>messages[:fr][:beta][:no_pb],
-					:jump_to=>"home/welcome"
+					:jump_to=>"welcome/start"
 				},
 				:nah=>{
 					:answer=>"Non désolé",
 					:text=>messages[:fr][:beta][:nah],
-					:jump_to=>"home/welcome"
+					:jump_to=>"welcome/start"
 				},
 
 			}
@@ -141,13 +141,13 @@ END
 			{
 				:expected_input=>:free_text,
 				:expected_input_size=>1,
-				:callback=>"beta/check_code"
+				:callback=>"beta/verify_code"
 			}
 		)
 		return self.get_screen(screen,user,msg)
 	end
 
-	def beta_check_code(msg,user,screen)
+	def beta_verify_code(msg,user,screen)
 		code=user[:buffer]
 		user_update={
 			:buffer=>"",

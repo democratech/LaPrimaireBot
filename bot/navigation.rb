@@ -149,7 +149,7 @@ module Bot
 		def find_by_name(name)
 			n1,n2=self.nodes(name)
 			screen=@screens[n1][n2]
-			screen[:id]=name
+			screen[:id]=name unless screen.nil?
 			return screen
 		end
 
