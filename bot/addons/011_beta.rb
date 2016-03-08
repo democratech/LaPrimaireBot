@@ -26,7 +26,7 @@ module Beta
 					:welcome=><<-END,
 Bonjour %{first_name} !
 Je suis Victoire, votre guide pour LaPrimaire #{Bot.emoticons[:blush]}
-L'accès à LaPrimaire est actuellement restreint aux seuls beta-testeurs.
+L'accès à LaPrimaire.org est actuellement restreint aux seuls beta-testeurs.
 END
 					:menu=><<-END,
 Avez-vous reçu un code de beta-testeur ? 
@@ -42,7 +42,7 @@ Hmmmmm... apparemment ce code ne fonctionne pas #{Bot.emoticons[:disappointed]}
 Reprenons du début !
 END
 					:come_back_later=><<-END,
-Désolé, il va vous falloir patienter encore un peu pour pouvoir accéder à LaPrimaire #{Bot.emoticons[:disappointed]}
+Désolé, il va vous falloir patienter encore un peu pour pouvoir accéder à LaPrimaire.org #{Bot.emoticons[:disappointed]}
 Si cela peut vous réconforter, l'ouverture est prévue dans les tous prochains jours !
 END
 					:code_ok=><<-END,
@@ -77,6 +77,7 @@ END
 			:beta=>{
 				:menu=>{
 					:text=>messages[:fr][:beta][:menu],
+					:disable_web_page_preview=>true,
 					:kbd=>["beta/check_code","beta/come_back_later"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
@@ -109,11 +110,13 @@ END
 				:come_back_later=>{
 					:answer=>"#{Bot.emoticons[:confused]} Non",
 					:text=>messages[:fr][:beta][:come_back_later],
+					:disable_web_page_preview=>true,
 					:kbd=>["beta/code_received"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:code_ok=>{
 					:text=>messages[:fr][:beta][:code_ok],
+					:disable_web_page_preview=>true,
 					:kbd=>["beta/no_pb","beta/nah"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
@@ -159,7 +162,6 @@ END
 			:expected_input_length=>-1,
 		}
 		@users.update(user[:id],user_update)
-		puts code
 		screen=self.find_by_name("beta/code_ok")
 		screen=self.find_by_name("beta/code_wrong") if false
 		return self.get_screen(screen,user,msg)

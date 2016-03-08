@@ -28,8 +28,8 @@ module Democratech
 		end
 
 		helpers do
-			def send_msg(id,msg,kbd,options)
-				kbd = Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) if kbd.nil?
+			def send_msg(id,msg,options)
+				kbd = options[:kbd].nil? ? Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) : options[:kbd]
 				lines=msg.split("\n")
 				buffer=""
 				max=lines.length
@@ -120,8 +120,8 @@ module Democratech
 			update_id = update.update_id
 			message = update.message
 			message_id = message.message_id
-			msg,ans=Democratech::LaPrimaireBot.nav.get(message)
-			send_msg(message.chat.id,msg,ans,disable_web_page_preview:true) unless msg.nil?
+			msg,options=Democratech::LaPrimaireBot.nav.get(message)
+			send_msg(message.chat.id,msg,options) unless msg.nil?
 		end
 	end
 end

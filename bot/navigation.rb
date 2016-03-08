@@ -86,19 +86,19 @@ module Bot
 		end
 
 		def get(msg)
-			res,ans=nil
+			res,options=nil
 			user=@users.get(msg.from)
 			input=user[:expected_input]
 			if input==:answer then
 				screen=self.find_by_answer(msg.text,self.context(user[:current]))
 				screen=self.find_by_name("system/dont_understand") if screen.nil?
-				res,ans=get_screen(screen,user,msg)
+				res,options=get_screen(screen,user,msg)
 				jump_to=screen[:jump_to]
 				while !jump_to.nil? do
 					next_screen=find_by_name(jump_to)
 					a,b=get_screen(next_screen,user,msg)
 					res+=a unless a.nil?
-					ans=b unless b.nil?
+					options=b unless b.nil?
 					jump_to=next_screen[:jump_to]
 				end
 			elsif input==:free_text then
@@ -111,14 +111,14 @@ module Bot
 						user_update={:expected_input_size=>input_size,:buffer=>buffer}
 						user_update[:callback]=nil if input_size==0
 						@users.update(user[:id],user_update)
-						res,ans=self.method(callback).call(msg,user,screen) if input_size==0
+						res,options=self.method(callback).call(msg,user,screen) if input_size==0
 						screen=self.find_by_name(user[:current])
 						jump_to=screen[:jump_to]
 						while !jump_to.nil? do
 							next_screen=find_by_name(jump_to)
 							a,b=get_screen(next_screen,user,msg)
 							res+=a unless a.nil?
-							ans=b unless b.nil?
+							options=b unless b.nil?
 							jump_to=next_screen[:jump_to]
 						end
 
@@ -127,21 +127,21 @@ module Bot
 			else
 				STDERR.puts "something is not right in your code dude..."
 			end
-			return res,ans
+			return res,options
 		end
 
 		def get_screen(screen,user,msg)
-			res,ans=nil
+			res,options=nil
 			return nil,nil if screen.nil?
 			callback=self.to_callback(screen[:callback].to_s) unless screen[:callback].nil?
 			previous=caller_locations(1,1)[0].label
 			@users.update(user[:id],{:current=>screen[:id]})
 			if !callback.nil? && previous!=callback && self.respond_to?(callback)
-				res,ans=self.method(callback).call(msg,user,screen)
+				res,options=self.method(callback).call(msg,user,screen)
 			else
-				res,ans=self.format_answer(screen,user)
+				res,options=self.format_answer(screen,user)
 			end
-			return res,ans
+			return res,options
 		end
 
 		def find_by_name(name)
@@ -167,13 +167,15 @@ module Bot
 
 		def format_answer(screen,user)
 			res=screen[:text] % {first_name: user[:first_name],last_name: user[:last_name],id: user[:id],username: user[:username]} unless screen.nil?
-			ans=@keyboards[screen[:id]].nil? ? nil : Telegram::Bot::Types::ReplyKeyboardMarkup.new(
+			options={}
+			options[:kbd]=Telegram::Bot::Types::ReplyKeyboardMarkup.new(
 				keyboard:@keyboards[screen[:id]],
 				resize_keyboard:screen[:kbd_options][:resize_keyboard],
 				one_time_keyboard:screen[:kbd_options][:one_time_keyboard],
 				selective:screen[:kbd_options][:selective]
-			)
-			return res,ans
+			) unless @keyboards[screen[:id]].nil?
+			options[:disable_web_page_preview]=true if screen[:disable_web_page_preview]
+			return res,options
 		end
 	end
 end
