@@ -46,7 +46,7 @@ Désolé, il va vous falloir patienter encore un peu pour pouvoir accéder à La
 Si cela peut vous réconforter, l'ouverture est prévue dans les tous prochains jours !
 END
 					:code_ok=><<-END,
-Parfait ! Merci encore de nous aider à mettre au point LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
+Code correct ! Bienvenue et merci encore de nous aider à mettre au point LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
 Une dernière petite question : Nous allons avoir besoin d'un coup de main pour pré-valider la pertinence des candidats qui nous seront proposés par les citoyens.
 Est-ce que cela vous dérangerait que nous vous sollicitions de temps en temps pour valider des candidats qui nous sont proposés ?
 END
@@ -63,12 +63,6 @@ END
 			}
 		}
 		screens={
-			:system=>{
-				:dont_understand=>{
-					:text=>messages[:fr][:beta][:pas_compris],
-					:jump_to=>"beta/menu"
-				}
-			},
 			:home=>{ 
 				:welcome=>{
 					:answer=>nil

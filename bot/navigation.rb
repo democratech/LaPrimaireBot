@@ -177,6 +177,7 @@ module Bot
 				selective:screen[:kbd_options][:selective]
 			) unless @keyboards[screen[:id]].nil?
 			options[:disable_web_page_preview]=true if screen[:disable_web_page_preview]
+			options[:keep_kbd]=true if screen[:keep_kbd]
 			return res,options
 		end
 	end

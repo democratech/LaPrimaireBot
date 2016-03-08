@@ -65,7 +65,7 @@ END
 			},
 			:dont_understand=>{
 				:text=>@@messages[:fr][:system][:dont_understand],
-				:jump_to=>"system/default"
+				:keep_kbd=>true
 			}
 		}
 	}

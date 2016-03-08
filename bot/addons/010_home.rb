@@ -43,12 +43,6 @@ END
 			}
 		}
 		screens={
-			:system=>{
-				:dont_understand=>{
-					:text=>messages[:fr][:home][:pas_compris],
-					:jump_to=>"home/menu"
-				}
-			},
 			:home=>{
 				:welcome=>{
 					:answer=>"/start",

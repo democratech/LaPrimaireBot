@@ -29,7 +29,11 @@ module Democratech
 
 		helpers do
 			def send_msg(id,msg,options)
-				kbd = options[:kbd].nil? ? Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) : options[:kbd]
+				if options[:keep_kbd] then
+					options.delete(:keep_kbd)
+				else
+					kbd = options[:kbd].nil? ? Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) : options[:kbd] 
+				end
 				lines=msg.split("\n")
 				buffer=""
 				max=lines.length
