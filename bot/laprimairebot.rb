@@ -117,11 +117,8 @@ module Democratech
 
 		post '/' do
 			update = Telegram::Bot::Types::Update.new(params)
-			update_id = update.update_id
-			message = update.message
-			message_id = message.message_id
-			msg,options=Democratech::LaPrimaireBot.nav.get(message)
-			send_msg(message.chat.id,msg,options) unless msg.nil?
+			msg,options=Democratech::LaPrimaireBot.nav.get(update.message,update.update_id)
+			send_msg(update.message.chat.id,msg,options) unless msg.nil?
 		end
 	end
 end

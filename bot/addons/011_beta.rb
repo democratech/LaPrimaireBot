@@ -47,7 +47,7 @@ Si cela peut vous réconforter, l'ouverture est prévue dans les tous prochains 
 END
 					:code_ok=><<-END,
 Parfait ! Merci encore de nous aider à mettre au point LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
-Une dernière petite question : Nous allons avoir besoin d'un coup de main pour pré-valider la pertinence des candidats qui seront proposés.
+Une dernière petite question : Nous allons avoir besoin d'un coup de main pour pré-valider la pertinence des candidats qui nous seront proposés par les citoyens.
 Est-ce que cela vous dérangerait que nous vous sollicitions de temps en temps pour valider des candidats qui nous sont proposés ?
 END
 					:no_pb=><<-END,
@@ -98,7 +98,6 @@ END
 					:callback=>"beta/enter_code"
 				},
 				:code_wrong=>{
-					:answer=>"#{Bot.emoticons[:confused]} Non",
 					:text=>messages[:fr][:beta][:code_wrong],
 					:jump_to=>"beta/menu"
 				},
@@ -108,7 +107,7 @@ END
 					:callback=>"beta/enter_code"
 				},
 				:come_back_later=>{
-					:answer=>"#{Bot.emoticons[:confused]} Non",
+					:answer=>"#{Bot.emoticons[:confused]} Non je n'ai pas de code",
 					:text=>messages[:fr][:beta][:come_back_later],
 					:disable_web_page_preview=>true,
 					:kbd=>["beta/code_received"],

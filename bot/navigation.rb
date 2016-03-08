@@ -85,9 +85,10 @@ module Bot
 			path.split('/',2).join('_')
 		end
 
-		def get(msg)
+		def get(msg,update_id)
 			res,options=nil
 			user=@users.get(msg.from)
+			return nil,nil if @users.already_answered(user[:id],update_id)
 			input=user[:expected_input]
 			if input==:answer then
 				screen=self.find_by_answer(msg.text,self.context(user[:current]))
@@ -131,6 +132,7 @@ module Bot
 		end
 
 		def get_screen(screen,user,msg)
+			Democratech::LaPrimaireBot.tg_client.track(screen[:id],user[:id],screen)
 			res,options=nil
 			return nil,nil if screen.nil?
 			callback=self.to_callback(screen[:callback].to_s) unless screen[:callback].nil?

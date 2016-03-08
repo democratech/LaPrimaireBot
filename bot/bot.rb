@@ -19,7 +19,7 @@
 =end
 
 module Bot
-	@@emoticons={
+	@@emoticons={ # see http://unicode.org/emoji/charts/full-emoji-list.html
 		:blush=>"\u{1F60A}",
 		:crying_face=>"\u{1F622}",
 		:face_sunglasses=>"\u{1F60E}",
@@ -37,7 +37,13 @@ module Bot
 		:disappointed=>"\u{1F61E}",
 		:rocket=>"\u{1F680}",
 		:smile=>"\u{1F603}",
-		:confused=>"\u{1F615}"
+		:confused=>"\u{1F615}",
+		:rolling_eyes=>"\u{1F644}",
+		:thinking_face=>"\u{1F914}",
+		:head_bandage_face=>"\u{1F915}",
+		:bomb=>"\u{1F4A3}",
+		:earth=>"\u{1F30D}",
+		:house=>"\u{1F3E0}"
 	}
 	@@messages={
 		:fr=>{

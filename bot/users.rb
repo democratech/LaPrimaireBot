@@ -26,6 +26,7 @@ module Bot
 
 		def add(user)
 			u={
+				:last_update_id=>nil,
 				:current=>"home/welcome",
 				:expected_input=>:answer,
 				:expected_input_size=>-1,
@@ -49,6 +50,13 @@ module Bot
 			user=@users[user_info.id]
 			user=self.add(user_info) if user.nil?
 			return user
+		end
+
+		def already_answered(user_id,update_id)
+			user=@users[user_id]
+			return true if not user[:last_update_id].nil? and user[:last_update_id]>update_id.to_i
+			self.update(user_id,{:last_update_id=>update_id.to_i})
+			return false
 		end
 	end
 end
