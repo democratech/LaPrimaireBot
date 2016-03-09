@@ -20,6 +20,7 @@
 
 module Home
 	def self.included(base)
+		puts "loading Home add-on" if DEBUG
 		messages={
 			:fr=>{
 				:home=>{
@@ -69,7 +70,7 @@ END
 	end
 
 	def home_welcome(msg,user,screen)
-		@users.update_session(user[:id],{'new'=>false})
+		puts "home_welcome" if DEBUG
 		return self.get_screen(screen,user,msg)
 	end
 end

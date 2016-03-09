@@ -10,3 +10,4 @@ DROP TABLE citizens_tags;
 DROP TABLE tags;
 DROP TABLE citizens;
 DROP TABLE cities;
+DROP TABLE countries;

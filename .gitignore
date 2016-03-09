@@ -1,3 +1,5 @@
+*pid
 *.local.rb
+*.local.sh
 *.csv
 *.ods

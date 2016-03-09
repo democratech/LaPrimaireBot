@@ -21,29 +21,15 @@
 module Bot
 	class Db
 		@@db=nil
-		@@queries_to_prepare=nil
 
 		def self.init
 			Db.close
 			@@db=PG.connect(:dbname=>PGNAME,"user"=>PGUSER,"sslmode"=>"require","password"=>PGPWD,"host"=>PGHOST)
-			if @@queries_to_prepare then
-				@@queries_to_prepare.each do |k,v|
-					self.prepare(k,v)
-				end
-				@@queries_to_prepare=nil;
-			end
+			Bot::Users.load_queries
 		end
 
 		def self.prepare(name,query)
-			if @@db then
-				@@db.prepare(name,query)
-			else
-				if @@queries_to_prepare.nil? then
-					@@queries_to_prepare={name=>query}
-				else
-					@@queries_to_prepare[name]=query
-				end
-			end
+			@@db.prepare(name,query)
 		end
 
 		def self.close
@@ -54,7 +40,7 @@ module Bot
 		end
 
 		def self.query(name,params)
-			self.db_init if @@db.status!=PG::CONNECTION_OK
+			self.init if @@db.nil? or @@db.status!=PG::CONNECTION_OK
 			@@db.exec_prepared(name,params)
 		end
 	end

@@ -80,25 +80,21 @@ END
 	end
 
 	def you_candidat_menu(msg,user,screen)
-		@users.update(
-			user[:id],
-			{
-				:expected_input=>:free_text,
-				:expected_input_size=>1,
-				:callback=>"you_candidat/you_candidat_confirm"
-			}
-		)
+		@users.update(user[:id], {
+			'expected_input'=>'free_text',
+			'expected_input_size'=>1,
+			'callback'=>"you_candidat/you_candidat_confirm"
+		})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def you_candidat_you_candidat_confirm(msg,user,screen)
-		candidat=user[:buffer]
-		user_update={
-			:buffer=>"",
-			:expected_input=>:answer,
-			:expected_input_length=>-1,
-		}
-		@users.update(user[:id],user_update)
+		candidat=user['session'][:buffer]
+		@users.update(user[:id],{
+			'buffer'=>"",
+			'expected_input'=>'answer',
+			'expected_input_size'=>-1,
+		})
 		img,type = @search.image(candidat)
 		return self.get_screen(self.find_by_name("you_candidat/you_candidat_not_found"),user,msg) if img.nil?
 		output_img='image'+user[:id].to_s+"."+type

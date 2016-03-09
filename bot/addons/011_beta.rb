@@ -20,6 +20,7 @@
 
 module Beta
 	def self.included(base)
+		puts "loading Beta add-on" if DEBUG
 		messages={
 			:fr=>{
 				:beta=>{
@@ -33,9 +34,6 @@ Avez-vous reçu un code de beta-testeur ?
 END
 					:check_code=><<-END,
 Super ! Quel est votre code ?
-END
-					:yes_bis=><<-END,
-Ok réessayons ! Quel est le code beta-testeur que vous avez reçu ?
 END
 					:code_wrong=><<-END,
 Hmmmmm... apparemment ce code ne fonctionne pas #{Bot.emoticons[:disappointed]}
@@ -95,11 +93,6 @@ END
 					:text=>messages[:fr][:beta][:code_wrong],
 					:jump_to=>"beta/menu"
 				},
-				:yes_bis=>{
-					:answer=>"Oui, je me suis trompé de code #{Bot.emoticons[:grinning]}",
-					:text=>messages[:fr][:beta][:yes_bis],
-					:callback=>"beta/enter_code"
-				},
 				:come_back_later=>{
 					:answer=>"#{Bot.emoticons[:confused]} Non je n'ai pas de code",
 					:text=>messages[:fr][:beta][:come_back_later],
@@ -114,7 +107,7 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:no_pb=>{
-					:answer=>"Oui, avec plaisir !",
+					:answer=>"Oui, pas de souci !",
 					:text=>messages[:fr][:beta][:no_pb],
 					:jump_to=>"welcome/start"
 				},
@@ -131,11 +124,13 @@ END
 	end
 
 	def beta_welcome(msg,user,screen)
-		@users.update_session(user[:id],{:new=>false})
+		puts "beta_welcome" if DEBUG
+		#screen=self.find_by_name("welcome/start") if true
 		return self.get_screen(screen,user,msg)
 	end
 
 	def beta_enter_code(msg,user,screen)
+		puts "beta_enter_code" if DEBUG
 		@users.update_session(user[:id],{
 			'expected_input'=>'free_text',
 			'expected_input_size'=>1,
@@ -146,14 +141,17 @@ END
 
 	def beta_verify_code(msg,user,screen)
 		code=user['session']['buffer']
-		puts "code %s" % [code]
+		puts "beta_verify_code : #{code}" if DEBUG
 		@users.update_session(user[:id],{
 			'buffer'=>"",
 			'expected_input'=>'answer',
-			'expected_input_length'=>-1,
+			'expected_input_size'=>-1,
 		})
-		screen=self.find_by_name("beta/code_ok")
-		screen=self.find_by_name("beta/code_wrong") if false
+		if BETA_CODES.include?(code) then
+			screen=self.find_by_name("beta/code_ok")
+		else
+			screen=self.find_by_name("beta/code_wrong")
+		end
 		return self.get_screen(screen,user,msg)
 	end
 end

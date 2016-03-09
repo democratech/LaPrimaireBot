@@ -1,3 +1,12 @@
+CREATE TABLE countries (
+	name varchar(60) PRIMARY KEY,
+	name_accent varchar(60),
+	iso2 varchar(2),
+	iso3 varchar(3),
+	lat_deg double precision,
+	lon_deg double precision
+);
+
 CREATE TABLE cities (
 	city_id SERIAL PRIMARY KEY,
 	slug varchar(60),
@@ -12,14 +21,13 @@ CREATE TABLE cities (
 	lon_deg double precision,
 	location point,
 	population integer,
-	country varchar(20) DEFAULT 'FRANCE'
+	country varchar(20) DEFAULT 'FRANCE' REFERENCES countries (name) 
 );
 CREATE INDEX cities_name_idx ON cities(name);
 CREATE INDEX cities_zip_idx ON cities(zipCode);
 
 CREATE TABLE citizens (
-	user_id SERIAL PRIMARY KEY,
-	telegram_id integer,
+	user_id integer PRIMARY KEY, -- telegram ID
 	email varchar(60),
 	firstname varchar(30),
 	lastname varchar(30),
@@ -30,7 +38,6 @@ CREATE TABLE citizens (
 	reviewer boolean DEFAULT false,
 	city_id integer REFERENCES cities(city_id)
 );
-CREATE INDEX citizens_tg_idx ON citizens(telegram_id);
 CREATE INDEX citizens_email_idx ON citizens(email);
 
 CREATE TABLE tags (
@@ -135,3 +142,4 @@ CREATE TABLE conversations (
 	source jsonb,
 	rating integer
 );
+

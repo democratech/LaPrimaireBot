@@ -20,7 +20,7 @@
 
 module Bot
 	class Users
-		def load_queries
+		def self.load_queries
 			register_user=<<END
 INSERT INTO citizens (telegram_id,firstname,lastname,username,session) VALUES ($1,$2,$3,$4,$5::jsonb) RETURNING *
 END
@@ -52,7 +52,6 @@ END
 		end
 
 		def initialize()
-			self.load_queries()
 			@users={}
 		end
 
@@ -62,16 +61,20 @@ END
 				'current'=>nil,
 				'expected_input'=>:answer,
 				'expected_input_size'=>-1,
-				'buffer'=>"",
-				'new'=>true
+				'buffer'=>""
 			}
 			return Bot::Db.query("register_user",[user.id,user.first_name,user.last_name,user.username,JSON.dump(bot_session)])[0]
+		end
+
+		def get_session(user_id)
+			return @users[user_id]['session']
 		end
 
 		def update_session(user_id,data)
 			data.each do |k,v|
 				@users[user_id]['session'][k]=v
 			end
+			return self.get_session(user_id)
 		end
 
 		def save(user_id,data)
@@ -83,7 +86,7 @@ END
 			user=res.num_tuples.zero? ? self.add(user_info) : res[0]
 			user['session']=JSON.parse(user['session'])
 			user[:id]=user['telegram_id']
-			@users[user[:id]]=user if @users[user[:id]].nil?
+			@users[user[:id]]=user
 			return user
 		end
 

@@ -20,6 +20,7 @@
 
 module Welcome
 	def self.included(base)
+		puts "loading Welcome add-on" if DEBUG
 		messages={
 			:fr=>{
 				:welcome=>{
@@ -84,12 +85,12 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:zipcode=>{
-					:answer=>"Oui j'habite en France",
+					:answer=>"J'habite en France",
 					:text=>messages[:fr][:welcome][:zipcode],
 					:callback=>"welcome/enter_zipcode"
 				},
 				:country=>{
-					:answer=>"Non j'habite à l'étranger",
+					:answer=>"J'habite à l'étranger",
 					:text=>messages[:fr][:welcome][:country],
 					:callback=>"welcome/enter_country"
 				},
@@ -108,6 +109,7 @@ END
 	end
 
 	def welcome_enter_email(msg,user,screen)
+		puts "welcome_enter_email" if DEBUG
 		@users.update_session(user[:id], {
 			'expected_input'=>'free_text',
 			'expected_input_size'=>1,
@@ -118,10 +120,11 @@ END
 
 	def welcome_save_email(msg,user,screen)
 		email=user['session']['buffer']
+		puts "welcome_save_email: #{email}" if DEBUG
 		@users.update_session(user[:id],{
 			'buffer'=>"",
 			'expected_input'=>'answer',
-			'expected_input_length'=>-1,
+			'expected_input_size'=>-1,
 		})
 		@users.save(user[:id],{'email'=>email})
 		screen=self.find_by_name("welcome/france")
@@ -129,6 +132,7 @@ END
 	end
 
 	def welcome_enter_country(msg,user,screen)
+		puts "welcome_enter_country" if DEBUG
 		@users.update_session(user[:id], {
 			'expected_input'=>'free_text',
 			'expected_input_size'=>1,
@@ -139,10 +143,11 @@ END
 
 	def welcome_save_country(msg,user,screen)
 		country=user['session']['buffer']
+		puts "welcome_save_country: #{country}" if DEBUG
 		@users.update_session(user[:id],{
 			'buffer'=>"",
 			'expected_input'=>'answer',
-			'expected_input_length'=>-1,
+			'expected_input_size'=>-1,
 		})
 		@users.save(user[:id],{'country'=>country})
 		screen=self.find_by_name("welcome/city")
@@ -150,6 +155,7 @@ END
 	end
 
 	def welcome_enter_city(msg,user,screen)
+		puts "welcome_enter_country" if DEBUG
 		@users.update_session(user[:id], {
 			'expected_input'=>'free_text',
 			'expected_input_size'=>1,
@@ -160,10 +166,11 @@ END
 
 	def welcome_save_city(msg,user,screen)
 		city=user['session']['buffer']
+		puts "welcome_save_city: #{city}" if DEBUG
 		@users.update_session(user[:id],{
 			'buffer'=>"",
 			'expected_input'=>'answer',
-			'expected_input_length'=>-1,
+			'expected_input_size'=>-1,
 		})
 		@users.save(user[:id],{'city'=>city})
 		screen=self.find_by_name("welcome/account_created")
@@ -171,6 +178,7 @@ END
 	end
 
 	def welcome_enter_zipcode(msg,user,screen)
+		puts "welcome_enter_zipcode" if DEBUG
 		@users.update_session(user[:id],{
 			'expected_input'=>'free_text',
 			'expected_input_size'=>1,
@@ -178,13 +186,14 @@ END
 		})
 		return self.get_screen(screen,user,msg)
 	end
-
+#https://maps.googleapis.com/maps/api/staticmap?size=512x512&maptype=roadmap\&markers=size:mid%7Ccolor:red%7CBernardswiller,France
 	def welcome_save_zipcode(msg,user,screen)
 		zipcode=user['session']['buffer']
+		puts "welcome_save_zipcode: #{zipcode}" if DEBUG
 		@users.update_session(user[:id],{
 			'buffer'=>"",
 			'expected_input'=>'answer',
-			'expected_input_length'=>-1,
+			'expected_input_size'=>-1,
 		})
 		@users.save(user[:id],{'zipcode'=>zipcode})
 		screen=self.find_by_name("welcome/account_created")
