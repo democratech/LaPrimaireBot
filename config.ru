@@ -12,7 +12,6 @@ Mongo::Logger.logger.level = Logger::WARN
 Democratech::LaPrimaireBot.mg_client=Mailgun::Client.new(MGUNKEY)
 Democratech::LaPrimaireBot.mandrill=Mandrill::API.new(MANDRILLKEY)
 Democratech::LaPrimaireBot.db=Mongo::Client.new(DBURL)
-Democratech::LaPrimaireBot.pg=PG.connect(:dbname=>PGNAME,"user"=>PGUSER,"sslmode"=>"require","password"=>PGPWD,"host"=>PGHOST)
 Democratech::LaPrimaireBot.tg_client=Telegram::Bot::Client.new(ENV['RACK_ENV']=='production' ? TG_LIVE_TOKEN : TG_TEST_TOKEN)
 Democratech::LaPrimaireBot.tg_client.enable_botan!(BOTAN_TOKEN) if ENV['RACK_ENV']=='production'
 Bot::Navigation.load_addons()

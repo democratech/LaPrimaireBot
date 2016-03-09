@@ -20,42 +20,81 @@
 
 module Bot
 	class Users
+		def load_queries
+			register_user=<<END
+INSERT INTO citizens (telegram_id,firstname,lastname,username,session) VALUES ($1,$2,$3,$4,$5::jsonb) RETURNING *
+END
+			save_user_email=<<END
+UPDATE citizens SET email=$1 WHERE telegram_id=$2;
+END
+			get_user_by_tgid=<<END
+SELECT z.*,c.* FROM citizens AS z LEFT JOIN cities AS c ON (z.telegram_id=$1 AND c.city_id=z.city_id)
+END
+			get_city_by_zipcode=<<END
+SELECT c.* FROM cities AS c WHERE c.zipcode=$1
+END
+			save_user_city=<<END
+UPDATE citizens SET city_id=$1 WHERE telegram_id=$2
+END
+			remove_user=<<END
+DELETE FROM citizens WHERE telegram_id=$1
+END
+			save_user_session=<<END
+UPDATE citizens SET session=$1 WHERE telegram_id=$2
+END
+			Bot::Db.prepare("register_user",register_user)
+			Bot::Db.prepare("save_user_email",save_user_email)
+			Bot::Db.prepare("get_user_by_tgid",get_user_by_tgid)
+			Bot::Db.prepare("get_city_by_zipcode",get_city_by_zipcode)
+			Bot::Db.prepare("save_user_city",save_user_city)
+			Bot::Db.prepare("remove_user",remove_user)
+			Bot::Db.prepare("save_user_session",save_user_session)
+		end
+
 		def initialize()
+			self.load_queries()
 			@users={}
 		end
 
 		def add(user)
-			u={
-				:last_update_id=>nil,
-				:current=>"home/welcome",
-				:expected_input=>:answer,
-				:expected_input_size=>-1,
-				:buffer=>"",
-				:new=>true,
-				:first_name=>user.first_name,
-				:last_name=>user.last_name,
-				:id=>user.id,
-				:username=>user.username
+			bot_session={
+				'last_update_id'=>nil,
+				'current'=>nil,
+				'expected_input'=>:answer,
+				'expected_input_size'=>-1,
+				'buffer'=>"",
+				'new'=>true
 			}
-			@users[u[:id]]=u
+			return Bot::Db.query("register_user",[user.id,user.first_name,user.last_name,user.username,JSON.dump(bot_session)])[0]
 		end
 
-		def update(user_id,data)
+		def update_session(user_id,data)
 			data.each do |k,v|
-				@users[user_id][k]=v
+				@users[user_id]['session'][k]=v
 			end
 		end
 
+		def save(user_id,data)
+			puts "SAVE user_id: %s data: %s" % [user_id,data.inspect]
+		end
+
 		def get(user_info)
-			user=@users[user_info.id]
-			user=self.add(user_info) if user.nil?
+			res=Bot::Db.query("get_user_by_tgid",[user_info.id])
+			user=res.num_tuples.zero? ? self.add(user_info) : res[0]
+			user['session']=JSON.parse(user['session'])
+			user[:id]=user['telegram_id']
+			@users[user[:id]]=user if @users[user[:id]].nil?
 			return user
 		end
 
+		def save_user_session(user_id)
+			res=Bot::Db.query("save_user_session",[JSON.dump(@users[user_id]['session']),user_id])
+		end
+
 		def already_answered(user_id,update_id)
-			user=@users[user_id]
-			return true if not user[:last_update_id].nil? and user[:last_update_id]>update_id.to_i
-			self.update(user_id,{:last_update_id=>update_id.to_i})
+			session=@users[user_id]['session']
+			return true if not session['last_update_id'].nil? and session['last_update_id'].to_i>update_id.to_i
+			self.update_session(user_id,{'last_update_id'=>update_id.to_i})
 			return false
 		end
 	end

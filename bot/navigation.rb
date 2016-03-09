@@ -70,28 +70,29 @@ module Bot
 		end
 
 		def path(nodes)
-			nodes.join('/')
+			nodes.join('/') unless nodes.nil?
 		end
 
 		def nodes(path)
-			path.split('/',2).map &:to_sym
+			path.split('/',2).map &:to_sym unless path.nil?
 		end
 
 		def context(path)
-			path.split('/',2)[0]
+			path.split('/',2)[0] unless path.nil?
 		end
 
 		def to_callback(path)
-			path.split('/',2).join('_')
+			path.split('/',2).join('_') unless path.nil?
 		end
 
 		def get(msg,update_id)
 			res,options=nil
 			user=@users.get(msg.from)
 			return nil,nil if @users.already_answered(user[:id],update_id)
-			input=user[:expected_input]
-			if input==:answer then
-				screen=self.find_by_answer(msg.text,self.context(user[:current]))
+			session=user['session']
+			input=session['expected_input']
+			if input=='answer' then
+				screen=self.find_by_answer(msg.text,self.context(session['current']))
 				screen=self.find_by_name("system/dont_understand") if screen.nil?
 				res,options=get_screen(screen,user,msg)
 				jump_to=screen[:jump_to]
@@ -102,18 +103,18 @@ module Bot
 					options=b unless b.nil?
 					jump_to=next_screen[:jump_to]
 				end
-			elsif input==:free_text then
-				callback=self.to_callback(user[:callback].to_s)
+			elsif input=='free_text' then
+				callback=self.to_callback(session['callback'].to_s)
 				if self.respond_to?(callback) then
-					if user[:expected_input_size]>0 then
-						input_size=user[:expected_input_size]-1
-						buffer=user[:buffer]+msg.text
-						screen=self.find_by_name(user[:callback])
-						user_update={:expected_input_size=>input_size,:buffer=>buffer}
-						user_update[:callback]=nil if input_size==0
-						@users.update(user[:id],user_update)
+					if session['expected_input_size']>0 then
+						input_size=session['expected_input_size']-1
+						@users.update_session(user[:id],{'buffer'=>session['buffer']+msg.text})
+						screen=self.find_by_name(session['callback'])
+						session_update={'expected_input_size'=>input_size}
+						session_update['callback']=nil if input_size==0
+						@users.update_session(user[:id],session_update)
 						res,options=self.method(callback).call(msg,user,screen) if input_size==0
-						screen=self.find_by_name(user[:current])
+						screen=self.find_by_name(session['current'])
 						jump_to=screen[:jump_to]
 						while !jump_to.nil? do
 							next_screen=find_by_name(jump_to)
@@ -128,6 +129,7 @@ module Bot
 			else
 				STDERR.puts "something is not right in your code dude..."
 			end
+			@users.save_user_session(user[:id])
 			return res,options
 		end
 
@@ -137,7 +139,7 @@ module Bot
 			return nil,nil if screen.nil?
 			callback=self.to_callback(screen[:callback].to_s) unless screen[:callback].nil?
 			previous=caller_locations(1,1)[0].label
-			@users.update(user[:id],{:current=>screen[:id]})
+			@users.update_session(user[:id],{'current'=>screen[:id]})
 			if !callback.nil? && previous!=callback && self.respond_to?(callback)
 				res,options=self.method(callback).call(msg,user,screen)
 			else
@@ -168,7 +170,7 @@ module Bot
 		end
 
 		def format_answer(screen,user)
-			res=screen[:text] % {first_name: user[:first_name],last_name: user[:last_name],id: user[:id],username: user[:username]} unless screen.nil?
+			res=screen[:text] % {firstname: user['firstname'],lastname: user['lastname'],id: user[:id],username: user['username']} unless screen.nil?
 			options={}
 			options[:kbd]=Telegram::Bot::Types::ReplyKeyboardMarkup.new(
 				keyboard:@keyboards[screen[:id]],

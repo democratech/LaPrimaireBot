@@ -52,7 +52,7 @@ module Bot
 Aucun programme n'est actuellement chargé dans ce bot, ses capacités sont donc très limitées... mais vous pouvez toujours essayer :)
 END
 				:dont_understand=><<-END
-Aïe, désolé %{first_name} j'ai peur de ne pas avoir compris ce que vous me demandez #{@@emoticons[:crying_face]}
+Aïe, désolé %{firstname} j'ai peur de ne pas avoir compris ce que vous me demandez #{@@emoticons[:crying_face]}
 END
 			}
 		}

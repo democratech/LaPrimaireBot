@@ -24,7 +24,7 @@ module Democratech
 	class LaPrimaireBot < Grape::API
 		format :json
 		class << self
-			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token, :nav, :pg
+			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token, :nav
 		end
 
 		helpers do
@@ -96,7 +96,7 @@ module Democratech
 				request.body = "payload="+JSON.dump(msg)
 				res=http.request(request)
 				if not res.kind_of? Net::HTTPSuccess then
-					puts "An error occurred trying to send a Slack notification\n"
+					STDERR.puts "An error occurred trying to send a Slack notification\n"
 				end
 			end
 

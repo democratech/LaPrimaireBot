@@ -24,7 +24,7 @@ module Welcome
 			:fr=>{
 				:welcome=>{
 					:hello=><<-END,
-Bonjour %{first_name} !
+Bonjour %{firstname} !
 Je suis Victoire, votre guide pour LaPrimaire #{Bot.emoticons[:blush]}
 END
 					:start=><<-END,
@@ -40,7 +40,7 @@ Hmmm... cet email ne semble pas valide #{Bot.emoticons[:rolling_eyes]}
 Quel est votre email ?
 END
 					:france=><<-END,
-Habitez-vous en France métropolitaine ou dans les DOM-TOM ?
+Habitez-vous en France (DOM-TOM inclus) ou à l'étranger ?
 END
 					:country=><<-END,
 Dans quel pays habitez-vous ?
@@ -101,7 +101,6 @@ END
 					:text=>messages[:fr][:welcome][:account_created],
 					:jump_to=>"home/menu"
 				}
-
 			}
 		}
 		Bot.updateScreens(screens)
@@ -109,102 +108,85 @@ END
 	end
 
 	def welcome_enter_email(msg,user,screen)
-		@users.update(
-			user[:id],
-			{
-				:expected_input=>:free_text,
-				:expected_input_size=>1,
-				:callback=>"welcome/save_email"
-			}
-		)
+		@users.update_session(user[:id], {
+			'expected_input'=>'free_text',
+			'expected_input_size'=>1,
+			'callback'=>"welcome/save_email"
+		})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_save_email(msg,user,screen)
-		email=user[:buffer]
-		user_update={
-			:email=>email,
-			:buffer=>"",
-			:expected_input=>:answer,
-			:expected_input_length=>-1,
-		}
-		@users.update(user[:id],user_update)
+		email=user['session']['buffer']
+		@users.update_session(user[:id],{
+			'buffer'=>"",
+			'expected_input'=>'answer',
+			'expected_input_length'=>-1,
+		})
+		@users.save(user[:id],{'email'=>email})
 		screen=self.find_by_name("welcome/france")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_country(msg,user,screen)
-		@users.update(
-			user[:id],
-			{
-				:expected_input=>:free_text,
-				:expected_input_size=>1,
-				:callback=>"welcome/save_country"
-			}
-		)
+		@users.update_session(user[:id], {
+			'expected_input'=>'free_text',
+			'expected_input_size'=>1,
+			'callback'=>"welcome/save_country"
+		})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_save_country(msg,user,screen)
-		country=user[:buffer]
-		user_update={
-			:country=>country,
-			:buffer=>"",
-			:expected_input=>:answer,
-			:expected_input_length=>-1,
-		}
-		@users.update(user[:id],user_update)
+		country=user['session']['buffer']
+		@users.update_session(user[:id],{
+			'buffer'=>"",
+			'expected_input'=>'answer',
+			'expected_input_length'=>-1,
+		})
+		@users.save(user[:id],{'country'=>country})
 		screen=self.find_by_name("welcome/city")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_city(msg,user,screen)
-		@users.update(
-			user[:id],
-			{
-				:expected_input=>:free_text,
-				:expected_input_size=>1,
-				:callback=>"welcome/save_city"
-			}
-		)
+		@users.update_session(user[:id], {
+			'expected_input'=>'free_text',
+			'expected_input_size'=>1,
+			'callback'=>"welcome/save_city"
+		})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_save_city(msg,user,screen)
-		city=user[:buffer]
-		user_update={
-			:city=>city,
-			:buffer=>"",
-			:expected_input=>:answer,
-			:expected_input_length=>-1,
-		}
-		@users.update(user[:id],user_update)
+		city=user['session']['buffer']
+		@users.update_session(user[:id],{
+			'buffer'=>"",
+			'expected_input'=>'answer',
+			'expected_input_length'=>-1,
+		})
+		@users.save(user[:id],{'city'=>city})
 		screen=self.find_by_name("welcome/account_created")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_zipcode(msg,user,screen)
-		@users.update(
-			user[:id],
-			{
-				:expected_input=>:free_text,
-				:expected_input_size=>1,
-				:callback=>"welcome/save_zipcode"
-			}
-		)
+		@users.update_session(user[:id],{
+			'expected_input'=>'free_text',
+			'expected_input_size'=>1,
+			'callback'=>"welcome/save_zipcode"
+		})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_save_zipcode(msg,user,screen)
-		zipcode=user[:buffer]
-		user_update={
-			:zipCode=>zipcode,
-			:buffer=>"",
-			:expected_input=>:answer,
-			:expected_input_length=>-1,
-		}
-		# check or save city
-		@users.update(user[:id],user_update)
+		zipcode=user['session']['buffer']
+		@users.update_session(user[:id],{
+			'buffer'=>"",
+			'expected_input'=>'answer',
+			'expected_input_length'=>-1,
+		})
+		@users.save(user[:id],{'zipcode'=>zipcode})
 		screen=self.find_by_name("welcome/account_created")
 		return self.get_screen(screen,user,msg)
 	end

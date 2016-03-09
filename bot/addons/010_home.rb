@@ -24,7 +24,7 @@ module Home
 			:fr=>{
 				:home=>{
 					:welcome=><<-END,
-Bonjour %{first_name} !
+Bonjour %{firstname} !
 Je suis Victoire, votre guide pour LaPrimaire #{Bot.emoticons[:blush]}
 Mon rôle est de vous accompagner et de vous informer tout au long du déroulement de La Primaire.
 A tout moment, si vous avez des questions n'hésitez à me les poser, j'essaierais d'y répondre au mieux de mes capacités.
@@ -37,7 +37,7 @@ Que voulez-vous faire ?
 Désolée, je n'ai pas encore reçu les instructions pour vous guider dans ce choix #{Bot.emoticons[:crying_face]}
 END
 					:pas_compris=><<-END,
-Aïe, désolé %{first_name} j'ai peur de ne pas avoir compris ce que vous me demandez #{Bot.emoticons[:crying_face]}
+Aïe, désolé %{firstname} j'ai peur de ne pas avoir compris ce que vous me demandez #{Bot.emoticons[:crying_face]}
 END
 				}
 			}
@@ -69,7 +69,7 @@ END
 	end
 
 	def home_welcome(msg,user,screen)
-		@users.update(user[:id],{:new=>false})
+		@users.update_session(user[:id],{'new'=>false})
 		return self.get_screen(screen,user,msg)
 	end
 end

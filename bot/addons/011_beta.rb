@@ -24,7 +24,7 @@ module Beta
 			:fr=>{
 				:beta=>{
 					:welcome=><<-END,
-Bonjour %{first_name} !
+Bonjour %{firstname} !
 Je suis Victoire, votre guide pour LaPrimaire #{Bot.emoticons[:blush]}
 L'accès à LaPrimaire.org est actuellement restreint aux seuls beta-testeurs.
 END
@@ -131,30 +131,27 @@ END
 	end
 
 	def beta_welcome(msg,user,screen)
-		@users.update(user[:id],{:new=>false})
+		@users.update_session(user[:id],{:new=>false})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def beta_enter_code(msg,user,screen)
-		@users.update(
-			user[:id],
-			{
-				:expected_input=>:free_text,
-				:expected_input_size=>1,
-				:callback=>"beta/verify_code"
-			}
-		)
+		@users.update_session(user[:id],{
+			'expected_input'=>'free_text',
+			'expected_input_size'=>1,
+			'callback'=>"beta/verify_code"
+		})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def beta_verify_code(msg,user,screen)
-		code=user[:buffer]
-		user_update={
-			:buffer=>"",
-			:expected_input=>:answer,
-			:expected_input_length=>-1,
-		}
-		@users.update(user[:id],user_update)
+		code=user['session']['buffer']
+		puts "code %s" % [code]
+		@users.update_session(user[:id],{
+			'buffer'=>"",
+			'expected_input'=>'answer',
+			'expected_input_length'=>-1,
+		})
 		screen=self.find_by_name("beta/code_ok")
 		screen=self.find_by_name("beta/code_wrong") if false
 		return self.get_screen(screen,user,msg)
