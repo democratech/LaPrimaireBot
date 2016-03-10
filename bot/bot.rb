@@ -27,7 +27,7 @@ module Bot
 		:memo=>"\u{1F4DD}",
 		:speech_balloon=>"\u{1F4AC}",
 		:finger_up=>"\u{261D}",
-		:french_flag=>"\u{1F1EB}",
+		:french_flag=>"\u{1F1F7}",
 		:finger_right=>"\u{1F449}",
 		:house=>"\u{1F3E0}",
 		:thumbs_up=>"\u{1F44D}",
@@ -51,8 +51,11 @@ module Bot
 				:default=><<-END,
 Aucun programme n'est actuellement chargé dans ce bot, ses capacités sont donc très limitées... mais vous pouvez toujours essayer :)
 END
-				:dont_understand=><<-END
+				:dont_understand=><<-END,
 Aïe, désolé %{firstname} j'ai peur de ne pas avoir compris ce que vous me demandez #{@@emoticons[:crying_face]}
+END
+				:something_wrong=><<-END,
+Apparemment, un petit souci informatique est survenu #{@@emoticons[:head_bandage_face]} il va nous falloir reprendre depuis le début, désolé #{@@emoticons[:confused]}
 END
 			}
 		}
@@ -66,6 +69,9 @@ END
 			:dont_understand=>{
 				:text=>@@messages[:fr][:system][:dont_understand],
 				:keep_kbd=>true
+			},
+			:something_wrong=>{
+				:text=>@@messages[:fr][:system][:something_wrong]
 			}
 		}
 	}

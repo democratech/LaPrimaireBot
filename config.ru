@@ -23,5 +23,7 @@ Democratech::LaPrimaireBot.tg_client.enable_botan!(BOTAN_TOKEN) if DEBUG
 Bot::Navigation.load_addons()
 Democratech::LaPrimaireBot.nav=Bot::Navigation.new()
 Stripe.api_key=DEBUG ? STRTEST : STRLIVE
+Algolia.init :application_id=>ALGOLIA_ID, :api_key=>ALGOLIA_KEY
+Bot::Geo.countries=Algolia::Index.new("countries")
 
 run Democratech::LaPrimaireBot

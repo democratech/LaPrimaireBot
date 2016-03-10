@@ -24,7 +24,7 @@ module Democratech
 	class LaPrimaireBot < Grape::API
 		format :json
 		class << self
-			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token, :nav
+			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token, :nav, :countries
 		end
 
 		helpers do

@@ -31,7 +31,8 @@ module Bot
 
 		def initialize
 			@users = Bot::Users.new()
-			@search = Bot::Search.new()
+			@web = Bot::Web.new()
+			@geo = Bot::Geo.new()
 			@answers = {}
 			@keyboards = {}
 			@screens=Bot.screens
@@ -91,20 +92,19 @@ module Bot
 			# we check that this message has not already been answered (i.e. telegram sending a msg we alredy processed)
 			return nil,nil if @users.already_answered(user[:id],update_id)
 			session=user['session']
-			puts "user read session : #{session}" if DEBUG
+			puts "user read session : #{user}" if DEBUG
 			input=session['expected_input']
-			if input=='answer' then
-				# we expect the user to have used the proposed keyboard to answer
+			if input=='answer' then # we expect the user to have used the proposed keyboard to answer
 				screen=self.find_by_answer(msg.text,self.context(session['current']))
 				if not screen.nil? then
 					res,options=get_screen(screen,user,msg)
 					current=@users.get_session(user[:id])['current']
-					puts "current #{current}"
 					screen=self.find_by_name(current) if screen[:id]!=current
 					jump_to=screen[:jump_to]
 					while !jump_to.nil? do
 						next_screen=find_by_name(jump_to)
 						a,b=get_screen(next_screen,user,msg)
+						res="" unless res
 						res+=a unless a.nil?
 						options=b unless b.nil?
 						jump_to=next_screen[:jump_to]
@@ -112,10 +112,9 @@ module Bot
 				else
 					res,options=self.dont_understand(user,msg)
 				end
-			elsif input=='free_text' then
-				# we expect the user to have answered by typing text manually
+			else # we expect the user to have answered by typing text manually
 				callback=self.to_callback(session['callback'].to_s)
-				if self.respond_to?(callback) then
+			        if input=='free_text' and self.respond_to?(callback) then
 					if session['expected_input_size']>0 then
 						input_size=session['expected_input_size']-1
 						session=@users.update_session(user[:id],{'buffer'=>session['buffer']+msg.text})
@@ -137,20 +136,39 @@ module Bot
 
 					end
 				end
-			else
-				STDERR.puts "something is not right in your code dude..."
 			end
+			res,options=self.dont_understand(user,msg,true) if res.nil? # something is fishy
 			puts "user save session : #{@users.get_session(user[:id])}" if DEBUG
 			@users.save_user_session(user[:id])
 			return res,options
 		end
 
-		def dont_understand(user,msg)
+		def dont_understand(user,msg,reset=false)
 			# dedicated method to not affect user session
 			puts "dont_understand: #{msg}" if DEBUG
 			Democratech::LaPrimaireBot.tg_client.track('dont_understand',user[:id],msg.text) if PRODUCTION
 			screen=self.find_by_name("system/dont_understand")
-			return self.format_answer(screen,user)
+			res,options=self.format_answer(screen,user)
+			if reset then
+				screen=self.find_by_name("system/something_wrong")
+				a,b=get_screen(screen,user,msg)
+				res+=a unless a.nil?
+				options=b unless b.nil?
+				@users.next_answer(user[:id],'answer')
+				screen=self.find_by_answer("/start")
+				a,b=get_screen(screen,user,msg)
+				res+=a unless a.nil?
+				options=b unless b.nil?
+				jump_to=screen[:jump_to]
+				while !jump_to.nil? do
+					next_screen=find_by_name(jump_to)
+					a,b=get_screen(next_screen,user,msg)
+					res+=a unless a.nil?
+					options=b unless b.nil?
+					jump_to=next_screen[:jump_to]
+				end
+			end
+			return res,options
 		end
 
 		def get_screen(screen,user,msg)
@@ -194,8 +212,9 @@ module Bot
 
 		def format_answer(screen,user)
 			puts "format_answer: #{screen[:id]}" if DEBUG
-			res=screen[:text] % {firstname: user['firstname'],lastname: user['lastname'],id: user[:id],username: user['username']} unless screen.nil?
+			res=screen[:text] % {firstname: user['firstname'],lastname: user['lastname'],id: user[:id],username: user['username']} unless screen.nil? or screen[:text].nil?
 			options={}
+			puts "keyboard for #{screen[:id]} : #{@keyboards[screen[:id]]}"
 			options[:kbd]=Telegram::Bot::Types::ReplyKeyboardMarkup.new(
 				keyboard:@keyboards[screen[:id]],
 				resize_keyboard:screen[:kbd_options][:resize_keyboard],

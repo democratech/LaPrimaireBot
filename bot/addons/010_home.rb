@@ -33,7 +33,7 @@ Mais assez parlé, commençons !
 END
 					:menu=><<-END,
 Que voulez-vous faire ?
-	END
+END
 					:not_implemented=><<-END,
 Désolée, je n'ai pas encore reçu les instructions pour vous guider dans ce choix #{Bot.emoticons[:crying_face]}
 END

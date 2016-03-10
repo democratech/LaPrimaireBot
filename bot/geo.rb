@@ -19,23 +19,24 @@
 =end
 
 module Bot
-	class Search
-		def initialize
-			@cs=Google::Apis::CustomsearchV1::CustomsearchService.new
-			@cs.key=CSKEY
+	class Geo
+		class << self
+			attr_accessor :countries
 		end
 
-		def image(q)
-			res=@cs.list_cses(q,cx:CSID,cr:'countryFR', gl:'fr', hl:'fr', file_type:'.jpg', googlehost:'google.fr', img_type:'photo', search_type:'image', num:5)
-			if !res.items.nil? then
-				res.items.each do |img|
-					type=FastImage.type(img.link)
-					if !type.nil? then
-						return img,type.to_s
-					end
-				end
-			end
-			return nil
+		def self.load_queries
+			queries={
+			'get_city_by_zipcode'=><<END,
+SELECT c.* FROM cities AS c WHERE c.zipcode=$1
+END
+			}
+			queries.each { |k,v| Bot::Db.prepare(k,v) }
 		end
+
+		def search(query)
+			return Bot::Db.query("get_"+query[:type]+"_by_"+query[:by],[query[:target]]) 
+		end
+
 	end
 end
+

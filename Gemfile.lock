@@ -8,6 +8,9 @@ GEM
       thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
     addressable (2.4.0)
+    algoliasearch (1.7.0)
+      httpclient (~> 2.4)
+      json (>= 1.5.1)
     ast (2.2.0)
     axiom-types (0.1.1)
       descendants_tracker (~> 0.0.4)
@@ -65,6 +68,7 @@ GEM
     httparty (0.13.7)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
+    httpclient (2.7.1)
     hurley (0.2)
     i18n (0.7.0)
     ice_nine (0.11.2)
@@ -161,6 +165,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  algoliasearch
   bson (~> 3.0)
   bundler
   fastimage

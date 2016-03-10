@@ -21,7 +21,7 @@ CREATE TABLE cities (
 	lon_deg double precision,
 	location point,
 	population integer,
-	country varchar(20) DEFAULT 'FRANCE' REFERENCES countries (name) 
+	country varchar(60) DEFAULT 'FRANCE' REFERENCES countries (name) 
 );
 CREATE INDEX cities_name_idx ON cities(name);
 CREATE INDEX cities_zip_idx ON cities(zipCode);
@@ -34,9 +34,11 @@ CREATE TABLE citizens (
 	username varchar(30),
 	registered timestamp DEFAULT CURRENT_TIMESTAMP,
 	session jsonb,
-	beta_tester boolean DEFAULT false,
+	betatester boolean DEFAULT false,
 	reviewer boolean DEFAULT false,
-	city_id integer REFERENCES cities(city_id)
+	city varchar(60), 
+	city_id integer REFERENCES cities (city_id), -- for french cities
+	country varchar(60) REFERENCES countries (name)
 );
 CREATE INDEX citizens_email_idx ON citizens(email);
 

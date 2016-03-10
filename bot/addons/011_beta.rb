@@ -103,12 +103,14 @@ END
 				:code_ok=>{
 					:text=>messages[:fr][:beta][:code_ok],
 					:disable_web_page_preview=>true,
+					:callback=>"beta/tester",
 					:kbd=>["beta/no_pb","beta/nah"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:no_pb=>{
 					:answer=>"Oui, pas de souci !",
 					:text=>messages[:fr][:beta][:no_pb],
+					:callback=>"beta/reviewer",
 					:jump_to=>"welcome/start"
 				},
 				:nah=>{
@@ -131,27 +133,29 @@ END
 
 	def beta_enter_code(msg,user,screen)
 		puts "beta_enter_code" if DEBUG
-		@users.update_session(user[:id],{
-			'expected_input'=>'free_text',
-			'expected_input_size'=>1,
-			'callback'=>"beta/verify_code"
-		})
+		@users.next_answer(user[:id],'free_text',1,"beta/verify_code")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def beta_verify_code(msg,user,screen)
 		code=user['session']['buffer']
 		puts "beta_verify_code : #{code}" if DEBUG
-		@users.update_session(user[:id],{
-			'buffer'=>"",
-			'expected_input'=>'answer',
-			'expected_input_size'=>-1,
-		})
+		@users.next_answer(user[:id],'answer')
 		if BETA_CODES.include?(code) then
 			screen=self.find_by_name("beta/code_ok")
 		else
 			screen=self.find_by_name("beta/code_wrong")
 		end
+		return self.get_screen(screen,user,msg)
+	end
+
+	def beta_tester(msg,user,screen)
+		@users.set(user[:id],{:set=> 'betatester',:value=> true})
+		return self.get_screen(screen,user,msg)
+	end
+
+	def beta_reviewer(msg,user,screen)
+		@users.set(user[:id],{:set=>'reviewer',:value=>true})
 		return self.get_screen(screen,user,msg)
 	end
 end

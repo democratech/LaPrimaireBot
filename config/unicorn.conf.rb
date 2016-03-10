@@ -19,7 +19,7 @@ working_directory APP_ROOT # available in 0.94.0+
 listen 8080, :tcp_nopush => true
 
 # nuke workers after 30 seconds instead of 60 seconds (the default)
-timeout 30
+timeout 15
 
 # Whether the app should be pre-loaded
 preload_app true

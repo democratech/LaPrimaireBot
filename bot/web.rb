@@ -19,31 +19,23 @@
 =end
 
 module Bot
-	class Db
-		@@db=nil
-
-		def self.init
-			Db.close
-			@@db=PG.connect(:dbname=>PGNAME,"user"=>PGUSER,"sslmode"=>"require","password"=>PGPWD,"host"=>PGHOST)
-			Bot::Users.load_queries
-			Bot::Geo.load_queries
+	class Web
+		def initialize
+			@cs=Google::Apis::CustomsearchV1::CustomsearchService.new
+			@cs.key=CSKEY
 		end
 
-		def self.prepare(name,query)
-			@@db.prepare(name,query)
-		end
-
-		def self.close
-			if @@db then
-				@@db.flush
-				@@db.close
+		def search_image(q)
+			res=@cs.list_cses(q,cx:CSID,cr:'countryFR', gl:'fr', hl:'fr', file_type:'.jpg', googlehost:'google.fr', img_type:'photo', search_type:'image', num:5)
+			if !res.items.nil? then
+				res.items.each do |img|
+					type=FastImage.type(img.link)
+					if !type.nil? then
+						return img,type.to_s
+					end
+				end
 			end
-		end
-
-		def self.query(name,params)
-			puts "db query: #{name} / values: #{params}" if DEBUG
-			self.init if @@db.nil? or @@db.status!=PG::CONNECTION_OK
-			@@db.exec_prepared(name,params)
+			return nil
 		end
 	end
 end

@@ -34,11 +34,15 @@ A tout moment, si vous avez des questions n'hésitez à me les poser, j'essaiera
 Mais assez parlé, commençons par vous créer un compte !
 END
 					:email=><<-END,
-Quel est votre email ?
+Quelle est votre adresse email ?
 END
-					:email_not_valid=><<-END,
+					:email_error=><<-END,
 Hmmm... cet email ne semble pas valide #{Bot.emoticons[:rolling_eyes]}
-Quel est votre email ?
+Quel est votre (vrai) email ?
+END
+					:email_used=><<-END,
+Hmmm... cet email est déjà utilisé #{Bot.emoticons[:rolling_eyes]}
+Réessayons, quel est votre email ?
 END
 					:france=><<-END,
 Habitez-vous en France (DOM-TOM inclus) ou à l'étranger ?
@@ -46,14 +50,32 @@ END
 					:country=><<-END,
 Dans quel pays habitez-vous ?
 END
+					:country_error=><<-END,
+Hmmm... il ne me semble pas connaître ce pays #{Bot.emoticons[:thinking_face]}
+Pouvez-vous me redire dans quel pays vous habitez (en français) ?
+END
 					:city=><<-END,
-Et dans quelle ville habitez-vous ?
+Dans quelle ville habitez-vous ?
+END
+					:city_ask=><<-END,
+https://maps.googleapis.com/maps/api/staticmap?size=300x300&maptype=roadmap\&markers=size:mid|color:red|%{city},%{country}
+Vous habitez ici, c'est bien çà ?
+END
+					:city_ask_ok=><<-END,
+Bien noté !
+END
+					:city_ask_ko=><<-END,
+Hmmmm... recommençons pour voir, une erreur a dû se glisser quelque part !
 END
 					:zipcode=><<-END,
-Enfin, quel est le code postal de votre ville ?
+Quel est le code postal de votre ville ?
 END
-					:mutliple_cities=><<-END,
-Hmmmm... plusieurs villes correpondent à ce code postal #{Bot.emoticons[:thinking_face]} dans laquelle habitez-vous ?
+					:zipcode_city=><<-END,
+#{Bot.emoticons[:thinking_face]} Hmmmm... il existe plusieurs villes avec ce code postal, laquelle est la vôtre ?
+END
+					:zipcode_error=><<-END,
+A priori, ce code postal n'exite pas...
+Réessayez s'il vous plait.
 END
 					:account_created=><<-END,
 Merci ! Votre compte a été créé avec succès.
@@ -75,8 +97,12 @@ END
 					:text=>messages[:fr][:welcome][:email],
 					:callback=>"welcome/enter_email"
 				},
-				:email_not_valid=>{
-					:text=>messages[:fr][:welcome][:email_not_valid],
+				:email_error=>{
+					:text=>messages[:fr][:welcome][:email_error],
+					:callback=>"welcome/enter_email"
+				},
+				:email_used=>{
+					:text=>messages[:fr][:welcome][:email_used],
 					:callback=>"welcome/enter_email"
 				},
 				:france=>{
@@ -89,14 +115,41 @@ END
 					:text=>messages[:fr][:welcome][:zipcode],
 					:callback=>"welcome/enter_zipcode"
 				},
+				:zipcode_city=>{
+					:text=>messages[:fr][:welcome][:zipcode_city],
+					:kbd=>[],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:zipcode_error=>{
+					:text=>messages[:fr][:welcome][:zipcode_error],
+					:jump_to=>"welcome/zipcode"
+				},
 				:country=>{
 					:answer=>"J'habite à l'étranger",
 					:text=>messages[:fr][:welcome][:country],
 					:callback=>"welcome/enter_country"
 				},
+				:country_error=>{
+					:text=>messages[:fr][:welcome][:country_error],
+					:callback=>"welcome/enter_country"
+				},
 				:city=>{
 					:text=>messages[:fr][:welcome][:city],
 					:callback=>"welcome/enter_city"
+				},
+				:city_ask=>{
+					:text=>messages[:fr][:welcome][:city_ask],
+					:kbd=>["welcome/city_ask_ok","welcome/city_ask_ko"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:city_ask_ok=>{
+					:answer=>"Oui, c'est bien là",
+					:text=>messages[:fr][:welcome][:city_ask_ok],
+					:jump_to=>"welcome/account_created"
+				},
+				:city_ask_ko=>{
+					:answer=>"Non, ce n'est pas là",
+					:jump_to=>"welcome/zipcode"
 				},
 				:account_created=>{
 					:text=>messages[:fr][:welcome][:account_created],
@@ -110,93 +163,123 @@ END
 
 	def welcome_enter_email(msg,user,screen)
 		puts "welcome_enter_email" if DEBUG
-		@users.update_session(user[:id], {
-			'expected_input'=>'free_text',
-			'expected_input_size'=>1,
-			'callback'=>"welcome/save_email"
-		})
+		@users.next_answer(user[:id],'free_text',1,"welcome/save_email")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_save_email(msg,user,screen)
 		email=user['session']['buffer']
 		puts "welcome_save_email: #{email}" if DEBUG
-		@users.update_session(user[:id],{
-			'buffer'=>"",
-			'expected_input'=>'answer',
-			'expected_input_size'=>-1,
+		if email.match(/\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/).nil? then
+			screen=self.find_by_name("welcome/email_error")
+			return self.get_screen(screen,user,msg) 
+		end
+		res=@users.search({:by=>'email',:target=>email})
+		if res.num_tuples > 0 and res[0]['user_id']!=user[:id] then
+			screen=self.find_by_name("welcome/email_used")
+			return self.get_screen(screen,user,msg) 
+		end
+		@users.next_answer(user[:id],'answer')
+		@users.set(user[:id],{
+			:set=>'email',
+			:value=>email
 		})
-		@users.save(user[:id],{'email'=>email})
 		screen=self.find_by_name("welcome/france")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_country(msg,user,screen)
 		puts "welcome_enter_country" if DEBUG
-		@users.update_session(user[:id], {
-			'expected_input'=>'free_text',
-			'expected_input_size'=>1,
-			'callback'=>"welcome/save_country"
-		})
+		@users.next_answer(user[:id],'free_text',1,"welcome/save_country")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_save_country(msg,user,screen)
 		country=user['session']['buffer']
+		answer=Bot::Geo.countries.search(country,{hitsPerPage:1})
+		return self.get_screen("welcome/country_error") if answer["hits"].length==0
+		country=answer["hits"][0]["name"]
 		puts "welcome_save_country: #{country}" if DEBUG
-		@users.update_session(user[:id],{
-			'buffer'=>"",
-			'expected_input'=>'answer',
-			'expected_input_size'=>-1,
+		@users.next_answer(user[:id],'answer')
+		@users.set(user[:id],{
+			:set=>'country',
+			:value=>country
 		})
-		@users.save(user[:id],{'country'=>country})
 		screen=self.find_by_name("welcome/city")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_city(msg,user,screen)
-		puts "welcome_enter_country" if DEBUG
-		@users.update_session(user[:id], {
-			'expected_input'=>'free_text',
-			'expected_input_size'=>1,
-			'callback'=>"welcome/save_city"
-		})
+		puts "welcome_enter_city" if DEBUG
+		@users.next_answer(user[:id],'free_text',1,"welcome/city_ask")
 		return self.get_screen(screen,user,msg)
 	end
 
-	def welcome_save_city(msg,user,screen)
+	def welcome_city_ask(msg,user,screen)
 		city=user['session']['buffer']
-		puts "welcome_save_city: #{city}" if DEBUG
-		@users.update_session(user[:id],{
-			'buffer'=>"",
-			'expected_input'=>'answer',
-			'expected_input_size'=>-1,
+		country=user['country']
+		puts "welcome_city_ask: #{city}" if DEBUG
+		@users.next_answer(user[:id],'answer')
+		@users.set(user[:id],{
+			:set=>'city',
+			:value=>city.upcase
 		})
-		@users.save(user[:id],{'city'=>city})
-		screen=self.find_by_name("welcome/account_created")
+		args={:city=>city.gsub(' ','+'),:country=>country.gsub(' ','+')}
+		screen=self.find_by_name("welcome/city_ask")
+		screen[:text]=screen[:text] % args
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_zipcode(msg,user,screen)
 		puts "welcome_enter_zipcode" if DEBUG
-		@users.update_session(user[:id],{
-			'expected_input'=>'free_text',
-			'expected_input_size'=>1,
-			'callback'=>"welcome/save_zipcode"
-		})
+		@users.next_answer(user[:id],'free_text',1,"welcome/save_zipcode")
 		return self.get_screen(screen,user,msg)
 	end
-#https://maps.googleapis.com/maps/api/staticmap?size=512x512&maptype=roadmap\&markers=size:mid%7Ccolor:red%7CBernardswiller,France
+
 	def welcome_save_zipcode(msg,user,screen)
-		zipcode=user['session']['buffer']
+		zipcode=user['session']['buffer'].delete(' ')
+		zipcode="0"+zipcode if zipcode.length==4
 		puts "welcome_save_zipcode: #{zipcode}" if DEBUG
-		@users.update_session(user[:id],{
-			'buffer'=>"",
-			'expected_input'=>'answer',
-			'expected_input_size'=>-1,
+		@users.set(user[:id],{
+			:set=>'zipcode',
+			:value=>zipcode
 		})
-		@users.save(user[:id],{'zipcode'=>zipcode})
-		screen=self.find_by_name("welcome/account_created")
+		res=@geo.search({
+			:type=>'city',
+			:by=>'zipcode',
+			:target=>zipcode
+		})
+		nb_tuples=res.num_tuples
+		@users.next_answer(user[:id],'answer')
+		if nb_tuples>1 then
+			screen=self.find_by_name("welcome/zipcode_city")
+			if nb_tuples > 4 then
+				kbd=[]
+				row=[]
+				res.each_with_index do |r,i|
+					row.push(r['name'])
+					if (i>0 and (i % 3)==0) then
+						kbd.push(row)
+						row=[]
+					end
+				end
+				kbd.push(row) if row
+				@keyboards[screen[:id]]=kbd
+			else
+				res.each do |r|
+					@keyboards[screen[:id]].push(r['name'])
+				end
+			end
+			@users.next_answer(user[:id],'free_text',1,"welcome/city_ask")
+		elsif nb_tuples==1
+			@users.set(user[:id],{
+				:set=>'city',
+				:value=>res[0]['name']
+			})
+			screen=self.find_by_name("welcome/account_created")
+		else
+			screen=self.find_by_name("welcome/zipcode_error")
+		end
 		return self.get_screen(screen,user,msg)
 	end
 end
