@@ -217,7 +217,6 @@ module Bot
 			puts "format_answer: #{screen[:id]}" if DEBUG
 			res=screen[:text] % {firstname: user['firstname'],lastname: user['lastname'],id: user[:id],username: user['username']} unless screen.nil? or screen[:text].nil?
 			options={}
-			puts "keyboard for #{screen[:id]} : #{@keyboards[screen[:id]]}"
 			options[:kbd]=Telegram::Bot::Types::ReplyKeyboardMarkup.new(
 				keyboard:@keyboards[screen[:id]],
 				resize_keyboard:screen[:kbd_options][:resize_keyboard],

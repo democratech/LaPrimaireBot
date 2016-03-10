@@ -49,6 +49,9 @@ END
 			'set_email'=><<END,
 UPDATE citizens SET email=$1 WHERE user_id=$2;
 END
+			'set_optin'=><<END,
+UPDATE citizens SET optin=$1 WHERE user_id=$2;
+END
 			'set_country'=><<END,
 UPDATE citizens SET country=$1 WHERE user_id=$2;
 END

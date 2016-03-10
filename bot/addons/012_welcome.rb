@@ -36,6 +36,15 @@ END
 					:email=><<-END,
 Quelle est votre adresse email ?
 END
+					:email_optin=><<-END,
+Est-ce que vous acceptez que l'équipe de LaPrimaire.org (et seulement elle !) puisse vous envoyer un email de temps en temps ?
+END
+					:email_optin_ok=><<-END,
+Merci de votre confiance !
+END
+					:email_optin_ko=><<-END,
+Ok, aucun souci, je respecte totalement votre décision #{Bot.emoticons[:little_smile]}
+END
 					:email_error=><<-END,
 Hmmm... cet email ne semble pas valide #{Bot.emoticons[:rolling_eyes]}
 Quel est votre (vrai) email ?
@@ -74,7 +83,7 @@ END
 #{Bot.emoticons[:thinking_face]} Hmmmm... il existe plusieurs villes avec ce code postal, laquelle est la vôtre ?
 END
 					:zipcode_error=><<-END,
-A priori, ce code postal n'exite pas...
+A priori, ce code postal n'existe pas...
 Réessayez s'il vous plait.
 END
 					:account_created=><<-END,
@@ -104,6 +113,23 @@ END
 				:email_used=>{
 					:text=>messages[:fr][:welcome][:email_used],
 					:callback=>"welcome/enter_email"
+				},
+				:email_optin=>{
+					:text=>messages[:fr][:welcome][:email_optin],
+					:disable_web_page_preview=>true,
+					:kbd=>["welcome/email_optin_ok","welcome/email_optin_ko"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:email_optin_ok=>{
+					:answer=>"Oui, pas de souci",
+					:text=>messages[:fr][:welcome][:email_optin_ok],
+					:callback=>"welcome/email_optin_ok",
+					:jump_to=>"welcome/france"
+				},
+				:email_optin_ko=>{
+					:answer=>"Non, je ne préfère pas",
+					:text=>messages[:fr][:welcome][:email_optin_ko],
+					:jump_to=>"welcome/france"
 				},
 				:france=>{
 					:text=>messages[:fr][:welcome][:france],
@@ -185,7 +211,17 @@ END
 			:set=>'email',
 			:value=>email
 		})
-		screen=self.find_by_name("welcome/france")
+		screen=self.find_by_name("welcome/email_optin")
+		return self.get_screen(screen,user,msg)
+	end
+
+	def welcome_email_optin_ok(msg,user,screen)
+		puts "welcome_email_optin_ok" if DEBUG
+		@users.set(user[:id],{
+			:set=>'optin',
+			:value=>true
+		})
+		screen=self.find_by_name("welcome/email_optin_ok")
 		return self.get_screen(screen,user,msg)
 	end
 
