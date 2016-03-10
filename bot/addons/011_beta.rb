@@ -46,16 +46,13 @@ END
 					:code_ok=><<-END,
 Code correct ! Bienvenue et merci encore de nous aider à mettre au point LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
 Une dernière petite question : Nous allons avoir besoin d'un coup de main pour pré-valider la pertinence des candidats qui nous seront proposés par les citoyens.
-Est-ce que cela vous dérangerait que nous vous sollicitions de temps en temps pour valider des candidats qui nous sont proposés ?
+Est-ce que vous nous autorisez à vous solliciter de temps en temps pour valider des candidats qui nous sont proposés ?
 END
 					:no_pb=><<-END,
 Super, merci beaucoup !
 END
 					:nah=><<-END,
 Ok, pas de souci, je comprends #{Bot.emoticons[:smile]} C'est déjà sympa de nous faire vos retours sur l'application en tout cas !
-END
-					:pas_compris=><<-END,
-Désolé je n'ai pas compris ce que vous vouliez me dire #{Bot.emoticons[:disappointed]}
 END
 				}
 			}
@@ -108,13 +105,13 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:no_pb=>{
-					:answer=>"Oui, pas de souci !",
+					:answer=>"Oui, n'hésitez pas à me demander #{Bot.emoticons[:little_smile]}",
 					:text=>messages[:fr][:beta][:no_pb],
 					:callback=>"beta/reviewer",
 					:jump_to=>"welcome/start"
 				},
 				:nah=>{
-					:answer=>"Non désolé",
+					:answer=>"Désolé, je n'ai pas vraiment envie #{Bot.emoticons[:confused]}",
 					:text=>messages[:fr][:beta][:nah],
 					:jump_to=>"welcome/start"
 				},

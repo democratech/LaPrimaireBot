@@ -34,6 +34,9 @@ END
 			'set_city'=><<END,
 UPDATE citizens SET city=$1, city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=$1) as city_id) AS v WHERE citizens.user_id=$2;
 END
+			'set_city_using_zipcode'=><<END,
+UPDATE citizens SET city=$1, city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=$1 AND b.zipcode=$3) as city_id) AS v WHERE citizens.user_id=$2;
+END
 			'set_session'=><<END,
 UPDATE citizens SET session=$1 WHERE user_id=$2
 END
@@ -121,7 +124,11 @@ END
 		end
 
 		def set(user_id,query)
-			Bot::Db.query("set_"+query[:set],[query[:value],user_id])
+			if query[:using].nil? then
+				Bot::Db.query("set_"+query[:set],[query[:value],user_id]) 
+			else
+				Bot::Db.query("set_"+query[:set]+"_using_"+query[:using][:field],[query[:value],user_id,query[:using][:value]]) 
+			end
 			@users[user_id][query[:set]]=query[:value]
 		end
 

@@ -149,7 +149,8 @@ END
 				},
 				:city_ask_ko=>{
 					:answer=>"Non, ce n'est pas là",
-					:jump_to=>"welcome/zipcode"
+					:callback=>"welcome/city_ask_ko",
+					:jump_to=>"welcome/city"
 				},
 				:account_created=>{
 					:text=>messages[:fr][:welcome][:account_created],
@@ -215,23 +216,37 @@ END
 		return self.get_screen(screen,user,msg)
 	end
 
-	def welcome_city_ask(msg,user,screen)
-		city=user['session']['buffer']
+	def welcome_city_ask(msg,user,screen,city=nil)
+		city= city.nil? ? user['session']['buffer'] : city
 		country=user['country']
 		puts "welcome_city_ask: #{city}" if DEBUG
 		@users.next_answer(user[:id],'answer')
-		@users.set(user[:id],{
+		args={
 			:set=>'city',
 			:value=>city.upcase
-		})
-		args={:city=>city.gsub(' ','+'),:country=>country.gsub(' ','+')}
+		}
+		args[:using]={:field=>'zipcode',:value=>user['zipcode']} if country=="FRANCE"
+		@users.set(user[:id],args)
+		args={
+			:city=>city.gsub(' ','+'),
+			:country=>country.gsub(' ','+')
+		}
 		screen=self.find_by_name("welcome/city_ask")
 		screen[:text]=screen[:text] % args
 		return self.get_screen(screen,user,msg)
 	end
 
+	def welcome_city_ask_ko(msg,user,screen)
+		screen= user['country']=="FRANCE" ? self.find_by_name("welcome/zipcode") : self.find_by_name("welcome/city")
+		return self.get_screen(screen,user,msg)
+	end
+
 	def welcome_enter_zipcode(msg,user,screen)
 		puts "welcome_enter_zipcode" if DEBUG
+		@users.set(user[:id],{
+			:set=>'country',
+			:value=>'FRANCE'
+		})
 		@users.next_answer(user[:id],'free_text',1,"welcome/save_zipcode")
 		return self.get_screen(screen,user,msg)
 	end
@@ -258,7 +273,7 @@ END
 				row=[]
 				res.each_with_index do |r,i|
 					row.push(r['name'])
-					if (i>0 and (i % 3)==0) then
+					if (i>0 and (i % 2)==0) then
 						kbd.push(row)
 						row=[]
 					end
@@ -272,11 +287,17 @@ END
 			end
 			@users.next_answer(user[:id],'free_text',1,"welcome/city_ask")
 		elsif nb_tuples==1
+			city=res[0]['name']
 			@users.set(user[:id],{
 				:set=>'city',
-				:value=>res[0]['name']
+				:value=>city.upcase,
+				:using=>{
+					:field=>"zipcode",
+					:value=>zipcode
+				}
 			})
-			screen=self.find_by_name("welcome/account_created")
+			return self.welcome_city_ask(msg,user,screen,city)
+			# screen=self.find_by_name("welcome/city_ask")
 		else
 			screen=self.find_by_name("welcome/zipcode_error")
 		end

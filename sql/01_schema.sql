@@ -34,6 +34,8 @@ CREATE TABLE citizens (
 	username varchar(30),
 	registered timestamp DEFAULT CURRENT_TIMESTAMP,
 	session jsonb,
+	validated boolean DEFAULT false,
+	optin boolean DEFAULT false,
 	betatester boolean DEFAULT false,
 	reviewer boolean DEFAULT false,
 	city varchar(60), 

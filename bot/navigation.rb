@@ -191,7 +191,10 @@ module Bot
 			puts "find_by_name: #{name}" if DEBUG
 			n1,n2=self.nodes(name)
 			screen=@screens[n1][n2]
-			screen[:id]=name unless screen.nil?
+			if screen then
+				screen[:id]=name 
+				screen=screen.clone
+			end
 			return screen
 		end
 
