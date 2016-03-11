@@ -21,6 +21,7 @@
 module Bot
 	@@emoticons={ # see http://unicode.org/emoji/charts/full-emoji-list.html
 		:blush=>"\u{1F60A}",
+		:info=>"\u{2139}",
 		:crying_face=>"\u{1F622}",
 		:face_sunglasses=>"\u{1F60E}",
 		:megaphone=>"\u{1F4E3}",

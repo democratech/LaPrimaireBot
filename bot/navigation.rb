@@ -218,12 +218,29 @@ module Bot
 			puts "format_answer: #{screen[:id]}" if DEBUG
 			res=screen[:text] % {firstname: user['firstname'],lastname: user['lastname'],id: user[:id],username: user['username']} unless screen.nil? or screen[:text].nil?
 			options={}
-			options[:kbd]=Telegram::Bot::Types::ReplyKeyboardMarkup.new(
-				keyboard:@keyboards[screen[:id]],
-				resize_keyboard:screen[:kbd_options][:resize_keyboard],
-				one_time_keyboard:screen[:kbd_options][:one_time_keyboard],
-				selective:screen[:kbd_options][:selective]
-			) unless @keyboards[screen[:id]].nil?
+			kbd=@keyboards[screen[:id]]
+			if not kbd.nil? then
+				if kbd.length>4 then # display keyboard on several rows
+					newkbd=[]
+					row=[]
+					kbd.each_with_index do |r,i|
+						row.push(r)
+						if (i>0 and (i % 2)==0) then
+							newkbd.push(row)
+							row=[]
+						end
+					end
+					newkbd.push(row) if row
+					kbd=newkbd
+				end
+				options[:kbd]=Telegram::Bot::Types::ReplyKeyboardMarkup.new(
+					keyboard:kbd,
+					resize_keyboard:screen[:kbd_options][:resize_keyboard],
+					one_time_keyboard:screen[:kbd_options][:one_time_keyboard],
+					selective:screen[:kbd_options][:selective]
+				)
+
+			end
 			options[:disable_web_page_preview]=true if screen[:disable_web_page_preview]
 			options[:keep_kbd]=true if screen[:keep_kbd]
 			return res,options

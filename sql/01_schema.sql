@@ -40,7 +40,8 @@ CREATE TABLE citizens (
 	reviewer boolean DEFAULT false,
 	city varchar(60), 
 	city_id integer REFERENCES cities (city_id), -- for french cities
-	country varchar(60) REFERENCES countries (name)
+	country varchar(60) REFERENCES countries (name),
+	last_updated timestamp DEFAULT CURRENT_TIMESTAMP -- date when the candidate has been addeed
 );
 CREATE INDEX citizens_email_idx ON citizens(email);
 

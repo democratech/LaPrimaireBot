@@ -304,22 +304,8 @@ END
 		@users.next_answer(user[:id],'answer')
 		if nb_tuples>1 then
 			screen=self.find_by_name("welcome/zipcode_city")
-			if nb_tuples > 4 then
-				kbd=[]
-				row=[]
-				res.each_with_index do |r,i|
-					row.push(r['name'])
-					if (i>0 and (i % 2)==0) then
-						kbd.push(row)
-						row=[]
-					end
-				end
-				kbd.push(row) if row
-				@keyboards[screen[:id]]=kbd
-			else
-				res.each do |r|
-					@keyboards[screen[:id]].push(r['name'])
-				end
+			res.each do |r|
+				@keyboards[screen[:id]].push(r['name'])
 			end
 			@users.next_answer(user[:id],'free_text',1,"welcome/city_ask")
 		elsif nb_tuples==1
