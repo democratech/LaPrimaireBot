@@ -33,6 +33,7 @@ module Bot
 			@users = Bot::Users.new()
 			@web = Bot::Web.new()
 			@geo = Bot::Geo.new()
+			@candidates = Bot::Candidates.new()
 			@answers = {}
 			@keyboards = {}
 			@screens=Bot.screens
