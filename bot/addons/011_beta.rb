@@ -44,7 +44,8 @@ Désolé, il va vous falloir patienter encore un peu pour pouvoir accéder à La
 Si cela peut vous réconforter, l'ouverture est prévue dans les tous prochains jours !
 END
 					:code_ok=><<-END,
-Code correct ! Bienvenue et merci encore de nous aider à mettre au point LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
+image:static/images/laprimaire-bienvenue.jpg
+Bienvenue et merci encore de nous aider à mettre au point LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
 Une dernière petite question : Nous allons avoir besoin d'un coup de main pour pré-valider la pertinence des candidats qui nous seront proposés par les citoyens.
 Est-ce que vous nous autorisez à vous solliciter de temps en temps pour valider des candidats qui nous sont proposés ?
 END
@@ -124,7 +125,13 @@ END
 
 	def beta_welcome(msg,user,screen)
 		puts "beta_welcome" if DEBUG
-		#screen=self.find_by_name("welcome/start") if true
+		if user['betatester'] then
+			if user['email'] and user['city'] and user['zipcode'] and user['country'] then
+				screen=self.find_by_name("home/menu")
+			else
+				screen=self.find_by_name("welcome/hello")
+			end
+		end
 		return self.get_screen(screen,user,msg)
 	end
 
