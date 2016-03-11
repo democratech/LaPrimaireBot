@@ -42,6 +42,7 @@ END
 				:welcome=>{
 					:answer=>"/start",
 					:text=>messages[:fr][:home][:welcome],
+					:disable_web_page_preview=>true,
 					:callback=>"home/welcome",
 					:jump_to=>"home/menu"
 				},

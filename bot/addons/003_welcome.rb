@@ -100,6 +100,7 @@ END
 				},
 				:start=>{
 					:text=>messages[:fr][:welcome][:start],
+					:disable_web_page_preview=>true,
 					:jump_to=>"welcome/email"
 				},
 				:email=>{
