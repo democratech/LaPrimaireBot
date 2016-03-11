@@ -36,7 +36,6 @@ if ENV['RACK_ENV']=='production' then
 	user 'www-data', 'www-data'
 end
 pid "%s/pid/pid" % [APP_ROOT]
-old_pid = "%s/pid.oldbin" % [APP_ROOT]
 
 if GC.respond_to?(:copy_on_write_friendly=)
   GC.copy_on_write_friendly = true
@@ -49,6 +48,7 @@ end
 before_fork do |server, worker|
   defined?(ActiveRecord::Base) && ActiveRecord::Base.connection.disconnect!
   Bot::Db.close()
+  old_pid = "%s/pid/pid.oldbin" % [APP_ROOT]
   if File.exists?(old_pid) && server.pid != old_pid
     begin
       Process.kill('QUIT', File.read(old_pid).to_i)
