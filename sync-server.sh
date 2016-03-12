@@ -1,1 +1,1 @@
-rsync -avz . root@democratech-bot:/home/laprimaire/bot/
+rsync -avz --delete . root@democratech-bot:/home/laprimaire/bot/

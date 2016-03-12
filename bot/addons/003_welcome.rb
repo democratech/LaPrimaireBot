@@ -267,6 +267,7 @@ END
 			:city=>city.gsub(' ','+'),
 			:country=>country.gsub(' ','+')
 		}
+		screen=self.find_by_name("welcome/city_ask")
 		screen[:text]=screen[:text] % args
 		return self.get_screen(screen,user,msg)
 	end
