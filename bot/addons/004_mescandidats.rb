@@ -190,8 +190,10 @@ END
 			idx=candidate.nil? ? 0 : candidate['idx']
 			img,type=images[idx]
 			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if images.empty? or images[idx].nil?
+			web_img=MiniMagick::Image.open(img.link)
+			web_img.resize "x300"
 			photo=TMP_DIR+'image'+user[:id].to_s+"."+type
-			open(photo,'wb') { |file| file << open(img.link).read }
+			web_img.write(photo)
 			idx+=1
 			@users.update_session(user[:id],{'candidate'=>{'name'=>name,'photo'=>photo,'idx'=>idx}})
 			retry_screen=self.find_by_name("mes_candidats/confirm_no")
