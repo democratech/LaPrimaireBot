@@ -215,6 +215,8 @@ END
 		puts "mes_candidats_confirm_yes : #{candidate}" if DEBUG
 		if candidate then
 			if candidate['candidate_id'] then # candidate already exists in db
+				res=@candidates.search({:by=>'candidate_id',:target=>candidate['candidate_id']})
+				@candidates.add(candidate) if res.num_tuples.zero? # candidate in index but not in db (weird case)
 				@candidates.add_supporter(user[:id],candidate['candidate_id'])
 			else # candidate needs to be registered in db
 				image=candidate['photo']
