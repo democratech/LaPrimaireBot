@@ -59,11 +59,6 @@ END
 			}
 		}
 		screens={
-			:home=>{ 
-				:welcome=>{
-					:answer=>nil
-				}
-			},
 			:beta=>{
 				:menu=>{
 					:text=>messages[:fr][:beta][:menu],
@@ -72,7 +67,6 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:welcome=>{
-					:answer=>"/start",
 					:text=>messages[:fr][:beta][:welcome],
 					:callback=>"beta/welcome",
 					:jump_to=>"beta/menu"
@@ -125,13 +119,6 @@ END
 
 	def beta_welcome(msg,user,screen)
 		puts "beta_welcome" if DEBUG
-		if user['betatester'] then
-			if user['email'] and user['city'] and user['zipcode'] and user['country'] then
-				screen=self.find_by_name("home/menu")
-			else
-				screen=self.find_by_name("welcome/hello")
-			end
-		end
 		return self.get_screen(screen,user,msg)
 	end
 

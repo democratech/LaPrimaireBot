@@ -42,11 +42,11 @@ END
 				},
 				:menu=>{
 					:text=>messages[:fr][:about][:menu],
-					:jump_to=>"about/intro"
+					:kbd=>["home/menu"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:laprimaire=>{
 					:answer=>"#{Bot.emoticons[:info]} A propos de LaPrimaire.org",
-					:text=>messages[:fr][:about][:menu],
 					:jump_to=>"about/intro"
 				}
 			}

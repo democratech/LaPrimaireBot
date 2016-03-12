@@ -49,6 +49,7 @@ END
 				:menu=>{
 					:answer=>"#{Bot.emoticons[:home]} Accueil",
 					:text=>messages[:fr][:home][:menu],
+					:callback=>"home/menu",
 					:kbd=>[],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				}
@@ -61,6 +62,19 @@ END
 
 	def home_welcome(msg,user,screen)
 		puts "home_welcome" if DEBUG
+		if user['betatester'].to_b and not (user['email'] or user['city'] or user['country']) then
+			screen=self.find_by_name("welcome/hello")
+		else
+			screen=self.find_by_name("beta/welcome")
+		end
+		return self.get_screen(screen,user,msg)
+	end
+
+	def home_menu(msg,user,screen)
+		puts "home_menu" if DEBUG
+		@users.next_answer(user[:id],'answer')
+		@users.clear_session(user[:id],'candidate')
+		@users.clear_session(user[:id],'delete_candidates')
 		return self.get_screen(screen,user,msg)
 	end
 end

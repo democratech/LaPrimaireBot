@@ -222,7 +222,6 @@ END
 			:set=>'optin',
 			:value=>true
 		})
-		screen=self.find_by_name("welcome/email_optin_ok")
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -268,7 +267,6 @@ END
 			:city=>city.gsub(' ','+'),
 			:country=>country.gsub(' ','+')
 		}
-		screen=self.find_by_name("welcome/city_ask")
 		screen[:text]=screen[:text] % args
 		return self.get_screen(screen,user,msg)
 	end
@@ -305,8 +303,9 @@ END
 		@users.next_answer(user[:id],'answer')
 		if nb_tuples>1 then
 			screen=self.find_by_name("welcome/zipcode_city")
+			screen[:kbd_add]=[]
 			res.each do |r|
-				@keyboards[screen[:id]].push(r['name'])
+				screen[:kbd_add].push(r['name'])
 			end
 			@users.next_answer(user[:id],'free_text',1,"welcome/city_ask")
 		elsif nb_tuples==1
@@ -320,7 +319,6 @@ END
 				}
 			})
 			return self.welcome_city_ask(msg,user,screen,city)
-			# screen=self.find_by_name("welcome/city_ask")
 		else
 			screen=self.find_by_name("welcome/zipcode_error")
 		end

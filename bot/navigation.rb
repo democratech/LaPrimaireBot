@@ -18,8 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 =end
 
-TYPINGSPEED=80
-
 module Bot
 	class Navigation
 		# loads all screens
@@ -52,22 +50,11 @@ module Bot
 				t=nil
 				n1,n2=self.nodes(k).map &:to_sym
 				size=@screens[n1][n2][:kbd].length
-				t=[] if size>2
 				@screens[n1][n2][:kbd].each_with_index do |u,i|
 					m1,m2=self.nodes(u).map &:to_sym
 					item=@screens[m1][m2][:answer]
-					if t.nil? then
-						@keyboards[k].push(item)
-					else
-						idx=i%2
-						t[idx]=item
-						if idx==1 then
-							@keyboards[k].push(t)
-							t=[]
-						end
-					end
+					@keyboards[k].push(item)
 				end
-				@keyboards[k].push(t) if not (t.nil? or t.empty?)
 			end
 		end
 
@@ -95,16 +82,19 @@ module Bot
 			session=user['session']
 			puts "user read session : #{user}" if DEBUG
 			input=session['expected_input']
-			if input=='answer' then # we expect the user to have used the proposed keyboard to answer
+			session['current']="home/welcome" if msg.text=='/start'
+			if (input=='answer' or msg.text=="/start") then # we expect the user to have used the proposed keyboard to answer
 				screen=self.find_by_answer(msg.text,self.context(session['current']))
 				if not screen.nil? then
 					res,options=get_screen(screen,user,msg)
-					current=@users.get_session(user[:id])['current']
+					user['session']=@users.get_session(user[:id])
+					current=user['session']['current']
 					screen=self.find_by_name(current) if screen[:id]!=current
 					jump_to=screen[:jump_to]
 					while !jump_to.nil? do
 						next_screen=find_by_name(jump_to)
 						a,b=get_screen(next_screen,user,msg)
+						user['session']=@users.get_session(user[:id])
 						res="" unless res
 						res+=a unless a.nil?
 						options=b unless b.nil?
@@ -129,6 +119,7 @@ module Bot
 						jump_to=screen[:jump_to]
 						while !jump_to.nil? do
 							next_screen=find_by_name(jump_to)
+							user['session']=@users.get_session(user[:id])
 							a,b=get_screen(next_screen,user,msg)
 							res+=a unless a.nil?
 							options=b unless b.nil?
@@ -181,9 +172,9 @@ module Bot
 			previous=caller_locations(1,1)[0].label
 			@users.update_session(user[:id],{'current'=>screen[:id]})
 			if !callback.nil? && previous!=callback && self.respond_to?(callback)
-				res,options=self.method(callback).call(msg,user,screen)
+				res,options=self.method(callback).call(msg,user,screen.clone)
 			else
-				res,options=self.format_answer(screen,user)
+				res,options=self.format_answer(screen.clone,user)
 			end
 			return res,options
 		end
@@ -210,7 +201,10 @@ module Bot
 			end
 			STDERR.puts "Something looks wrong here" if screen_id.nil?
 			screen=@screens[ctx.to_sym][screen_id] 
-			screen[:id]=self.path([ctx,screen_id]) unless screen.nil?
+			if screen then
+				screen[:id]=self.path([ctx,screen_id])
+				screen=screen.clone
+			end
 			return screen
 		end
 
@@ -218,7 +212,14 @@ module Bot
 			puts "format_answer: #{screen[:id]}" if DEBUG
 			res=screen[:text] % {firstname: user['firstname'],lastname: user['lastname'],id: user[:id],username: user['username']} unless screen.nil? or screen[:text].nil?
 			options={}
-			kbd=@keyboards[screen[:id]]
+			kbd=@keyboards[screen[:id]].clone if @keyboards[screen[:id]]
+			if screen[:kbd_del] then
+				screen[:kbd_del].each do |k|
+					n1,n2=self.nodes(k)
+					kbd.delete(@screens[n1][n2][:answer])
+				end
+			end
+			screen[:kbd_add].each { |k| kbd.push(k) } if screen[:kbd_add]
 			if not kbd.nil? then
 				if kbd.length>4 then # display keyboard on several rows
 					newkbd=[]
@@ -242,6 +243,8 @@ module Bot
 
 			end
 			options[:disable_web_page_preview]=true if screen[:disable_web_page_preview]
+			options[:groupsend]=true if screen[:groupsend]
+			options[:parse_mode]=screen[:parse_mode] if screen[:parse_mode]
 			options[:keep_kbd]=true if screen[:keep_kbd]
 			return res,options
 		end

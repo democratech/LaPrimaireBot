@@ -160,6 +160,7 @@ GEM
       coercible (~> 1.0)
       descendants_tracker (~> 0.0, >= 0.0.3)
       equalizer (~> 0.0, >= 0.0.9)
+    wannabe_bool (0.5.0)
 
 PLATFORMS
   ruby
@@ -183,3 +184,4 @@ DEPENDENCIES
   stripe
   telegram-bot-ruby (= 0.3.9)
   unicorn (= 4.7.0)
+  wannabe_bool

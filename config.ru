@@ -25,5 +25,6 @@ Democratech::LaPrimaireBot.nav=Bot::Navigation.new()
 Stripe.api_key=DEBUG ? STRTEST : STRLIVE
 Algolia.init :application_id=>ALGOLIA_ID, :api_key=>ALGOLIA_KEY
 Bot::Geo.countries=Algolia::Index.new("countries")
+Bot::Candidates.index=Algolia::Index.new("candidates")
 
 run Democratech::LaPrimaireBot

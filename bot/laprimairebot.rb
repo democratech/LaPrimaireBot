@@ -20,6 +20,8 @@
 
 require_relative 'navigation.rb'
 
+TYPINGSPEED=100
+
 module Democratech
 	class LaPrimaireBot < Grape::API
 		format :json
@@ -53,18 +55,27 @@ module Democratech
 					if image then # sending image
 						LaPrimaireBot.tg_client.api.send_chat_action(chat_id: id, action: "upload_photo")
 						LaPrimaireBot.tg_client.api.send_photo(chat_id: id, photo: File.new(l.split(":")[1]))
+					elsif options[:groupsend] # grouping lines into 1 single message # buggy
+						buffer+=l
+						if (idx==max) then # flush buffer
+							writing_time=l.length/TYPINGSPEED
+							LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
+							sleep(writing_time)
+							LaPrimaireBot.tg_client.api.sendMessage(chat_id: id, text: buffer, reply_markup:kbd)
+							buffer=""
+						end
 					else # sending 1 msg for every line
 						writing_time=l.length/TYPINGSPEED
 						LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
 						sleep(writing_time)
 						options[:chat_id]=id
 						options[:text]=l
-						if (kbd.nil? || idx<max) then
-							LaPrimaireBot.tg_client.api.sendMessage(options)
+						if (idx==1 and max>1) then
+							options[:reply_markup]=Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) 
 						elsif (idx==max)
 							options[:reply_markup]=kbd
-							LaPrimaireBot.tg_client.api.sendMessage(options)
 						end
+						LaPrimaireBot.tg_client.api.sendMessage(options)
 					end
 				end
 			end
@@ -121,8 +132,14 @@ module Democratech
 
 		post '/' do
 			update = Telegram::Bot::Types::Update.new(params)
-			msg,options=Democratech::LaPrimaireBot.nav.get(update.message,update.update_id)
-			send_msg(update.message.chat.id,msg,options) unless msg.nil?
+			begin
+				msg,options=Democratech::LaPrimaireBot.nav.get(update.message,update.update_id)
+				send_msg(update.message.chat.id,msg,options) unless msg.nil?
+			rescue Exception=>e
+				slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect}) if PRODUCTION
+				STDERR.puts "#{e.message}\n#{e.backtrace.inspect}"
+				error! "Exception raised: #{e.message}", 500
+			end
 		end
 	end
 end

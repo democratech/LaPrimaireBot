@@ -45,7 +45,20 @@ module Bot
 		:head_bandage_face=>"\u{1F915}",
 		:bomb=>"\u{1F4A3}",
 		:earth=>"\u{1F30D}",
-		:house=>"\u{1F3E0}"
+		:house=>"\u{1F3E0}",
+		:plus_sign=>"\u{2795}",
+		:cross_mark=>"\u{274C}",
+		:nb_0=>"\u{0030}",
+		:nb_1=>"\u{0031}",
+		:nb_2=>"\u{0032}",
+		:nb_3=>"\u{0033}",
+		:nb_4=>"\u{0034}",
+		:nb_5=>"\u{0035}",
+		:woman=>"\u{1F469}",
+		:man=>"\u{1F468}",
+		:inbox=>"\u{1F4E5}",
+		:trash=>"\u{1F5D1}",
+		:back=>"\u{21A9}"
 	}
 	@@messages={
 		:fr=>{

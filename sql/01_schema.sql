@@ -98,14 +98,12 @@ CREATE INDEX candidates_name_idx ON candidates(name);
 CREATE TABLE supporters (
 	candidate_id bigint REFERENCES candidates(candidate_id),
 	user_id integer REFERENCES citizens(user_id),
-	support_date timestamp,
-	removed boolean,
-	removed_date timestamp
+	support_date timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE donations (
 	user_id integer REFERENCES citizens(user_id),
-	donation_date timestamp,
+	donation_date timestamp DEFAULT CURRENT_TIMESTAMP,
 	amount decimal,
 	source varchar(20),
 	anonymous boolean default false,
@@ -135,7 +133,8 @@ CREATE TABLE reviews (
 	user_id integer REFERENCES citizens(user_id),
 	date_asked timestamp,
 	date_answered timestamp,
-	answer accept_candidate,
+	answer smallint, -- 1/ yes 0/not sure -1/no
+	result smallint,
 	remark text
 );
 

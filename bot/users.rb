@@ -84,6 +84,10 @@ END
 			return @users[user_id]['session']
 		end
 
+		def clear_session(user_id,key)
+			@users[user_id]['session'].delete(key)
+		end
+
 		def update_session(user_id,data)
 			data.each do |k,v|
 				@users[user_id]['session'][k]=v
@@ -91,9 +95,9 @@ END
 			return self.get_session(user_id)
 		end
 
-		def next_answer(user_id,type,size=-1,callback=nil)
+		def next_answer(user_id,type,size=-1,callback=nil,buffer="")
 			@users[user_id]['session'].merge!({
-				'buffer'=>"",
+				'buffer'=>buffer,
 				'expected_input'=>type,
 				'expected_input_size'=>size,
 				'callback'=>callback
