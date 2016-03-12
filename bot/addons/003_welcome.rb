@@ -67,7 +67,7 @@ END
 Dans quelle ville habitez-vous ?
 END
 					:city_ask=><<-END,
-https://maps.googleapis.com/maps/api/staticmap?size=300x300&maptype=roadmap\&markers=size:mid|color:red|%{city},%{country}
+https://maps.googleapis.com/maps/api/staticmap?size=250x250&maptype=roadmap\&markers=size:mid|color:red|%{city},%{country}
 Vous habitez ici, c'est bien çà ?
 END
 					:city_ask_ok=><<-END,

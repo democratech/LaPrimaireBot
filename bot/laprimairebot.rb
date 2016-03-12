@@ -70,11 +70,12 @@ module Democratech
 						sleep(writing_time)
 						options[:chat_id]=id
 						options[:text]=l
-						if (idx==1 and max>1) then
-							options[:reply_markup]=Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) 
-						elsif (idx==max)
-							options[:reply_markup]=kbd
-						end
+						options[:reply_markup]=kbd if (idx==max)
+						#if (idx==1 and max>1) then
+						#	options[:reply_markup]=Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) 
+						#elsif (idx==max)
+						#	options[:reply_markup]=kbd
+						#end
 						LaPrimaireBot.tg_client.api.sendMessage(options)
 					end
 				end

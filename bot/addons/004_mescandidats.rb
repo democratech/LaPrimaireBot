@@ -143,7 +143,7 @@ END
 			name=r['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
 			i+=1
 			fig="nb_"+i.to_s
-			screen[:text]+="* #{name} (<a href='https://bot.democratech.co/candidat/#{r['candidate_id']}'>voir sa page</a>)\n"
+			screen[:text]+="* #{name} (<a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>voir sa page</a>)\n"
 			screen[:parse_mode]='HTML'
 		end
 		if res.num_tuples<1 then # no candidates supported yet
