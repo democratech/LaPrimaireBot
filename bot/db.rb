@@ -24,7 +24,7 @@ module Bot
 
 		def self.init
 			Db.close
-			@@db=PG.connect(:dbname=>PGNAME,"user"=>PGUSER,"sslmode"=>"require","password"=>PGPWD,"host"=>PGHOST)
+			@@db=PG.connect(:dbname=>PGNAME,"user"=>PGUSER,"password"=>PGPWD,"host"=>PGHOST, "port"=>PGPORT)
 			Bot::Users.load_queries
 			Bot::Geo.load_queries
 			Bot::Candidates.load_queries

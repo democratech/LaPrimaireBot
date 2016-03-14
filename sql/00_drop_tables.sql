@@ -1,5 +1,6 @@
 DROP TRIGGER update_candidate_timestamp ON candidates;
 DROP TRIGGER update_citizen_timestamp ON citizens;
+DROP TABLE waiting_list;
 DROP TABLE conversations;
 DROP TABLE reviews;
 DROP TYPE accept_candidate;

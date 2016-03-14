@@ -38,12 +38,20 @@ CREATE TABLE citizens (
 	optin boolean DEFAULT false,
 	betatester boolean DEFAULT false,
 	reviewer boolean DEFAULT false,
+	blocked boolean DEFAULT false,
 	city varchar(60), 
 	city_id integer REFERENCES cities (city_id), -- for french cities
 	country varchar(60) REFERENCES countries (name),
 	last_updated timestamp DEFAULT CURRENT_TIMESTAMP -- date when the candidate has been addeed
 );
 CREATE INDEX citizens_email_idx ON citizens(email);
+
+CREATE TABLE waiting_list (
+	user_id integer REFERENCES citizens(user_id),
+	firstname varchar(30),
+	lastname varchar(30),
+	registered timestamp DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE tags (
 	name varchar(25) PRIMARY KEY

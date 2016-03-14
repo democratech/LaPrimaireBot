@@ -27,10 +27,11 @@ module Beta
 					:welcome=><<-END,
 Bonjour %{firstname} !
 Je suis Victoire, votre guide pour LaPrimaire #{Bot.emoticons[:blush]}
+image:static/images/laprimaire-bienvenue.jpg
 L'accès à LaPrimaire.org est actuellement restreint aux seuls beta-testeurs.
 END
 					:menu=><<-END,
-Avez-vous reçu un code de beta-testeur ? 
+Avez-vous un code de beta-testeur ?
 END
 					:check_code=><<-END,
 Super ! Quel est votre code ?
@@ -40,20 +41,14 @@ Hmmmmm... apparemment ce code ne fonctionne pas #{Bot.emoticons[:disappointed]}
 Reprenons du début !
 END
 					:come_back_later=><<-END,
-Désolé, il va vous falloir patienter encore un peu pour pouvoir accéder à LaPrimaire.org #{Bot.emoticons[:disappointed]}
-Si cela peut vous réconforter, l'ouverture est prévue dans les tous prochains jours !
+Ok c'est bien noté ! Vous êtes actuellement %{position} sur la liste d'attente, nous vous préviendrons dès que vous pourrez accéder à LaPrimaire.org.
+Cela ne devrait pas être très long, quelques jours tout au plus. Merci pour votre patience !
+END
+					:check_position=><<-END,
+Vous êtes actuellement %{position} sur la liste d'attente (et, pour info, il y en a %{behind} derrière vous). Encore un peu de patience #{Bot.emoticons[:smile]}
 END
 					:code_ok=><<-END,
-image:static/images/laprimaire-bienvenue.jpg
-Bienvenue et merci encore de nous aider à mettre au point LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
-Une dernière petite question : Nous allons avoir besoin d'un coup de main pour pré-valider la pertinence des candidats qui nous seront proposés par les citoyens.
-Est-ce que vous nous autorisez à vous solliciter de temps en temps pour valider des candidats qui nous sont proposés ?
-END
-					:no_pb=><<-END,
-Super, merci beaucoup !
-END
-					:nah=><<-END,
-Ok, pas de souci, je comprends #{Bot.emoticons[:smile]} C'est déjà sympa de nous faire vos retours sur l'application en tout cas !
+Bienvenue ! Merci encore de nous aider à mettre au point LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
 END
 				}
 			}
@@ -72,12 +67,12 @@ END
 					:jump_to=>"beta/menu"
 				},
 				:check_code=>{
-					:answer=>"#{Bot.emoticons[:smile]} Oui j'ai reçu un code",
+					:answer=>"#{Bot.emoticons[:smile]} Oui j'ai un code",
 					:text=>messages[:fr][:beta][:check_code],
 					:callback=>"beta/enter_code"
 				},
 				:code_received=>{
-					:answer=>"#{Bot.emoticons[:smile]} C'est bon j'ai reçu mon code !",
+					:answer=>"#{Bot.emoticons[:smile]} J'ai un code !",
 					:text=>messages[:fr][:beta][:check_code],
 					:callback=>"beta/enter_code"
 				},
@@ -86,31 +81,25 @@ END
 					:jump_to=>"beta/menu"
 				},
 				:come_back_later=>{
-					:answer=>"#{Bot.emoticons[:confused]} Non je n'ai pas de code",
+					:answer=>"#{Bot.emoticons[:halo]} Non mais je voudrais bien entrer !",
 					:text=>messages[:fr][:beta][:come_back_later],
+					:callback=>"beta/waiting_list",
 					:disable_web_page_preview=>true,
-					:kbd=>["beta/code_received"],
+					:kbd=>["beta/code_received","beta/check_position"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:check_position=>{
+					:answer=>"#{Bot.emoticons[:tongue]} Quelle est ma position actuelle ?",
+					:text=>messages[:fr][:beta][:check_position],
+					:callback=>"beta/check_position",
+					:kbd=>["beta/code_received","beta/check_position"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:code_ok=>{
 					:text=>messages[:fr][:beta][:code_ok],
 					:disable_web_page_preview=>true,
-					:callback=>"beta/tester",
-					:kbd=>["beta/no_pb","beta/nah"],
-					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
-				},
-				:no_pb=>{
-					:answer=>"Oui, n'hésitez pas à me demander #{Bot.emoticons[:little_smile]}",
-					:text=>messages[:fr][:beta][:no_pb],
-					:callback=>"beta/reviewer",
 					:jump_to=>"welcome/start"
-				},
-				:nah=>{
-					:answer=>"Désolé, je n'ai pas vraiment envie #{Bot.emoticons[:confused]}",
-					:text=>messages[:fr][:beta][:nah],
-					:jump_to=>"welcome/start"
-				},
-
+				}
 			}
 		}
 		Bot.updateScreens(screens)
@@ -124,29 +113,48 @@ END
 
 	def beta_enter_code(msg,user,screen)
 		puts "beta_enter_code" if DEBUG
-		@users.next_answer(user[:id],'free_text',1,"beta/verify_code")
+		@users.next_answer(user[:id],'free_text',1,"beta/verify_code_cb")
 		return self.get_screen(screen,user,msg)
 	end
 
-	def beta_verify_code(msg,user,screen)
+	def beta_verify_code_cb(msg,user,screen)
 		code=user['session']['buffer']
 		puts "beta_verify_code : #{code}" if DEBUG
 		@users.next_answer(user[:id],'answer')
 		if BETA_CODES.include?(code) then
 			screen=self.find_by_name("beta/code_ok")
+			@users.remove_from_waiting_list(user)
+			@users.set(user[:id],{:set=> 'betatester',:value=> true})
+			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_enters_beta_test',{'with_code'=>code})
+			Democratech::LaPrimaireBot.mixpanel.people.append(user[:id],{'betatest_code'=>code})
 		else
 			screen=self.find_by_name("beta/code_wrong")
 		end
 		return self.get_screen(screen,user,msg)
 	end
 
-	def beta_tester(msg,user,screen)
-		@users.set(user[:id],{:set=> 'betatester',:value=> true})
+	def beta_waiting_list(msg,user,screen)
+		res=@users.get_position_on_wait_list(user[:id])
+		pos=res['position'].to_i
+		if (pos==0) then
+			@users.add_to_waiting_list(user)
+			res=@users.get_position_on_wait_list(user[:id])
+			pos=res['position'].to_i
+			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_added_to_waiting_list',{'position'=>pos.to_s})
+		end
+		pos= (pos==1) ? "1er" : "#{pos}ème"
+		screen[:text] = screen[:text] % {position: pos}
 		return self.get_screen(screen,user,msg)
 	end
 
-	def beta_reviewer(msg,user,screen)
-		@users.set(user[:id],{:set=>'reviewer',:value=>true})
+	def beta_check_position(msg,user,screen)
+		res=@users.get_position_on_wait_list(user[:id])
+		pos=res['position'].to_i
+		tot=res['total'].to_i
+		behind=(tot-pos).to_s
+		Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'beta_waiting_list_pos_checked'=>1})
+		pos= (pos==1) ? "1er" : "#{pos}ème"
+		screen[:text] = screen[:text] % {position: pos, behind: behind}
 		return self.get_screen(screen,user,msg)
 	end
 end

@@ -27,6 +27,7 @@ module Bot
 			end
 		end
 
+
 		def initialize
 			@users = Bot::Users.new()
 			@web = Bot::Web.new()
@@ -55,6 +56,9 @@ module Bot
 					item=@screens[m1][m2][:answer]
 					@keyboards[k].push(item)
 				end
+			@answers.freeze
+			@screens.freeze
+			@keyboards.freeze
 			end
 		end
 
@@ -76,7 +80,7 @@ module Bot
 
 		def get(msg,update_id)
 			res,options=nil
-			user=@users.get(msg.from)
+			user=@users.get(msg.from,msg.date)
 			# we check that this message has not already been answered (i.e. telegram sending a msg we alredy processed)
 			return nil,nil if @users.already_answered(user[:id],update_id)
 			session=user['session']
@@ -122,7 +126,7 @@ module Bot
 							user['session']=@users.get_session(user[:id])
 							a,b=get_screen(next_screen,user,msg)
 							res+=a unless a.nil?
-							options=b unless b.nil?
+							options.merge(b) unless b.nil?
 							jump_to=next_screen[:jump_to]
 						end
 

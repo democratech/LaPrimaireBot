@@ -61,6 +61,15 @@ END
 			'remove_user'=><<END,
 DELETE FROM citizens WHERE user_id=$1
 END
+			'add_to_waiting_list'=><<END,
+INSERT INTO waiting_list (user_id,firstname,lastname) VALUES ($1,$2,$3) RETURNING *
+END
+			'remove_from_waiting_list'=><<END,
+DELETE FROM waiting_list WHERE user_id=$1
+END
+			'get_user_position_in_wait_list'=><<END,
+SELECT a.position, b.total FROM (SELECT COUNT(w.user_id) AS position FROM waiting_list AS w, (SELECT user_id,registered FROM waiting_list WHERE user_id=$1) AS z WHERE w.registered<=z.registered) AS a, (SELECT count(*) AS total FROM waiting_list) AS b;
+END
 			}
 			queries.each { |k,v| Bot::Db.prepare(k,v) }
 		end
@@ -104,12 +113,31 @@ END
 			})
 		end
 
-		def get(user_info)
+		def get(user_info,date)
 			res=self.search({
 				:by=>"user_id",
 				:target=>user_info.id
 			})
-			user=res.num_tuples.zero? ? self.add(user_info) : res[0]
+			if res.num_tuples.zero? then # new user
+				slack_msg="Nouveau participant : #{user_info.first_name} #{user_info.last_name} (<https://telegram.me/#{user_info.username}|@#{user_info.username}>)"
+				Bot.slack_notification(slack_msg,"inscrits",":telegram:","telegram")
+				if date then
+					tag={
+						'firstname'=>user_info.first_name,
+						'lastname'=>user_info.last_name,
+						'username'=>user_info.username,
+						'register_day'=> Time.at(date).strftime('%Y-%m-%d'),
+						'register_week'=> Time.at(date).strftime('%Y-%V'),
+						'register_month'=> Time.at(date).strftime('%Y-%m'),
+						'beta_waiting_list_pos_checked'=>0
+					}
+					Democratech::LaPrimaireBot.mixpanel.track(user_info.id,'new_user')
+					Democratech::LaPrimaireBot.mixpanel.people.set(user_info.id,tag)
+				end
+				user=self.add(user_info)
+			else
+				user=res[0]
+			end
 			user['session']=JSON.parse(user['session'])
 			user[:id]=user['user_id']
 			@users[user[:id]]=user
@@ -141,6 +169,18 @@ END
 
 		def search(query)
 			return Bot::Db.query("get_user_by_"+query[:by],[query[:target]]) 
+		end
+
+		def add_to_waiting_list(user)
+			return Bot::Db.query("add_to_waiting_list",[user[:id],user['firstname'],user['lastname']]) 
+		end
+
+		def remove_from_waiting_list(user)
+			return Bot::Db.query("remove_from_waiting_list",[user[:id]]) 
+		end
+
+		def get_position_on_wait_list(user_id)
+			return Bot::Db.query("get_user_position_in_wait_list",[user_id])[0]
 		end
 	end
 end
