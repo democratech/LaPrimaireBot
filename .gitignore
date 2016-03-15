@@ -1,5 +1,7 @@
+*log
 *pid
 *.local.rb
 *.local.sh
 *.csv
 *.ods
+static/candidats

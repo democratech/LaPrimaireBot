@@ -1,4 +1,4 @@
-\COPY candidates (name,gender,uuid,photo,country,email,zipCode,tel,program_theme,with_team,political_party,already_candidate,already_elected,website,twitter,facebook,other_media,summary,accepted) FROM 'candidats.csv' CSV HEADER DELIMITER ',';
+\COPY candidates (name,gender,candidate_id,photo,country,email,zipCode,tel,program_theme,with_team,political_party,already_candidate,already_elected,website,twitter,facebook,other_media,summary,accepted) FROM 'candidats.csv' CSV HEADER DELIMITER ',';
 
 UPDATE candidates
    SET city_id=c.city_id

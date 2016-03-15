@@ -21,34 +21,57 @@
 module Bot
 	class Users
 		def self.load_queries
-			register_user=<<END
+			queries={
+			'register_user'=><<END,
 INSERT INTO citizens (user_id,firstname,lastname,username,session) VALUES ($1,$2,$3,$4,$5::jsonb) RETURNING *
 END
-			save_user_email=<<END
-UPDATE citizens SET email=$1 WHERE user_id=$2;
+			'get_user_by_email'=><<END,
+SELECT z.*,c.slug,c.zipcode,c.departement,c.lat_deg,c.lon_deg FROM citizens AS z LEFT JOIN cities AS c ON (c.city_id=z.city_id) WHERE z.email=$1
 END
-			get_user_by_tgid=<<END
-SELECT z.*,c.* FROM citizens AS z LEFT JOIN cities AS c ON (z.user_id=$1 AND c.city_id=z.city_id)
+			'get_user_by_user_id'=><<END,
+SELECT z.*,c.slug,c.zipcode,c.departement,c.lat_deg,c.lon_deg FROM citizens AS z LEFT JOIN cities AS c ON (c.city_id=z.city_id) WHERE z.user_id=$1
 END
-			get_city_by_zipcode=<<END
-SELECT c.* FROM cities AS c WHERE c.zipcode=$1
+			'set_city'=><<END,
+UPDATE citizens SET city=$1, city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=$1) as city_id) AS v WHERE citizens.user_id=$2;
 END
-			save_user_city=<<END
-UPDATE citizens SET city_id=$1 WHERE user_id=$2
+			'set_city_using_zipcode'=><<END,
+UPDATE citizens SET city=$1, city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=$1 AND b.zipcode=$3) as city_id) AS v WHERE citizens.user_id=$2;
 END
-			remove_user=<<END
-DELETE FROM citizens WHERE user_id=$1
-END
-			save_user_session=<<END
+			'set_session'=><<END,
 UPDATE citizens SET session=$1 WHERE user_id=$2
 END
-			Bot::Db.prepare("register_user",register_user)
-			Bot::Db.prepare("save_user_email",save_user_email)
-			Bot::Db.prepare("get_user_by_tgid",get_user_by_tgid)
-			Bot::Db.prepare("get_city_by_zipcode",get_city_by_zipcode)
-			Bot::Db.prepare("save_user_city",save_user_city)
-			Bot::Db.prepare("remove_user",remove_user)
-			Bot::Db.prepare("save_user_session",save_user_session)
+			'set_betatester'=><<END,
+UPDATE citizens SET betatester=$1 WHERE user_id=$2
+END
+			'set_reviewer'=><<END,
+UPDATE citizens SET reviewer=$1 WHERE user_id=$2
+END
+			'set_email'=><<END,
+UPDATE citizens SET email=$1 WHERE user_id=$2;
+END
+			'set_optin'=><<END,
+UPDATE citizens SET optin=$1 WHERE user_id=$2;
+END
+			'set_country'=><<END,
+UPDATE citizens SET country=$1 WHERE user_id=$2;
+END
+			'set_zipcode'=><<END,
+UPDATE citizens SET city_id=v.city_id FROM cities AS v WHERE v.zipcode=$1 AND citizens.user_id=$2;
+END
+			'remove_user'=><<END,
+DELETE FROM citizens WHERE user_id=$1
+END
+			'add_to_waiting_list'=><<END,
+INSERT INTO waiting_list (user_id,firstname,lastname) VALUES ($1,$2,$3) RETURNING *
+END
+			'remove_from_waiting_list'=><<END,
+DELETE FROM waiting_list WHERE user_id=$1
+END
+			'get_user_position_in_wait_list'=><<END,
+SELECT a.position, b.total FROM (SELECT COUNT(w.user_id) AS position FROM waiting_list AS w, (SELECT user_id,registered FROM waiting_list WHERE user_id=$1) AS z WHERE w.registered<=z.registered) AS a, (SELECT count(*) AS total FROM waiting_list) AS b;
+END
+			}
+			queries.each { |k,v| Bot::Db.prepare(k,v) }
 		end
 
 		def initialize()
@@ -70,6 +93,10 @@ END
 			return @users[user_id]['session']
 		end
 
+		def clear_session(user_id,key)
+			@users[user_id]['session'].delete(key)
+		end
+
 		def update_session(user_id,data)
 			data.each do |k,v|
 				@users[user_id]['session'][k]=v
@@ -77,13 +104,40 @@ END
 			return self.get_session(user_id)
 		end
 
-		def save(user_id,data)
-			puts "SAVE user_id: %s data: %s" % [user_id,data.inspect]
+		def next_answer(user_id,type,size=-1,callback=nil,buffer="")
+			@users[user_id]['session'].merge!({
+				'buffer'=>buffer,
+				'expected_input'=>type,
+				'expected_input_size'=>size,
+				'callback'=>callback
+			})
 		end
 
-		def get(user_info)
-			res=Bot::Db.query("get_user_by_tgid",[user_info.id])
-			user=res.num_tuples.zero? ? self.add(user_info) : res[0]
+		def get(user_info,date)
+			res=self.search({
+				:by=>"user_id",
+				:target=>user_info.id
+			})
+			if res.num_tuples.zero? then # new user
+				slack_msg="Nouveau participant : #{user_info.first_name} #{user_info.last_name} (<https://telegram.me/#{user_info.username}|@#{user_info.username}>)"
+				Bot.slack_notification(slack_msg,"inscrits",":telegram:","telegram")
+				if date then
+					tag={
+						'firstname'=>user_info.first_name,
+						'lastname'=>user_info.last_name,
+						'username'=>user_info.username,
+						'register_day'=> Time.at(date).strftime('%Y-%m-%d'),
+						'register_week'=> Time.at(date).strftime('%Y-%V'),
+						'register_month'=> Time.at(date).strftime('%Y-%m'),
+						'beta_waiting_list_pos_checked'=>0
+					}
+					Democratech::LaPrimaireBot.mixpanel.track(user_info.id,'new_user')
+					Democratech::LaPrimaireBot.mixpanel.people.set(user_info.id,tag)
+				end
+				user=self.add(user_info)
+			else
+				user=res[0]
+			end
 			user['session']=JSON.parse(user['session'])
 			user[:id]=user['user_id']
 			@users[user[:id]]=user
@@ -91,7 +145,10 @@ END
 		end
 
 		def save_user_session(user_id)
-			res=Bot::Db.query("save_user_session",[JSON.dump(@users[user_id]['session']),user_id])
+			self.set(user_id,{
+				:set=>"session",
+				:value=>JSON.dump(@users[user_id]['session'])
+			})
 		end
 
 		def already_answered(user_id,update_id)
@@ -99,6 +156,31 @@ END
 			return true if not session['last_update_id'].nil? and session['last_update_id'].to_i>update_id.to_i
 			self.update_session(user_id,{'last_update_id'=>update_id.to_i})
 			return false
+		end
+
+		def set(user_id,query)
+			if query[:using].nil? then
+				Bot::Db.query("set_"+query[:set],[query[:value],user_id]) 
+			else
+				Bot::Db.query("set_"+query[:set]+"_using_"+query[:using][:field],[query[:value],user_id,query[:using][:value]]) 
+			end
+			@users[user_id][query[:set]]=query[:value]
+		end
+
+		def search(query)
+			return Bot::Db.query("get_user_by_"+query[:by],[query[:target]]) 
+		end
+
+		def add_to_waiting_list(user)
+			return Bot::Db.query("add_to_waiting_list",[user[:id],user['firstname'],user['lastname']]) 
+		end
+
+		def remove_from_waiting_list(user)
+			return Bot::Db.query("remove_from_waiting_list",[user[:id]]) 
+		end
+
+		def get_position_on_wait_list(user_id)
+			return Bot::Db.query("get_user_position_in_wait_list",[user_id])[0]
 		end
 	end
 end

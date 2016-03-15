@@ -33,12 +33,6 @@ Mais assez parlé, commençons !
 END
 					:menu=><<-END,
 Que voulez-vous faire ?
-	END
-					:not_implemented=><<-END,
-Désolée, je n'ai pas encore reçu les instructions pour vous guider dans ce choix #{Bot.emoticons[:crying_face]}
-END
-					:pas_compris=><<-END,
-Aïe, désolé %{firstname} j'ai peur de ne pas avoir compris ce que vous me demandez #{Bot.emoticons[:crying_face]}
 END
 				}
 			}
@@ -48,29 +42,39 @@ END
 				:welcome=>{
 					:answer=>"/start",
 					:text=>messages[:fr][:home][:welcome],
+					:disable_web_page_preview=>true,
 					:callback=>"home/welcome",
 					:jump_to=>"home/menu"
 				},
 				:menu=>{
 					:answer=>"#{Bot.emoticons[:home]} Accueil",
 					:text=>messages[:fr][:home][:menu],
+					:callback=>"home/menu",
 					:kbd=>[],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
-				},
-				:memo=>{
-					:answer=>"#{Bot.emoticons[:memo]} Vous faire un retour",
-					:text=>messages[:fr][:home][:not_implemented],
-					:jump_to=>"home/menu"
 				}
 			}
 		}
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
-		Bot.addMenu({:home=>{:menu=>{:kbd=>"home/memo"}}})
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"home/menu"}}})
 	end
 
 	def home_welcome(msg,user,screen)
 		puts "home_welcome" if DEBUG
+		if user['betatester'].to_b and not (user['email'] or user['city'] or user['country']) then
+			screen=self.find_by_name("welcome/hello")
+		else
+			screen=self.find_by_name("beta/welcome")
+		end
+		return self.get_screen(screen,user,msg)
+	end
+
+	def home_menu(msg,user,screen)
+		puts "home_menu" if DEBUG
+		@users.next_answer(user[:id],'answer')
+		@users.clear_session(user[:id],'candidate')
+		@users.clear_session(user[:id],'delete_candidates')
 		return self.get_screen(screen,user,msg)
 	end
 end

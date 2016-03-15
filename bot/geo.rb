@@ -18,26 +18,25 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 =end
 
-module MeCandidat
-	def self.included(base)
-		messages={
-			:fr=>{
-				:me_candidat=>{}
+module Bot
+	class Geo
+		class << self
+			attr_accessor :countries
+		end
+
+		def self.load_queries
+			queries={
+			'get_city_by_zipcode'=><<END,
+SELECT c.* FROM cities AS c WHERE c.zipcode=$1
+END
 			}
-		}
-		screens={
-			:me_candidat=>{
-				:menu=>{
-					:answer=>"#{Bot.emoticons[:finger_up]} Etre candidat",
-					:text=>Bot.messages[:fr][:home][:not_implemented],
-					:jump_to=>"home/menu"
-				}
-			}
-		}
-		Bot.updateScreens(screens)
-		Bot.updateMessages(messages)
-		Bot.addMenu({:home=>{:menu=>{:kbd=>"me_candidat/menu"}}})
+			queries.each { |k,v| Bot::Db.prepare(k,v) }
+		end
+
+		def search(query)
+			return Bot::Db.query("get_"+query[:type]+"_by_"+query[:by],[query[:target]]) 
+		end
+
 	end
 end
 
-include MeCandidat

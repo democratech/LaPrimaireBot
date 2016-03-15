@@ -21,7 +21,7 @@ CREATE TABLE cities (
 	lon_deg double precision,
 	location point,
 	population integer,
-	country varchar(20) DEFAULT 'FRANCE' REFERENCES countries (name) 
+	country varchar(60) DEFAULT 'FRANCE' REFERENCES countries (name) 
 );
 CREATE INDEX cities_name_idx ON cities(name);
 CREATE INDEX cities_zip_idx ON cities(zipCode);
@@ -34,11 +34,24 @@ CREATE TABLE citizens (
 	username varchar(30),
 	registered timestamp DEFAULT CURRENT_TIMESTAMP,
 	session jsonb,
-	beta_tester boolean DEFAULT false,
+	validated boolean DEFAULT false,
+	optin boolean DEFAULT false,
+	betatester boolean DEFAULT false,
 	reviewer boolean DEFAULT false,
-	city_id integer REFERENCES cities(city_id)
+	blocked boolean DEFAULT false,
+	city varchar(60), 
+	city_id integer REFERENCES cities (city_id), -- for french cities
+	country varchar(60) REFERENCES countries (name),
+	last_updated timestamp DEFAULT CURRENT_TIMESTAMP -- date when the candidate has been addeed
 );
 CREATE INDEX citizens_email_idx ON citizens(email);
+
+CREATE TABLE waiting_list (
+	user_id integer REFERENCES citizens(user_id),
+	firstname varchar(30),
+	lastname varchar(30),
+	registered timestamp DEFAULT CURRENT_TIMESTAMP
+);
 
 CREATE TABLE tags (
 	name varchar(25) PRIMARY KEY
@@ -50,11 +63,10 @@ CREATE TABLE citizens_tags (
 );
 
 CREATE TABLE candidates (
-	candidate_id SERIAL PRIMARY KEY,
+	candidate_id bigint UNIQUE, -- the candidate official ID (used to construct URL)
 	user_id integer REFERENCES citizens(user_id), -- if the candidate is also registered as a participating citizen
 	name varchar(60),
 	gender varchar(1),
-	uuid varchar(140), -- the candidate official ID (used to construct URL)
 	photo varchar(160),
 	trello varchar(200), -- the candidate official trello
 	loomio varchar(200), -- the candidate official loomio
@@ -68,6 +80,7 @@ CREATE TABLE candidates (
 	political_party varchar(140),
 	already_candidate varchar(140),
 	already_elected varchar(140),
+	job varchar(250),
 	website varchar(250),
 	twitter varchar(250),
 	facebook varchar(250),
@@ -84,22 +97,21 @@ CREATE TABLE candidates (
 	date_verified timestamp,
 	official boolean, -- the candidate accepted to participate to the primary and is officially running for president
 	date_officialized timestamp,
-	qualified boolean, -- the candidate accepted to participate to the primary and is officially running for president
-	date_qualified timestamp
+	qualified boolean, -- the candidate is qualified
+	date_qualified timestamp,
+	last_updated timestamp DEFAULT CURRENT_TIMESTAMP -- date when the candidate has been addeed
 );
 CREATE INDEX candidates_name_idx ON candidates(name);
 
 CREATE TABLE supporters (
-	candidate_id integer REFERENCES candidates(candidate_id),
+	candidate_id bigint REFERENCES candidates(candidate_id),
 	user_id integer REFERENCES citizens(user_id),
-	support_date timestamp,
-	removed boolean,
-	removed_date timestamp
+	support_date timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE donations (
 	user_id integer REFERENCES citizens(user_id),
-	donation_date timestamp,
+	donation_date timestamp DEFAULT CURRENT_TIMESTAMP,
 	amount decimal,
 	source varchar(20),
 	anonymous boolean default false,
@@ -125,11 +137,12 @@ CREATE TABLE humanbots (
 
 CREATE TYPE accept_candidate AS ENUM ('oui','non','not sure');
 CREATE TABLE reviews (
-	candidate_id integer REFERENCES candidates(candidate_id),
+	candidate_id bigint REFERENCES candidates(candidate_id),
 	user_id integer REFERENCES citizens(user_id),
 	date_asked timestamp,
 	date_answered timestamp,
-	answer accept_candidate,
+	answer smallint, -- 1/ yes 0/not sure -1/no
+	result smallint,
 	remark text
 );
 
@@ -143,3 +156,18 @@ CREATE TABLE conversations (
 	rating integer
 );
 
+CREATE OR REPLACE FUNCTION update_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+	   NEW.last_updated = now(); 
+	   RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+CREATE TRIGGER update_citizen_timestamp BEFORE UPDATE
+ON citizens FOR EACH ROW EXECUTE PROCEDURE 
+update_timestamp();
+
+CREATE TRIGGER update_candidate_timestamp BEFORE UPDATE
+ON candidates FOR EACH ROW EXECUTE PROCEDURE 
+update_timestamp();
