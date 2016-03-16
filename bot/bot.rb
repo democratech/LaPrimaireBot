@@ -22,6 +22,7 @@ module Bot
 	@@emoticons={ # see http://unicode.org/emoji/charts/full-emoji-list.html
 		:blush=>"\u{1F60A}",
 		:grinning=>"\u{1F600}",
+		:frowning=>"\u{2639}",
 		:info=>"\u{2139}",
 		:halo=>"\u{1F607}",
 		:tongue=>"\u{1F60B}",
@@ -107,7 +108,7 @@ END
 	def self.mergeMenu(old_path,new_path)
 		return old_path.merge(new_path) do |key,oldval,newval| 
 			if key==:kbd then
-				oldval.unshift(newval) 
+				oldval.push(newval) 
 			else
 				self.mergeMenu(oldval,newval)
 			end

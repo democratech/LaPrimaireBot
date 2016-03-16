@@ -72,7 +72,7 @@ END
 					:callback=>"beta/enter_code"
 				},
 				:code_received=>{
-					:answer=>"#{Bot.emoticons[:smile]} J'ai un code !",
+					:answer=>"#{Bot.emoticons[:smile]} J'ai un code",
 					:text=>messages[:fr][:beta][:check_code],
 					:callback=>"beta/enter_code"
 				},
@@ -81,7 +81,7 @@ END
 					:jump_to=>"beta/menu"
 				},
 				:come_back_later=>{
-					:answer=>"#{Bot.emoticons[:halo]} Non mais je voudrais bien entrer !",
+					:answer=>"#{Bot.emoticons[:halo]} Non mais je voudrais bien",
 					:text=>messages[:fr][:beta][:come_back_later],
 					:callback=>"beta/waiting_list",
 					:disable_web_page_preview=>true,

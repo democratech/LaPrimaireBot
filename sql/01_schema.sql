@@ -39,6 +39,9 @@ CREATE TABLE citizens (
 	betatester boolean DEFAULT false,
 	reviewer boolean DEFAULT false,
 	blocked boolean DEFAULT false,
+	legal boolean DEFAULT false, -- is french + over 18 in 2017 + registered as voter
+	charte boolean DEFAULT false, -- agrees to LaPrimaire code of conduct
+	can_vote boolean DEFAULT false, -- the final result of all the above
 	city varchar(60), 
 	city_id integer REFERENCES cities (city_id), -- for french cities
 	country varchar(60) REFERENCES countries (name),

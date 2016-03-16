@@ -62,8 +62,11 @@ END
 
 	def home_welcome(msg,user,screen)
 		puts "home_welcome" if DEBUG
-		if user['betatester'].to_b and not (user['email'] or user['city'] or user['country']) then
+		if user['betatester'].to_b and (not (user['email'] or user['city'] or user['country']) or not user['can_vote'].to_b)then
 			screen=self.find_by_name("welcome/hello")
+		elsif user['betatester'].to_b and user['can_vote'] and user['email'] and user['city'] and user['country'] then
+			screen=self.find_by_name("home/menu")
+			screen[:kbd_del]=["home/menu"]
 		else
 			screen=self.find_by_name("beta/welcome")
 		end
@@ -72,6 +75,7 @@ END
 
 	def home_menu(msg,user,screen)
 		puts "home_menu" if DEBUG
+		screen[:kbd_del]=["home/menu"]
 		@users.next_answer(user[:id],'answer')
 		@users.clear_session(user[:id],'candidate')
 		@users.clear_session(user[:id],'delete_candidates')

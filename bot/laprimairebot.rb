@@ -30,6 +30,10 @@ module Democratech
 		end
 
 		helpers do
+			def authorized
+				headers['Secret-Key']==SECRET
+			end
+
 			def send_msg(id,msg,options)
 				if options[:keep_kbd] then
 					options.delete(:keep_kbd)
@@ -71,14 +75,22 @@ module Democratech
 						options[:chat_id]=id
 						options[:text]=l
 						options[:reply_markup]=kbd if (idx==max)
-						#if (idx==1 and max>1) then
-						#	options[:reply_markup]=Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) 
-						#elsif (idx==max)
-						#	options[:reply_markup]=kbd
-						#end
 						LaPrimaireBot.tg_client.api.sendMessage(options)
 					end
 				end
+			end
+		end
+
+		post '/command' do
+			error!('401 Unauthorized', 401) unless authorized
+			update = Telegram::Bot::Types::Update.new(params)
+			begin
+				msg,options=Democratech::LaPrimaireBot.nav.get(update.message,update.update_id)
+				send_msg(update.message.chat.id,msg,options) unless msg.nil?
+			rescue Exception=>e
+				slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect}) if PRODUCTION
+				STDERR.puts "#{e.message}\n#{e.backtrace.inspect}"
+				error! "Exception raised: #{e.message}", 500
 			end
 		end
 

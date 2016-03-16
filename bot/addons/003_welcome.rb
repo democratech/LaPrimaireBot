@@ -30,14 +30,41 @@ Je suis Victoire, votre guide pour LaPrimaire #{Bot.emoticons[:blush]}
 END
 					:start=><<-END,
 Mon rôle est de vous accompagner et de vous informer tout au long du déroulement de La Primaire.
-A tout moment, si vous avez des questions n'hésitez à me les poser, j'essaierais d'y répondre au mieux de mes capacités.
-Mais assez parlé, commençons par vous créer un compte !
+END
+					:condition_1=><<-END,
+Avant tout, vous devez nous confirmer que vous remplissez les conditions légales afin de pouvoir voter à la prochaine élection présidentielle française.
+Etes-vous de nationalité française ?
+END
+					:condition_2=><<-END,
+Avez-vous 18 ans révolus ou les aurez-vous au plus tard le 22 avril 2017, soit la veille du 1er tour de l'élection présidentielle française de 2017 ?
+END
+					:condition_3=><<-END,
+Etes-vous inscrit sur les listes électorales ou vous engagez-vous à réaliser les démarches nécessaires en prévision des élections de 2017 ?
+END
+					:condition_ok=><<-END,
+Merci, c'est bien enregistré ! C'était une première étape de validation, une vérification complémentaire vous sera demandée ultérieurement.
+END
+					:condition_ko=><<-END,
+Merci, c'est bien enregistré ! Malheureusement, vous ne remplissez pas les conditions pour pouvoir participer à LaPrimaire.org, désolé #{Bot.emoticons[:crying_face]}
+END
+					:charte=><<-END,
+LaPrimaire.org étant une initiative ouverte à tous, pour que celle-ci se déroule au mieux, vous devez vous engager à :
+1. vous comporter avec respect, responsabilité et bienveillance envers les candidats et les autres citoyens, dans le respect de la Loi
+2. agir dans un esprit constructif et rechercher avant tout l'intérêt général et non servir des intérêts particuliers
+Vous engagez-vous à respecter ce code de conduite ?
+END
+					:charte_ok=><<-END,
+Parfait, merci ! A présent, il est temps de vous créer un compte #{Bot.emoticons[:smile]}
+END
+					:charte_ko=><<-END,
+Désolé, dans ces conditons, nous ne pouvons pas vous laisser participer à LaPrimaire.org #{Bot.emoticons[:frowning]}
+image:static/gif/aurevoir.gif
 END
 					:email=><<-END,
-Quelle est votre adresse email ?
+Quelle est votre adresse email ? Vous aurez besoin d'un email valide pour confirmer votre choix de candidat.
 END
 					:email_optin=><<-END,
-Est-ce que vous acceptez que l'équipe de LaPrimaire.org (et seulement elle !) puisse vous envoyer un email de temps en temps ?
+Est-ce que vous autorisez l'équipe de LaPrimaire.org (et seulement elle !) à vous envoyer un email de temps en temps ?
 END
 					:email_optin_ok=><<-END,
 Merci de votre confiance !
@@ -101,7 +128,70 @@ END
 				:start=>{
 					:text=>messages[:fr][:welcome][:start],
 					:disable_web_page_preview=>true,
+					:jump_to=>"welcome/condition_1"
+				},
+				:condition_1=>{
+					:text=>messages[:fr][:welcome][:condition_1],
+					:kbd=>["welcome/condition_1_ok","welcome/condition_1_ko"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:condition_1_ok=>{
+					:answer=>"Je suis Français",
+					:jump_to=>"welcome/condition_2"
+				},
+				:condition_1_ko=>{
+					:answer=>"Je suis étranger",
+					:callback=>"welcome/condition_ko_cb",
+					:jump_to=>"welcome/condition_3_ko"
+				},
+				:condition_2=>{
+					:text=>messages[:fr][:welcome][:condition_2],
+					:kbd=>["welcome/condition_2_ok","welcome/condition_2_ko"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:condition_2_ok=>{
+					:answer=>"J'ai plus de 18 ans",
+					:jump_to=>"welcome/condition_3"
+				},
+				:condition_2_ko=>{
+					:answer=>"J'ai moins de 18 ans",
+					:callback=>"welcome/condition_ko_cb",
+					:jump_to=>"welcome/condition_3_ko"
+				},
+				:condition_3=>{
+					:text=>messages[:fr][:welcome][:condition_3],
+					:kbd=>["welcome/condition_3_ok","welcome/condition_3_ko"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:condition_3_ok=>{
+					:answer=>"Oui, je pourrai voter",
+					:text=>messages[:fr][:welcome][:condition_ok],
+					:callback=>"welcome/condition_ok_cb",
+					:jump_to=>"welcome/charte"
+				},
+				:condition_3_ko=>{
+					:answer=>"Non, je n'irai pas voter",
+					:callback=>"welcome/condition_ko_cb",
+					:text=>messages[:fr][:welcome][:condition_ko],
+					:disable_web_page_preview=>true
+				},
+				:charte=>{
+					:text=>messages[:fr][:welcome][:charte],
+					:disable_web_page_preview=>true,
+					:kbd=>["welcome/charte_ok","welcome/charte_ko"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:charte_ok=>{
+					:answer=>"Oui, je m'y engage",
+					:text=>messages[:fr][:welcome][:charte_ok],
+					:callback=>"welcome/charte_ok_cb",
 					:jump_to=>"welcome/email"
+				},
+				:charte_ko=>{
+					:answer=>"Non, je ne le souhaite pas",
+					:text=>messages[:fr][:welcome][:charte_ko],
+					:disable_web_page_preview=>true,
+					:callback=>"welcome/charte_ko_cb"
 				},
 				:email=>{
 					:text=>messages[:fr][:welcome][:email],
@@ -187,6 +277,54 @@ END
 		}
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
+	end
+
+	def welcome_condition_ko_cb(msg,user,screen)
+		puts "welcome_charte_ko_cb" if DEBUG
+		@users.set(user[:id],{
+			:set=>'legal',
+			:value=>false
+		})
+		@users.set(user[:id],{
+			:set=>'can_vote',
+			:value=>false
+		})
+		return self.get_screen(screen,user,msg)
+	end
+
+	def welcome_condition_ok_cb(msg,user,screen)
+		puts "welcome_charte_ok_cb" if DEBUG
+		@users.set(user[:id],{
+			:set=>'legal',
+			:value=>true
+		})
+		return self.get_screen(screen,user,msg)
+	end
+
+	def welcome_charte_ko_cb(msg,user,screen)
+		puts "welcome_charte_ko_cb" if DEBUG
+		@users.set(user[:id],{
+			:set=>'charte',
+			:value=>false
+		})
+		@users.set(user[:id],{
+			:set=>'can_vote',
+			:value=>false
+		})
+		return self.get_screen(screen,user,msg)
+	end
+
+	def welcome_charte_ok_cb(msg,user,screen)
+		puts "welcome_charte_ok_cb" if DEBUG
+		@users.set(user[:id],{
+			:set=>'charte',
+			:value=>true
+		})
+		@users.set(user[:id],{
+			:set=>'can_vote',
+			:value=>true
+		})
+		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_email(msg,user,screen)

@@ -27,7 +27,6 @@ module Bot
 			end
 		end
 
-
 		def initialize
 			@users = Bot::Users.new()
 			@web = Bot::Web.new()
@@ -43,6 +42,7 @@ module Bot
 					end
 					if (!v1[:answer].nil?) then
 						@answers[v1[:answer]]={} if @answers[v1[:answer]].nil?
+						raise "Conflict of answers detected in add-on \"#{k}\" : \"#{v1[:answer]}\"" if not @answers[v1[:answer]][k].nil?
 						@answers[v1[:answer]][k]=k1
 					end
 				end
@@ -81,9 +81,10 @@ module Bot
 		def get(msg,update_id)
 			res,options=nil
 			user=@users.get(msg.from,msg.date)
-			# we check that this message has not already been answered (i.e. telegram sending a msg we alredy processed)
+			# we check that this message has not already been answered (i.e. telegram sending a msg we already processed)
 			return nil,nil if @users.already_answered(user[:id],update_id)
 			session=user['session']
+			@users.next_answer(user[:id],'free_text',1,msg.text) if update_id==-1
 			puts "user read session : #{user}" if DEBUG
 			input=session['expected_input']
 			session['current']="home/welcome" if msg.text=='/start'
@@ -101,7 +102,7 @@ module Bot
 						user['session']=@users.get_session(user[:id])
 						res="" unless res
 						res+=a unless a.nil?
-						options=b unless b.nil?
+						options.merge!(b) unless b.nil?
 						jump_to=next_screen[:jump_to]
 					end
 				else
@@ -126,7 +127,7 @@ module Bot
 							user['session']=@users.get_session(user[:id])
 							a,b=get_screen(next_screen,user,msg)
 							res+=a unless a.nil?
-							options.merge(b) unless b.nil?
+							options.merge!(b) unless b.nil?
 							jump_to=next_screen[:jump_to]
 						end
 
@@ -225,12 +226,12 @@ module Bot
 			end
 			screen[:kbd_add].each { |k| kbd.push(k) } if screen[:kbd_add]
 			if not kbd.nil? then
-				if kbd.length>4 then # display keyboard on several rows
+				if kbd.length>1 and not screen[:kbd_vertical] then # display keyboard on several rows
 					newkbd=[]
 					row=[]
 					kbd.each_with_index do |r,i|
 						row.push(r)
-						if (i>0 and (i % 2)==0) then
+						if (i%2)==0 then
 							newkbd.push(row)
 							row=[]
 						end

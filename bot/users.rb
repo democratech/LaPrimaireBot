@@ -49,6 +49,15 @@ END
 			'set_email'=><<END,
 UPDATE citizens SET email=$1 WHERE user_id=$2;
 END
+			'set_legal'=><<END,
+UPDATE citizens SET legal=$1 WHERE user_id=$2;
+END
+			'set_charte'=><<END,
+UPDATE citizens SET charte=$1 WHERE user_id=$2;
+END
+			'set_can_vote'=><<END,
+UPDATE citizens SET can_vote=$1 WHERE user_id=$2;
+END
 			'set_optin'=><<END,
 UPDATE citizens SET optin=$1 WHERE user_id=$2;
 END
@@ -152,6 +161,7 @@ END
 		end
 
 		def already_answered(user_id,update_id)
+			return false if update_id==-1 # external command
 			session=@users[user_id]['session']
 			return true if not session['last_update_id'].nil? and session['last_update_id'].to_i>update_id.to_i
 			self.update_session(user_id,{'last_update_id'=>update_id.to_i})

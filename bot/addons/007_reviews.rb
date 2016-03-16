@@ -18,11 +18,11 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 =end
 
-module MesCandidats
+module Reviews
 	# is being called when the module is included
 	# here you need to update the Bot with your Add-on screens and hook your entry point into the Bot's menu
 	def self.included(base)
-		puts "loading Welcome add-on" if DEBUG
+		puts "loading Reviews add-on" if DEBUG
 		messages={
 			:fr=>{
 				:mes_candidats=>{
@@ -70,18 +70,16 @@ END
 					:answer=>"#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats",
 					:text=>messages[:fr][:mes_candidats][:mes_candidats],
 					:callback=>"mes_candidats/mes_candidats",
-					:kbd_vertical=>true,
-					:kbd=>["mes_candidats/new","mes_candidats/del_ask","home/menu"],
+					:kbd=>["mes_candidats/del_ask","mes_candidats/new","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:empty=>{
 					:text=>messages[:fr][:mes_candidats][:empty],
-					:kbd_vertical=>true,
-					:kbd=>["mes_candidats/new","mes_candidats/how","home/menu"],
+					:kbd=>["mes_candidats/how","mes_candidats/new","mes_candidats/back"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:how=>{
-					:answer=>"#{Bot.emoticons[:thinking_face]} Quels candidats proposer ?",
+					:answer=>"#{Bot.emoticons[:thinking_face]} Quel candidats puis-je proposer ?",
 					:text=>messages[:fr][:mes_candidats][:how],
 					:jump_to=>"mes_candidats/empty"
 				},
@@ -135,7 +133,7 @@ END
 		}
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
-		Bot.addMenu({:home=>{:menu=>{:kbd=>"mes_candidats/mes_candidats"}}})
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"reviews/intro"}}})
 	end
 
 	def mes_candidats_mes_candidats(msg,user,screen)
@@ -269,4 +267,4 @@ END
 	end
 end
 
-include MesCandidats
+#include Reviews
