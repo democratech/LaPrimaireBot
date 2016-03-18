@@ -236,6 +236,9 @@ END
 
 	def mes_candidats_back(msg,user,screen)
 		puts "mes_candidats_back" if DEBUG
+		candidate=user['session']['candidate']
+		photo=candidate['photo'] if candidate
+		File.delete(photo) if File.exists?(photo)
 		@users.next_answer(user[:id],'answer')
 		@users.clear_session(user[:id],'candidate')
 		@users.clear_session(user[:id],'delete_candidates')
@@ -250,6 +253,13 @@ END
 	end
 
 	def mes_candidats_search(msg,user,screen)
+		candidate=user['session']['candidate']
+		name=candidate ? candidate["name"] : user['session']['buffer']
+		if name.downcase.include?(user['firstname'].downcase) and name.downcase.include?(user['lastname'].downcase) then
+			return self.get_screen(self.find_by_name("moi_candidat/start"),user,msg)
+		end
+		puts "mes_candidats_search : #{name}" if DEBUG
+		return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if not name
 		# immediately send a message to acknowledge we got the request as the search might take time
 		Democratech::LaPrimaireBot.tg_client.api.sendChatAction(chat_id: user[:id], action: "typing")
 		Democratech::LaPrimaireBot.tg_client.api.sendMessage({
@@ -257,10 +267,6 @@ END
 			:text=>"Ok, je recherche...",
 			:reply_markup=>nil
 		})
-		candidate=user['session']['candidate']
-		name=candidate ? candidate["name"] : user['session']['buffer']
-		puts "mes_candidats_search : #{name}" if DEBUG
-		return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if not name
 		screen=self.find_by_name("mes_candidats/confirm")
 		res=@candidates.search_index(name) if candidate.nil?
 		@users.next_answer(user[:id],'answer')

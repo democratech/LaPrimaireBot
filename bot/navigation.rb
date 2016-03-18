@@ -141,7 +141,7 @@ module Bot
 					end
 				end
 			end
-			res,options=self.dont_understand(user,msg,true) if res.nil? # something is fishy
+			res,options=self.dont_understand(user,msg) if res.nil? # something is fishy
 			puts "user save session : #{@users.get_session(user[:id])}" if DEBUG
 			@users.save_user_session(user[:id])
 			return res,options
