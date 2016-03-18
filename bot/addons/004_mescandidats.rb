@@ -342,7 +342,7 @@ END
 
 	def mes_candidats_real_candidate_cb(msg,user,screen)
 		candidate=user['session']['candidate']
-		puts "mes_candidates_real_candidate_cb : #{candidate}"
+		puts "mes_candidates_real_candidate_cb : #{candidate}" if DEBUG
 		real_candidate = screen[:real]
 		if not real_candidate then
 			@candidates.delete(candidate['candidate_id'])

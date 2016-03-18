@@ -230,7 +230,6 @@ END
 			else # candidate needs to be registered in db
 				image=candidate['photo']
 				candidate=@candidates.add(candidate)
-				puts "candidate #{candidate}"
 				FileUtils.mv(image,CANDIDATS_DIR+candidate['photo'])
 				@candidates.add_supporter(user[:id],candidate['candidate_id'])
 			end
