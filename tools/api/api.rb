@@ -17,6 +17,8 @@ ctx,cmd=ARGV[0].split(':') if ARGV[0]
 value=ARGV[1]
 if ctx.nil? or cmd.nil? then
 	puts <<END
+* search:user <lastname>
+* search:candidate <name>
 * reallow:search
 * reallow:user_id <id>
 * reset:user_id <id>
@@ -84,6 +86,25 @@ db=PG.connect(
 )
 
 case ctx
+when 'search'
+	case cmd
+	when 'user'
+		search_waiting_list="SELECT user_id,firstname,lastname,username,email,registered FROM citizens WHERE lastname ILIKE $1 ORDER BY registered ASC"
+		res=db.exec_params(search_waiting_list,[value])
+		if not res.num_tuples.zero? then
+			res.each do |r|
+				puts "#{r['user_id']} (#{r['registered']}) #{r['firstname']} #{r['lastname']} (@#{r['username']} #{r['email']})"
+			end
+		end
+	when 'candidate'
+		search_waiting_list="SELECT candidate_id,name,gender,trello,photo,date_added FROM candidates WHERE name ILIKE $1 ORDER BY date_added ASC"
+		res=db.exec_params(search_waiting_list,[value])
+		if not res.num_tuples.zero? then
+			res.each do |r|
+				puts "(#{r['date_added']}) #{r['name']} #{r['gender']} (#{r['trello']}) : #{r['candidate_id']}"
+			end
+		end
+	end
 when 'reallow'
 	case cmd
 	when 'search'
@@ -272,16 +293,6 @@ when 'reset'
 				username:res[0]['username'],
 				date:Time.now().to_i
 			}))
-		end
-	end
-when 'shit'
-	case cmd
-	when 'shit'
-		insert_user="UPDATE candidates SET photo=$1 WHERE candidate_id=$2;"
-		f=CSV.read('candidats_index.csv')
-		photos={}
-		f.each do |r|
-			db.exec_params(insert_user,[r[3],r[0]]) if r[3]
 		end
 	end
 end

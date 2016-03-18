@@ -134,6 +134,7 @@ END
 	def api_reset_user(msg,user,screen)
 		puts "api_reset_user" if DEBUG
 		@users.reset(user)
+		@users.next_answer(user[:id],'answer')
 		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_reset_user')
 		return self.get_screen(screen,user,msg)
 	end

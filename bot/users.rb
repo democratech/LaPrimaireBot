@@ -38,10 +38,10 @@ END
 UPDATE citizens SET city=$1, city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=$1 AND b.zipcode=$3) as city_id) AS v WHERE citizens.user_id=$2;
 END
 			'set_session'=><<END,
-UPDATE citizens SET session=$1 WHERE user_id=$2;
+UPDATE citizens SET session=$1::jsonb WHERE user_id=$2;
 END
 			'set_settings'=><<END,
-UPDATE citizens SET settings=$1 WHERE user_id=$2;
+UPDATE citizens SET settings=$1::jsonb WHERE user_id=$2;
 END
 			'set_email'=><<END,
 UPDATE citizens SET email=$1 WHERE user_id=$2;
@@ -79,7 +79,7 @@ END
 			bot_session={
 				'last_update_id'=>nil,
 				'current'=>nil,
-				'expected_input'=>:answer,
+				'expected_input'=>"answer",
 				'expected_input_size'=>-1,
 				'buffer'=>""
 			}
@@ -114,10 +114,11 @@ END
 		end
 
 		def reset(user)
+			puts "USER #{user}"
 			bot_session={
 				'last_update_id'=>nil,
 				'current'=>nil,
-				'expected_input'=>:answer,
+				'expected_input'=>"answer",
 				'expected_input_size'=>-1,
 				'buffer'=>""
 			}
@@ -148,9 +149,18 @@ END
 					'email_optin'=>false
 				}
 			}
+			puts "BEFORE #{@users[user[:id]]['session']}"
 			self.update_settings(user[:id],user_settings)
-			self.update_session(user[:id],bot_session)
+			@users[user[:id]]['session']={
+				'last_update_id'=>nil,
+				'current'=>nil,
+				'expected_input'=>"answer",
+				'expected_input_size'=>-1,
+				'buffer'=>""
+			}
+			puts "AFTER #{@users[user[:id]]['session']}"
 			self.save_user_session(user[:id])
+			puts "AFTER DE MEREEEEERDE #{@users[user[:id]]['session']}"
 		end
 
 		def get_session(user_id)
@@ -217,10 +227,7 @@ END
 		end
 
 		def save_user_session(user_id)
-			self.set(user_id,{
-				:set=>"session",
-				:value=>JSON.dump(@users[user_id]['session'])
-			})
+			Bot::Db.query("set_session",[JSON.dump(@users[user_id]['session']),user_id]) 
 		end
 
 		def already_answered(user_id,update_id)
@@ -237,7 +244,7 @@ END
 			else
 				Bot::Db.query("set_"+query[:set]+"_using_"+query[:using][:field],[query[:value],user_id,query[:using][:value]]) 
 			end
-			@users[user_id][query[:set]]=query[:value]
+			@users[user_id][query[:set]]=query[:value] unless query[:set]='session'
 		end
 
 		def search(query)

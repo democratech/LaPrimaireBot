@@ -100,10 +100,12 @@ END
 	def home_first_help_cb(msg,user,screen)
 		puts "home_first_help_cb" if DEBUG
 		if screen[:save_session] then
-			previous_screen=self.find_by_name(user['session']['current'])
+			current= user['session']['current'].nil? ? "home/welcome" :user['session']['current']
+			previous_screen=self.find_by_name(current)
 			@users.update_session(user[:id],{'previous_screen'=>previous_screen}) if previous_screen[:id]!="home/first_help"
 		else
-			screen=self.find_by_name(user['session']['previous_screen']['id']) if user['session']['previous_screen']
+			previous_screen=user['session']['previous_screen'].nil? ? "home/welcome" : user['session']['previous_screen']
+			screen=self.find_by_name(previous_screen['id'])
 			screen[:text]="Parfait, reprenons !\n"+screen[:text] if screen[:text]
 			@users.update_settings(user[:id],{'actions'=>{'first_help_given'=> true}})
 			@users.clear_session(user[:id],'previous_screen')
