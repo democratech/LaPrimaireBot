@@ -74,7 +74,7 @@ END
 Parfait, merci !
 END
 					:not_found=><<-END,
-Malheureusement, je ne trouve personne avec ce nom #{Bot.emoticons[:crying_face]}
+Malheureusement, je ne trouve personne avec ce nom #{Bot.emoticons[:crying_face]}. Pour affiner la recherche, n'hésitez pas à réessayer en ajoutant des mots-clés derrière le nom de la personne que vous souhaitez soutenir. Exemple: Prénom Nom #motclé1 #motclé2
 END
 					:blocked=><<-END,
 Désolé mais ce candidat est inconnu et votre compte n'est plus autorisé à proposer de nouveaux candidats #{Bot.emoticons[:crying_face]}
@@ -257,7 +257,14 @@ END
 			@users.update_session(user[:id],{'candidate'=>candidate})
 		else
 			puts "mes_candidats_search: web" if DEBUG
-			images = @web.search_image(name) if name
+			tags=name.scan(/#(\w+)/).flatten
+			name=name.gsub(/#\w+/,'').strip if tags
+			if name and tags then
+				tmp=name+" "+tags.join(' ')
+				images = @web.search_image(name+" "+tags.join(' '))
+			elsif name
+				images = @web.search_image(name)
+			end
 			idx=candidate.nil? ? 0 : candidate['idx']
 			img,type=images[idx]
 			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if images.empty? or images[idx].nil?
