@@ -105,7 +105,7 @@ END
 			@users.update_session(user[:id],{'previous_screen'=>previous_screen}) if previous_screen[:id]!="home/first_help"
 		else
 			screen=self.find_by_name(user['session']['previous_screen']['id'])
-			screen[:text]="Parfait, reprenons !\n"+screen[:text]
+			screen[:text]="Parfait, reprenons !\n"+screen[:text] if screen[:text]
 			@users.update_settings(user[:id],{'actions'=>{'first_help_given'=> true}})
 			@users.clear_session(user[:id],'previous_screen')
 		end

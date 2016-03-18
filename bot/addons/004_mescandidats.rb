@@ -22,7 +22,7 @@ module MesCandidats
 	# is being called when the module is included
 	# here you need to update the Bot with your Add-on screens and hook your entry point into the Bot's menu
 	def self.included(base)
-		puts "loading Welcome add-on" if DEBUG
+		puts "loading MesCandidats add-on" if DEBUG
 		messages={
 			:fr=>{
 				:mes_candidats=>{
