@@ -34,14 +34,7 @@ CREATE TABLE citizens (
 	username varchar(30),
 	registered timestamp DEFAULT CURRENT_TIMESTAMP,
 	session jsonb,
-	validated boolean DEFAULT false,
-	optin boolean DEFAULT false,
-	betatester boolean DEFAULT false,
-	reviewer boolean DEFAULT false,
-	blocked boolean DEFAULT false,
-	legal boolean DEFAULT false, -- is french + over 18 in 2017 + registered as voter
-	charte boolean DEFAULT false, -- agrees to LaPrimaire code of conduct
-	can_vote boolean DEFAULT false, -- the final result of all the above
+	settings jsonb,
 	city varchar(60), 
 	city_id integer REFERENCES cities (city_id), -- for french cities
 	country varchar(60) REFERENCES countries (name),
@@ -69,7 +62,7 @@ CREATE TABLE candidates (
 	candidate_id bigint UNIQUE, -- the candidate official ID (used to construct URL)
 	user_id integer REFERENCES citizens(user_id), -- if the candidate is also registered as a participating citizen
 	name varchar(60),
-	gender varchar(1),
+	gender varchar(1) DEFAULT 'M',
 	photo varchar(160),
 	trello varchar(200), -- the candidate official trello
 	loomio varchar(200), -- the candidate official loomio
@@ -107,8 +100,8 @@ CREATE TABLE candidates (
 CREATE INDEX candidates_name_idx ON candidates(name);
 
 CREATE TABLE supporters (
-	candidate_id bigint REFERENCES candidates(candidate_id),
-	user_id integer REFERENCES citizens(user_id),
+	candidate_id bigint REFERENCES candidates(candidate_id) ON DELETE CASCADE,
+	user_id integer REFERENCES citizens(user_id) ON DELETE CASCADE,
 	support_date timestamp DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -137,8 +130,6 @@ CREATE TABLE humanbots (
 	speed_factor integer -- 0 (does not answer) to 5 (very quick to answer)
 );
 
-
-CREATE TYPE accept_candidate AS ENUM ('oui','non','not sure');
 CREATE TABLE reviews (
 	candidate_id bigint REFERENCES candidates(candidate_id),
 	user_id integer REFERENCES citizens(user_id),

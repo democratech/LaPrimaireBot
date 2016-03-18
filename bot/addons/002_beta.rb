@@ -41,8 +41,9 @@ Hmmmmm... apparemment ce code ne fonctionne pas #{Bot.emoticons[:disappointed]}
 Reprenons du début !
 END
 					:come_back_later=><<-END,
-Ok c'est bien noté ! Vous êtes actuellement %{position} sur la liste d'attente, nous vous préviendrons dès que vous pourrez accéder à LaPrimaire.org.
-Cela ne devrait pas être très long, quelques jours tout au plus. Merci pour votre patience !
+Ok c'est bien noté ! Vous êtes actuellement %{position} sur la liste d'attente, je vous préviendrai dès que vous pourrez accéder à LaPrimaire.org. Cela ne devrait pas être très long, quelques jours tout au plus. Merci pour votre patience !
+Pour être prévenu, je vous invite à installer l'appli Telegram sur votre téléphone ou sur votre PC : <a href='https://telegram.org/dl'>Télécharger Telegram</a>
+Telegram est l'application de messagerie sécurisée utilisée pour organiser LaPrimaire.org.
 END
 					:check_position=><<-END,
 Vous êtes actuellement %{position} sur la liste d'attente (et, pour info, il y en a %{behind} derrière vous). Encore un peu de patience #{Bot.emoticons[:smile]}
@@ -85,6 +86,7 @@ END
 					:text=>messages[:fr][:beta][:come_back_later],
 					:callback=>"beta/waiting_list",
 					:disable_web_page_preview=>true,
+					:parse_mode=>"HTML",
 					:kbd=>["beta/code_received","beta/check_position"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
@@ -124,7 +126,7 @@ END
 		if BETA_CODES.include?(code) then
 			screen=self.find_by_name("beta/code_ok")
 			@users.remove_from_waiting_list(user)
-			@users.set(user[:id],{:set=> 'betatester',:value=> true})
+			@users.update_settings(user[:id],{'roles'=>{'betatester'=> true}})
 			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_enters_beta_test',{'with_code'=>code})
 			Democratech::LaPrimaireBot.mixpanel.people.append(user[:id],{'betatest_code'=>code})
 		else
@@ -152,6 +154,8 @@ END
 		pos=res['position'].to_i
 		tot=res['total'].to_i
 		behind=(tot-pos).to_s
+		nb_times=user['settings']['actions']['beta_nb_position_checked'].to_i+1
+		@users.update_settings(user[:id],{'actions'=>{'beta_nb_position_checked'=>nb_times}})
 		Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'beta_waiting_list_pos_checked'=>1})
 		pos= (pos==1) ? "1er" : "#{pos}ème"
 		screen[:text] = screen[:text] % {position: pos, behind: behind}

@@ -106,7 +106,11 @@ module Bot
 						jump_to=next_screen[:jump_to]
 					end
 				else
-					res,options=self.dont_understand(user,msg)
+					if not user['settings']['actions']['first_help_given'] then
+						screen=self.find_by_name("home/first_help")
+					else
+						res,options=self.dont_understand(user,msg)
+					end
 				end
 			else # we expect the user to have answered by typing text manually
 				callback=self.to_callback(session['callback'].to_s)
@@ -128,6 +132,9 @@ module Bot
 							a,b=get_screen(next_screen,user,msg)
 							res+=a unless a.nil?
 							options.merge!(b) unless b.nil?
+							user['session']=@users.get_session(user[:id])
+							current=user['session']['current']
+							next_screen=self.find_by_name(current) if next_screen[:id]!=current
 							jump_to=next_screen[:jump_to]
 						end
 
@@ -144,25 +151,32 @@ module Bot
 			# dedicated method to not affect user session
 			puts "dont_understand: #{msg}" if DEBUG
 			Democratech::LaPrimaireBot.tg_client.track('dont_understand',user[:id],msg.text) if PRODUCTION
-			screen=self.find_by_name("system/dont_understand")
-			res,options=self.format_answer(screen,user)
-			if reset then
-				screen=self.find_by_name("system/something_wrong")
-				a,b=get_screen(screen,user,msg)
-				res+=a unless a.nil?
-				options=b unless b.nil?
-				@users.next_answer(user[:id],'answer')
-				screen=self.find_by_answer("/start")
-				a,b=get_screen(screen,user,msg)
-				res+=a unless a.nil?
-				options=b unless b.nil?
-				jump_to=screen[:jump_to]
-				while !jump_to.nil? do
-					next_screen=find_by_name(jump_to)
-					a,b=get_screen(next_screen,user,msg)
+			if not user['settings']['actions']['first_help_given'] then
+				screen=self.find_by_name("home/first_help")
+				res,options=self.format_answer(screen,user)
+				callback=self.to_callback(screen[:callback].to_s)
+				self.method(callback).call(msg,user,screen) if self.respond_to?(callback)
+			else
+				screen=self.find_by_name("system/dont_understand")
+				res,options=self.format_answer(screen,user)
+				if reset then
+					screen=self.find_by_name("system/something_wrong")
+					a,b=get_screen(screen,user,msg)
 					res+=a unless a.nil?
 					options=b unless b.nil?
-					jump_to=next_screen[:jump_to]
+					@users.next_answer(user[:id],'answer')
+					screen=self.find_by_answer("/start")
+					a,b=get_screen(screen,user,msg)
+					res+=a unless a.nil?
+					options.merge!(b) unless b.nil?
+					jump_to=screen[:jump_to]
+					while !jump_to.nil? do
+						next_screen=find_by_name(jump_to)
+						a,b=get_screen(next_screen,user,msg)
+						res+=a unless a.nil?
+						options=b unless b.nil?
+						jump_to=next_screen[:jump_to]
+					end
 				end
 			end
 			return res,options
@@ -230,8 +244,9 @@ module Bot
 					newkbd=[]
 					row=[]
 					kbd.each_with_index do |r,i|
+						idx=i+1
 						row.push(r)
-						if (i%2)==0 then
+						if (idx%2)==0 then
 							newkbd.push(row)
 							row=[]
 						end

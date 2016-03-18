@@ -23,7 +23,7 @@ module Bot
 		def self.load_queries
 			queries={
 			'register_user'=><<END,
-INSERT INTO citizens (user_id,firstname,lastname,username,session) VALUES ($1,$2,$3,$4,$5::jsonb) RETURNING *
+INSERT INTO citizens (user_id,firstname,lastname,username,session,settings) VALUES ($1,$2,$3,$4,$5::jsonb,$6::jsonb) RETURNING *
 END
 			'get_user_by_email'=><<END,
 SELECT z.*,c.slug,c.zipcode,c.departement,c.lat_deg,c.lon_deg FROM citizens AS z LEFT JOIN cities AS c ON (c.city_id=z.city_id) WHERE z.email=$1
@@ -38,28 +38,13 @@ END
 UPDATE citizens SET city=$1, city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=$1 AND b.zipcode=$3) as city_id) AS v WHERE citizens.user_id=$2;
 END
 			'set_session'=><<END,
-UPDATE citizens SET session=$1 WHERE user_id=$2
+UPDATE citizens SET session=$1 WHERE user_id=$2;
 END
-			'set_betatester'=><<END,
-UPDATE citizens SET betatester=$1 WHERE user_id=$2
-END
-			'set_reviewer'=><<END,
-UPDATE citizens SET reviewer=$1 WHERE user_id=$2
+			'set_settings'=><<END,
+UPDATE citizens SET settings=$1 WHERE user_id=$2;
 END
 			'set_email'=><<END,
 UPDATE citizens SET email=$1 WHERE user_id=$2;
-END
-			'set_legal'=><<END,
-UPDATE citizens SET legal=$1 WHERE user_id=$2;
-END
-			'set_charte'=><<END,
-UPDATE citizens SET charte=$1 WHERE user_id=$2;
-END
-			'set_can_vote'=><<END,
-UPDATE citizens SET can_vote=$1 WHERE user_id=$2;
-END
-			'set_optin'=><<END,
-UPDATE citizens SET optin=$1 WHERE user_id=$2;
 END
 			'set_country'=><<END,
 UPDATE citizens SET country=$1 WHERE user_id=$2;
@@ -95,7 +80,34 @@ END
 				'expected_input_size'=>-1,
 				'buffer'=>""
 			}
-			return Bot::Db.query("register_user",[user.id,user.first_name,user.last_name,user.username,JSON.dump(bot_session)])[0]
+			user_settings={
+				'blocked'=>{
+					'abuse'=>false, # the user has clearly done bad things 
+					'not_allowed'=>false, # the information provided by the user do not allow him to participate
+					'review'=>false, # the user has done too many bad reviews and cannot review anymore
+					'add_candidate'=>false # the user has proposed too many rejected candidates and cannot propose candidates anymore
+				},
+				'limits'=>{
+					'candidate_proposals'=>MAX_CANDIDATES_PROPOSAL,
+					'candidate_reviews'=>nil
+				},
+				'actions'=>{
+					'first_help_given'=>false,
+					'nb_candidates_proposed'=>0,
+					'nb_candidates_reviewed'=>0,
+					'beta_nb_position_checked'=>0,
+				},
+				'roles'=>{
+					'betatester'=>false,
+					'reviewer'=>false,
+				},
+				'legal'=>{
+					'charte'=>false,
+					'can_vote'=>false,
+					'email_optin'=>false
+				}
+			}
+			return Bot::Db.query("register_user",[user.id,user.first_name,user.last_name,user.username,JSON.dump(bot_session),JSON.dump(user_settings)])[0]
 		end
 
 		def get_session(user_id)
@@ -111,6 +123,12 @@ END
 				@users[user_id]['session'][k]=v
 			end
 			return self.get_session(user_id)
+		end
+
+		def update_settings(user_id,data)
+			@users[user_id]['settings']=Bot.mergeHash(@users[user_id]['settings'],data)
+			Bot::Db.query("set_settings",[JSON.dump(@users[user_id]['settings']),user_id]) 
+			return @users[user_id]['settings']
 		end
 
 		def next_answer(user_id,type,size=-1,callback=nil,buffer="")
@@ -138,7 +156,8 @@ END
 						'register_day'=> Time.at(date).strftime('%Y-%m-%d'),
 						'register_week'=> Time.at(date).strftime('%Y-%V'),
 						'register_month'=> Time.at(date).strftime('%Y-%m'),
-						'beta_waiting_list_pos_checked'=>0
+						'beta_waiting_list_pos_checked'=>0,
+						'nb_candidates_proposed'=>0
 					}
 					Democratech::LaPrimaireBot.mixpanel.track(user_info.id,'new_user')
 					Democratech::LaPrimaireBot.mixpanel.people.set(user_info.id,tag)
@@ -148,6 +167,7 @@ END
 				user=res[0]
 			end
 			user['session']=JSON.parse(user['session'])
+			user['settings']=JSON.parse(user['settings'])
 			user[:id]=user['user_id']
 			@users[user[:id]]=user
 			return user

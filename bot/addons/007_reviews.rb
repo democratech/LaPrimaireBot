@@ -25,15 +25,18 @@ module Reviews
 		puts "loading Reviews add-on" if DEBUG
 		messages={
 			:fr=>{
-				:mes_candidats=>{
-					:new=><<-END,
-Qui souhaitez-vous proposer comme candidat(e) ?
+				:reviews=>{
+					:review_candidate=><<-END,
+Merci, c'est gentil de vouloir aider LaPrimaire.org à accepter ou rejeter les candidats proposés par les citoyens.
 END
-					:mes_candidats=><<-END,
-Voici les candidats que vous supportez :
+					:review_ask=><<-END,
+Les citoyens proposent beaucoup de candidats divers et variés pour LaPrimaire.org mais certains citoyens moins sérieux que d'autres proposent parfois des candidats fantaisistes.
+Vous pouvez nous aider à faire le tri entre les vrais candidats et les candidats fantaisistes en nous donnant votre opinion sur les candidats qui sont proposés.
+Le but n'est pas de juger de la pertinence des candidats mais d'écarter les candidats qui ne peuvent tout simplement pas participer car ils ne sont pas français, parce qu'ils sont morts, n'existent pas etc...
+Souhaitez-vous nous donner un coup de main pour faire le tri entre les vrais et les faux candidats ?
 END
-					:empty=><<-END,
-Vous n'avez encore proposé aucun candidat !
+					:review_ok=><<-END,
+Super, merci beaucoup pour votre aide !
 END
 					:how=><<-END,
 Choisissez quelqu'un de bien et c'est bon :)
@@ -65,7 +68,11 @@ END
 			}
 		}
 		screens={
-			:mes_candidats=>{
+			:reviews=>{
+				:review_candidate=>{
+					:answer=>"#{Bot.emoticons[:thumbs_up]}#{Bot.emoticons[:thumbs_down]} Candidats à approuver",
+					:text=>messages[:fr][:review][:review_candidate]
+				},
 				:mes_candidats=>{
 					:answer=>"#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats",
 					:text=>messages[:fr][:mes_candidats][:mes_candidats],

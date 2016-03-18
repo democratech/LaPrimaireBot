@@ -20,7 +20,6 @@
 
 require_relative 'navigation.rb'
 
-TYPINGSPEED=80
 
 module Democratech
 	class LaPrimaireBot < Grape::API

@@ -34,6 +34,23 @@ END
 					:menu=><<-END,
 Que voulez-vous faire ?
 END
+					:abuse=><<-END,
+Désolé votre comportement sur LaPrimaire.org était en violation de la charte que vous aviez acceptée et vous a valu d'être exclu  #{Bot.emoticons[:crying_face]}
+END
+					:not_allowed=><<-END,
+Désolé mais au vu des informations que vous nous avez fournies, vous ne remplissez pas les conditions pour pouvoir participer à LaPrimaire.org #{Bot.emoticons[:crying_face]}
+END
+					:first_help_ok=><<-END,
+Parfait, reprenons !
+END
+					:first_help=><<-END,
+Désolé je ne comprends pas ce que vous m'écrivez #{Bot.emoticons[:crying_face]}
+Pour communiquer avec moi, il est plus simple d'utiliser les boutons qui s'affichent sur le clavier (en bas de l'écran) lorsque celui-ci apparaît.
+De temps en temps, je vous demanderai d'écrire mais le plus souvent, le clavier suffit #{Bot.emoticons[:smile]}
+Si, par une fausse manipulation, vous faîtes disparaître les boutons du clavier, vous pouvez toujours le réafficher en cliquant sur l'icône suivante :
+image:static/images/keyboard-button.png
+Cliquez-sur le bouton "OK bien compris !" du clavier ci-dessous pour continuer.
+END
 				}
 			}
 		}
@@ -52,6 +69,27 @@ END
 					:callback=>"home/menu",
 					:kbd=>[],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:abuse=>{
+					:text=>messages[:fr][:home][:abuse],
+					:disable_web_page_preview=>true
+				},
+				:first_help_ok=>{
+					:answer=>"Ok bien compris #{Bot.emoticons[:thumbs_up]}",
+					:text=>messages[:fr][:home][:first_help_ok],
+					:callback=>"home/first_help_cb",
+				},
+				:first_help=>{
+					:text=>messages[:fr][:home][:first_help],
+					:callback=>"home/first_help_cb",
+					:save_session=>true,
+					:kbd=>["home/first_help_ok"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true},
+					:disable_web_page_preview=>true
+				},
+				:not_allowed=>{
+					:text=>messages[:fr][:home][:not_allowed],
+					:disable_web_page_preview=>true
 				}
 			}
 		}
@@ -60,11 +98,33 @@ END
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"home/menu"}}})
 	end
 
+	def home_first_help_cb(msg,user,screen)
+		puts "home_first_help_cb" if DEBUG
+		if screen[:save_session] then
+			previous_screen=self.find_by_name(user['session']['current'])
+			@users.update_session(user[:id],{'previous_screen'=>previous_screen}) if previous_screen[:id]!="home/first_help"
+		else
+			screen=self.find_by_name(user['session']['previous_screen']['id'])
+			screen[:text]="Parfait, reprenons !\n"+screen[:text]
+			@users.update_settings(user[:id],{'actions'=>{'first_help_given'=> true}})
+			@users.clear_session(user[:id],'previous_screen')
+		end
+		return self.get_screen(screen,user,msg)
+	end
+
 	def home_welcome(msg,user,screen)
 		puts "home_welcome" if DEBUG
-		if user['betatester'].to_b and (not (user['email'] or user['city'] or user['country']) or not user['can_vote'].to_b)then
+		betatester=user['settings']['roles']['betatester'].to_b
+		can_vote=user['settings']['legal']['can_vote'].to_b
+		abuse=user['settings']['blocked']['abuse']
+		not_allowed=user['settings']['blocked']['not_allowed']
+		if abuse then
+			screen=self.find_by_name("home/abuse")
+		elsif not_allowed then
+			screen=self.find_by_name("home/not_allowed")
+		elsif betatester and (not (user['email'] or user['city'] or user['country']) or not can_vote)then
 			screen=self.find_by_name("welcome/hello")
-		elsif user['betatester'].to_b and user['can_vote'] and user['email'] and user['city'] and user['country'] then
+		elsif betatester and can_vote and user['email'] and user['city'] and user['country'] then
 			screen=self.find_by_name("home/menu")
 			screen[:kbd_del]=["home/menu"]
 		else

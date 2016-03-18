@@ -29,6 +29,9 @@ module Bot
 			'register_candidate'=><<END,
 INSERT INTO candidates (candidate_id,name,photo) VALUES ($1,$2,$3) RETURNING *
 END
+			'delete_candidate'=><<END,
+DELETE FROM candidates WHERE candidate_id=$1 RETURNING *
+END
 			'register_candidate_from_user'=><<END,
 INSERT INTO candidates (user_id,candidate_id,name,zipcode,country,city_id,email,accepted,date_accepted) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *
 END
@@ -45,7 +48,7 @@ END
 SELECT z.*,s.* FROM candidates AS z INNER JOIN supporters AS s ON (s.candidate_id=z.candidate_id) WHERE s.user_id=$1
 END
 			'set_gender'=><<END,
-UPDATE candidates SET gender=$1 WHERE user_id=$2
+UPDATE candidates SET gender=$1 WHERE candidate_id=$2
 END
 			}
 			queries.each { |k,v| Bot::Db.prepare(k,v) }
@@ -62,6 +65,12 @@ END
 			return Bot::Db.query("register_candidate",[uuid,candidat['name'],profile_pic])[0]
 		end
 
+		def delete(candidate_id)
+			Bot::Candidates.index.delete_object(candidate_id)
+			res=Bot::Db.query("delete_candidate",[candidate_id])
+			return res.num_tuples.zero? ? nil : res[0]
+		end
+
 		def add_current_user(user)
 			uuid=a=(rand()*1000000000000).to_i
 			name=[]
@@ -76,14 +85,12 @@ END
 				:target=>candidate_info['candidate_id']
 			})
 			candidate=res.num_tuples.zero? ? self.add(candidate_info) : res[0]
-			candidate[:id]=user['user_id']
-			@users[user[:id]]=user
-			return user
+			candidate[:id]=candidate['candidate_id']
+			return candidate
 		end
 
 		def set(candidate_id,query)
 			Bot::Db.query("set_"+query[:set],[query[:value],candidate_id]) 
-			@users[candidate_id][query[:set]]=query[:value]
 		end
 
 		def supported_by(user_id)

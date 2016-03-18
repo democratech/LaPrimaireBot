@@ -143,7 +143,7 @@ GEM
     stripe (1.36.0)
       json (~> 1.8.1)
       rest-client (~> 1.4)
-    telegram-bot-ruby (0.3.9)
+    telegram-bot-ruby (0.4.1)
       httmultiparty
       persistent_httparty
       virtus
@@ -186,6 +186,6 @@ DEPENDENCIES
   representable (= 2.3.0)
   rubocop
   stripe
-  telegram-bot-ruby (= 0.3.9)
+  telegram-bot-ruby (= 0.4.1)
   unicorn (= 4.7.0)
   wannabe_bool
