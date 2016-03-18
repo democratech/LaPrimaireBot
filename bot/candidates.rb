@@ -58,10 +58,10 @@ END
 			@candidates={}
 		end
 
-		def add(candidat)
+		def add(candidat,skip_index=false)
 			uuid=candidat['candidate_id'] ? candidat['candidate_id'] : ((rand()*1000000000000).to_i).to_s
 			profile_pic=uuid+File.extname(candidat['photo'])
-			Bot::Candidates.index.add_object({"objectID"=>uuid,"candidate_id"=>uuid,"name"=>candidat['name'],"photo"=>profile_pic})
+			Bot::Candidates.index.add_object({"objectID"=>uuid,"candidate_id"=>uuid,"name"=>candidat['name'],"photo"=>profile_pic}) unless skip_index
 			return Bot::Db.query("register_candidate",[uuid,candidat['name'],profile_pic])[0]
 		end
 
