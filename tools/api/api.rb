@@ -1,4 +1,5 @@
 require_relative '../../config/keys.local.rb'
+require 'csv'
 require 'uri'
 require 'net/http'
 require 'json'
@@ -18,6 +19,7 @@ if ctx.nil? or cmd.nil? then
 	puts <<END
 * reallow:search
 * reallow:user_id <id>
+* reset:user_id <id>
 * grantaccess:search <lastname>
 * grantaccess:nb <nb>
 * grantaccess:user_id <id>
@@ -254,6 +256,32 @@ when 'betacodes'
 			res.each do |r|
 				puts "#{r['code']}"
 			end
+		end
+	end
+when 'reset'
+	case cmd
+	when 'user_id'
+		get_user="SELECT user_id FROM citizens WHERE user_id=$1"
+		res=db.exec_params(get_user, [value])
+		if not res.num_tuples.zero? then
+			send_command(JSON.parse(data2 % {
+				cmd:"api/reset_user",
+				user_id:res[0]['user_id'],
+				firstname:res[0]['firstname'],
+				lastname:res[0]['lastname'],
+				username:res[0]['username'],
+				date:Time.now().to_i
+			}))
+		end
+	end
+when 'shit'
+	case cmd
+	when 'shit'
+		insert_user="UPDATE candidates SET photo=$1 WHERE candidate_id=$2;"
+		f=CSV.read('candidats_index.csv')
+		photos={}
+		f.each do |r|
+			db.exec_params(insert_user,[r[3],r[0]]) if r[3]
 		end
 	end
 end

@@ -94,7 +94,7 @@ module Bot
 					res,options=get_screen(screen,user,msg)
 					user['session']=@users.get_session(user[:id])
 					current=user['session']['current']
-					screen=self.find_by_name(current) if screen[:id]!=current
+					screen=self.find_by_name(current) if screen[:id]!=current and !current.nil?
 					jump_to=screen[:jump_to]
 					while !jump_to.nil? do
 						next_screen=find_by_name(jump_to)
@@ -124,7 +124,7 @@ module Bot
 						session=@users.update_session(user[:id],session_update)
 						user['session']=session
 						res,options=self.method(callback).call(msg,user,screen) if input_size==0
-						screen=self.find_by_name(session['current'])
+						screen=self.find_by_name(session['current']) if session['current']
 						jump_to=screen[:jump_to]
 						while !jump_to.nil? do
 							next_screen=find_by_name(jump_to)
@@ -134,7 +134,7 @@ module Bot
 							options.merge!(b) unless b.nil?
 							user['session']=@users.get_session(user[:id])
 							current=user['session']['current']
-							next_screen=self.find_by_name(current) if next_screen[:id]!=current
+							next_screen=self.find_by_name(current) if next_screen[:id]!=current and !current.nil?
 							jump_to=next_screen[:jump_to]
 						end
 

@@ -1,6 +1,5 @@
 require File.expand_path('../config/environment', __FILE__)
 
-use Rack::Reloader
 use Rack::Cors do
 	allow do
 		origins '*'

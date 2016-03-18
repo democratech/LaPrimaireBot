@@ -42,6 +42,9 @@ END
 					:ban_user=><<-END,
 %{firstname}, votre comportement sur LaPrimaire.org est en violation de la charte que vous avez acceptée, par conséquent je suis donc dans l'obligation de suspendre votre compte #{Bot.emoticons[:crying_face]}
 END
+					:reset_user=><<-END,
+%{firstname}, votre compte vient d'être remis à zéro.
+END
 				}
 			}
 		}
@@ -59,6 +62,11 @@ END
 				},
 				:ban_user=>{
 					:text=>messages[:fr][:api][:ban_user],
+					:disable_web_page_preview=>true,
+					:jump_to=>"home/welcome"
+				},
+				:reset_user=>{
+					:text=>messages[:fr][:api][:reset_user],
 					:disable_web_page_preview=>true,
 					:jump_to=>"home/welcome"
 				},
@@ -120,6 +128,13 @@ END
 		@users.update_settings(user[:id],{'blocked'=>{'abuse'=>true }})
 		@users.next_answer(user[:id],'answer')
 		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_ban_user')
+		return self.get_screen(screen,user,msg)
+	end
+
+	def api_reset_user(msg,user,screen)
+		puts "api_reset_user" if DEBUG
+		@users.reset(user)
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_reset_user')
 		return self.get_screen(screen,user,msg)
 	end
 

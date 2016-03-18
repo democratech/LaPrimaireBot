@@ -113,6 +113,46 @@ END
 			return Bot::Db.query("register_user",[user.id,user.first_name,user.last_name,user.username,JSON.dump(bot_session),JSON.dump(user_settings)])[0]
 		end
 
+		def reset(user)
+			bot_session={
+				'last_update_id'=>nil,
+				'current'=>nil,
+				'expected_input'=>:answer,
+				'expected_input_size'=>-1,
+				'buffer'=>""
+			}
+			user_settings={
+				'blocked'=>{
+					'abuse'=>false, # the user has clearly done bad things 
+					'not_allowed'=>false, # the information provided by the user do not allow him to participate
+					'review'=>false, # the user has done too many bad reviews and cannot review anymore
+					'add_candidate'=>false # the user has proposed too many rejected candidates and cannot propose candidates anymore
+				},
+				'limits'=>{
+					'candidate_proposals'=>MAX_CANDIDATES_PROPOSAL,
+					'candidate_reviews'=>nil
+				},
+				'actions'=>{
+					'first_help_given'=>false,
+					'nb_candidates_proposed'=>0,
+					'nb_candidates_reviewed'=>0,
+					'beta_nb_position_checked'=>0,
+				},
+				'roles'=>{
+					'betatester'=>false,
+					'reviewer'=>false,
+				},
+				'legal'=>{
+					'charte'=>false,
+					'can_vote'=>false,
+					'email_optin'=>false
+				}
+			}
+			self.update_settings(user[:id],user_settings)
+			self.update_session(user[:id],bot_session)
+			self.save_user_session(user[:id])
+		end
+
 		def get_session(user_id)
 			return @users[user_id]['session']
 		end
