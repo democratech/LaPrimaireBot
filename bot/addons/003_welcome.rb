@@ -478,6 +478,11 @@ END
 
 	def welcome_account_created(msg,user,screen)
 		puts "welcome_account_created" if DEBUG
+		slack_msg="Nouveau compte créé : #{user['firstname']} #{user['lastname']}"
+	       	slack_msg+=" (<https://telegram.me/#{user['username']}|@#{user_info.username}>)" if user['username']
+		slack_msg+=" #{user['zipcode']}," if user['zipcode']
+		slack_msg+=" #{user['city']}, #{user['country']}"
+		Bot.slack_notification(slack_msg,"inscrits",":laprimaire:","LaPrimaire.org")
 		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_account_created')
 		Democratech::LaPrimaireBot.mixpanel.people.append(user[:id],{
 			'city'=>user['city'],

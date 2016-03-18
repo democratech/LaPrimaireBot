@@ -36,7 +36,13 @@ END
 Vous n'avez encore apporté votre soutien à aucun candidat !
 END
 					:how=><<-END,
-Choisissez quelqu'un de bien et c'est bon :)
+Vous avez la possibilité de soutenir jusqu'à 5 candidats sur LaPrimaire.org.
+Vous pouvez littéralement soutenir qui vous voulez mais voici quelques conseils :
+1. <b>Tout le monde peut être candidat(e)</b> (même vous !). L'objectif de LaPrimaire.org est de faire émerger les meilleurs candidat(e)s <b>d'où qu'ils/elles viennent</b>. Ne vous limitez pas aux seules personnalités politiques connues.
+2. <b>Pensez "équipe"</b>. Réfléchissez aux personnes dont vous adhérez aux idées et que vous souhaiteriez voir être plus impliquées dans la vie politique de notre pays. Ne vous limitez pas à la seule recherche du prochain Président.
+3. <b>Réfléchissez par thèmes</b>. Quels sont vos thématiques de prédilection et vos sujets d'expertise ? L'écologie ? L'économie ? La santé ? Proposez les personnes qui portent les idées auxquelles vous adhérez.
+4. <b>Privilégiez les "faiseurs"</b>. L'action est un bon moyen pour juger de la conviction d'un candidat : Privilégiez les candidats qui s'investissent personnellement pour mettre en oeuvre les idées qu'il défendent.
+5. <b>Soyez sérieux</b>. Ne proposez pas de faux candidats (fictifs, morts etc...), vous risqueriez le blocage pur et simple de votre compte.
 END
 					:del_ask=><<-END,
 A quel candidat souhaitez-vous retirer votre soutien ?
@@ -45,7 +51,6 @@ END
 %{name} n'a désormais plus votre soutien !
 END
 					:confirm=><<-END,
-Ok, je recherche...
 %{media}
 Est-ce bien votre choix ?
 END
@@ -106,7 +111,9 @@ END
 				:how=>{
 					:answer=>"#{Bot.emoticons[:thinking_face]} Quels candidats soutenir ?",
 					:text=>messages[:fr][:mes_candidats][:how],
-					:jump_to=>"mes_candidats/empty"
+					:disable_web_page_preview=>true,
+					:parse_mode=>"HTML",
+					:jump_to=>"mes_candidats/mes_candidats"
 				},
 				:new=>{
 					:answer=>"#{Bot.emoticons[:finger_right]} Soutenir un candidat",
@@ -243,6 +250,13 @@ END
 	end
 
 	def mes_candidats_search(msg,user,screen)
+		# immediately send a message to acknowledge we got the request as the search might take time
+		Democratech::LaPrimaireBot.tg_client.api.sendChatAction(chat_id: user[:id], action: "typing")
+		Democratech::LaPrimaireBot.tg_client.api.sendMessage({
+			:chat_id=>user[:id],
+			:text=>"Ok, je recherche...",
+			:reply_markup=>nil
+		})
 		candidate=user['session']['candidate']
 		name=candidate ? candidate["name"] : user['session']['buffer']
 		puts "mes_candidats_search : #{name}" if DEBUG
@@ -328,6 +342,8 @@ END
 			@candidates.delete(candidate['candidate_id'])
 			File.delete(CANDIDATS_DIR+candidate['photo']) if File.exists?(CANDIDATS_DIR+candidate['photo'])
 		else
+			slack_msg="Nouveau candidat(e) proposé(e) : #{candidate['name']} (<https://laprimaire.org/candidat/#{candidate['candidate_id']}|voir sa page>)"
+			Bot.slack_notification(slack_msg,"candidats",":man:","LaPrimaire.org")
 			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'new_candidate_supported',{'name'=>candidate['name']})
 			Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'nb_candidates_proposed'=>1})
 		end
