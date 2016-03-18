@@ -27,7 +27,7 @@ module MesCandidats
 			:fr=>{
 				:mes_candidats=>{
 					:new=><<-END,
-Quel candidat(e) souhaitez-vous soutenir ?
+Quel(le) candidat(e) souhaitez-vous soutenir ?
 END
 					:mes_candidats=><<-END,
 Voici les candidats que vous soutenez :
@@ -39,9 +39,9 @@ END
 Vous avez la possibilité de soutenir jusqu'à 5 candidats sur LaPrimaire.org.
 Vous pouvez littéralement soutenir qui vous voulez mais voici quelques conseils :
 1. <b>Tout le monde peut être candidat(e)</b> (même vous !). L'objectif de LaPrimaire.org est de faire émerger les meilleurs candidat(e)s <b>d'où qu'ils/elles viennent</b>. Ne vous limitez pas aux seules personnalités politiques connues.
-2. <b>Pensez "équipe"</b>. Réfléchissez aux personnes dont vous adhérez aux idées et que vous souhaiteriez voir être plus impliquées dans la vie politique de notre pays. Ne vous limitez pas à la seule recherche du prochain Président.
+2. <b>Pensez "équipe"</b>. Réfléchissez aux personnes dont les idées emportent votre adhésion et que vous souhaiteriez voir être plus impliquées dans la vie politique de notre pays. Ne vous limitez pas à la seule recherche du prochain Président.
 3. <b>Réfléchissez par thèmes</b>. Quels sont vos thématiques de prédilection et vos sujets d'expertise ? L'écologie ? L'économie ? La santé ? Proposez les personnes qui portent les idées auxquelles vous adhérez.
-4. <b>Privilégiez les "faiseurs"</b>. L'action est un bon moyen pour juger de la conviction d'un candidat : Privilégiez les candidats qui s'investissent personnellement pour mettre en oeuvre les idées qu'il défendent.
+4. <b>Privilégiez ceux et celles qui "font"</b>. L'action est un bon moyen pour juger de la conviction d'un candidat : Privilégiez les candidats qui s'investissent personnellement pour mettre en oeuvre les idées qu'il défendent.
 5. <b>Soyez sérieux</b>. Ne proposez pas de faux candidats (fictifs, morts etc...), vous risqueriez le blocage pur et simple de votre compte.
 END
 					:del_ask=><<-END,
@@ -113,7 +113,8 @@ END
 					:text=>messages[:fr][:mes_candidats][:how],
 					:disable_web_page_preview=>true,
 					:parse_mode=>"HTML",
-					:jump_to=>"mes_candidats/mes_candidats"
+					:kbd=>["mes_candidats/back"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:new=>{
 					:answer=>"#{Bot.emoticons[:finger_right]} Soutenir un candidat",
@@ -238,7 +239,9 @@ END
 		puts "mes_candidats_back" if DEBUG
 		candidate=user['session']['candidate']
 		photo=candidate['photo'] if candidate
-		File.delete(photo) if File.exists?(photo)
+		if photo then
+			File.delete(photo) if File.exists?(photo)
+		end
 		@users.next_answer(user[:id],'answer')
 		@users.clear_session(user[:id],'candidate')
 		@users.clear_session(user[:id],'delete_candidates')

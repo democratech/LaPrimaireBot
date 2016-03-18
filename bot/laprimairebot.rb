@@ -89,7 +89,7 @@ module Democratech
 			rescue Exception=>e
 				Bot.slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect}) if PRODUCTION
 				STDERR.puts "#{e.message}\n#{e.backtrace.inspect}"
-				error! "Exception raised: #{e.message}", 500
+				error! "Exception raised: #{e.message}", 200 # if you put an error code here, telegram will keep sending you the same msg until you die
 			end
 		end
 

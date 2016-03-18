@@ -28,7 +28,6 @@ module Home
 Bonjour %{firstname} !
 Je suis Victoire, votre guide pour LaPrimaire #{Bot.emoticons[:blush]}
 Mon rôle est de vous accompagner et de vous informer tout au long du déroulement de La Primaire.
-A tout moment, si vous avez des questions n'hésitez à me les poser, j'essaierais d'y répondre au mieux de mes capacités.
 Mais assez parlé, commençons !
 END
 					:menu=><<-END,
@@ -104,7 +103,7 @@ END
 			previous_screen=self.find_by_name(user['session']['current'])
 			@users.update_session(user[:id],{'previous_screen'=>previous_screen}) if previous_screen[:id]!="home/first_help"
 		else
-			screen=self.find_by_name(user['session']['previous_screen']['id'])
+			screen=self.find_by_name(user['session']['previous_screen']['id']) if user['session']['previous_screen']
 			screen[:text]="Parfait, reprenons !\n"+screen[:text] if screen[:text]
 			@users.update_settings(user[:id],{'actions'=>{'first_help_given'=> true}})
 			@users.clear_session(user[:id],'previous_screen')
