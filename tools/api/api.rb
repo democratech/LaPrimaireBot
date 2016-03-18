@@ -26,6 +26,8 @@ if ctx.nil? or cmd.nil? then
 * blockcandidatereview:user_id <id>
 * banuser:user_id <id>
 * unblock:user_id <id>
+* betacodes:gen <nb>
+* betacodes:search
 END
 	exit
 end
@@ -40,6 +42,11 @@ def send_command(data)
 	request.add_field('Content-Type', 'application/json')
 	request.body = JSON.dump(data)
 	http.request(request)
+end
+
+def generate_code(size = 6)
+	charset = %w{ 2 3 4 6 7 9 A C D E F G H J K M N P Q R T V W X Y Z}
+	(0...size).map{ charset.to_a[rand(charset.size)] }.join
 end
 
 data2=<<END
@@ -219,6 +226,34 @@ when 'blockcandidatereview'
 				username:res[0]['username'],
 				date:Time.now().to_i
 			}))
+		end
+	end
+when 'betacodes'
+	case cmd
+	when 'search'
+		get_codes="SELECT * FROM beta_codes"
+		res=db.exec(get_codes)
+		if not res.num_tuples.zero? then
+			res.each do |r|
+				puts "#{r['code']}"
+			end
+		end
+	when 'gen'
+		codes=[]
+		query=[]
+		idx=1
+		value.to_i.times do
+			codes.push(generate_code())
+			query.push("($#{idx})")
+			idx+=1
+		end
+		query_str=query.join(',')+" RETURNING *"
+		insert_codes="INSERT INTO beta_codes (code) VALUES "+query_str
+		res=db.exec_params(insert_codes, codes)
+		if not res.num_tuples.zero? then
+			res.each do |r|
+				puts "#{r['code']}"
+			end
 		end
 	end
 end

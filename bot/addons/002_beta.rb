@@ -123,7 +123,7 @@ END
 		code=user['session']['buffer']
 		puts "beta_verify_code : #{code}" if DEBUG
 		@users.next_answer(user[:id],'answer')
-		if BETA_CODES.include?(code) then
+		if (@users.beta_code_ok(code) or BETA_CODES.include?(code)) then
 			screen=self.find_by_name("beta/code_ok")
 			@users.remove_from_waiting_list(user)
 			@users.update_settings(user[:id],{'roles'=>{'betatester'=> true}})

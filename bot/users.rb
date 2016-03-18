@@ -61,6 +61,9 @@ END
 			'remove_from_waiting_list'=><<END,
 DELETE FROM waiting_list WHERE user_id=$1
 END
+			'delete_beta_code'=><<END,
+DELETE FROM beta_codes WHERE code=$1 RETURNING code
+END
 			'get_user_position_in_wait_list'=><<END,
 SELECT a.position, b.total FROM (SELECT COUNT(w.user_id) AS position FROM waiting_list AS w, (SELECT user_id,registered FROM waiting_list WHERE user_id=$1) AS z WHERE w.registered<=z.registered) AS a, (SELECT count(*) AS total FROM waiting_list) AS b;
 END
@@ -211,6 +214,12 @@ END
 
 		def get_position_on_wait_list(user_id)
 			return Bot::Db.query("get_user_position_in_wait_list",[user_id])[0]
+		end
+
+		def beta_code_ok(code)
+			res=Bot::Db.query("delete_beta_code",[code])
+			ok=!res.num_tuples.zero?
+			return ok
 		end
 	end
 end

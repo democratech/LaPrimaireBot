@@ -42,6 +42,10 @@ CREATE TABLE citizens (
 );
 CREATE INDEX citizens_email_idx ON citizens(email);
 
+CREATE TABLE beta_codes (
+	code varchar(10)
+);
+
 CREATE TABLE waiting_list (
 	user_id integer REFERENCES citizens(user_id),
 	firstname varchar(30),

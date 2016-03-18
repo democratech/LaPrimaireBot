@@ -1,9 +1,9 @@
 DROP TRIGGER update_candidate_timestamp ON candidates;
 DROP TRIGGER update_citizen_timestamp ON citizens;
+DROP TABLE beta_codes;
 DROP TABLE waiting_list;
 DROP TABLE conversations;
 DROP TABLE reviews;
-DROP TYPE accept_candidate;
 DROP TABLE humanbots;
 DROP TABLE reviewers;
 DROP TABLE donations;
