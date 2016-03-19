@@ -49,7 +49,7 @@ END
 Vous êtes actuellement %{position} sur la liste d'attente (et, pour info, il y en a %{behind} derrière vous). Encore un peu de patience #{Bot.emoticons[:smile]}
 END
 					:code_ok=><<-END,
-Bienvenue ! Merci encore de nous aider à mettre au point LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
+Bienvenue ! Merci encore de nous aider à finaliser LaPrimaire.org #{Bot.emoticons[:thumbs_up]}
 END
 				}
 			}

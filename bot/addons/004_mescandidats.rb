@@ -33,16 +33,16 @@ END
 Voici les candidats que vous soutenez :
 END
 					:empty=><<-END,
-Vous n'avez encore apporté votre soutien à aucun candidat !
+Pour l'instant, vous n'avez apporté votre soutien à aucun candidat !
 END
 					:how=><<-END,
 Vous avez la possibilité de soutenir jusqu'à 5 candidats sur LaPrimaire.org.
-Vous pouvez littéralement soutenir qui vous voulez mais voici quelques conseils :
+Vous pouvez soutenir qui vous souhaitez, mais voici quelques conseils :
 1. <b>Tout le monde peut être candidat(e)</b> (même vous !). L'objectif de LaPrimaire.org est de faire émerger les meilleurs candidat(e)s <b>d'où qu'ils/elles viennent</b>. Ne vous limitez pas aux seules personnalités politiques connues.
 2. <b>Pensez "équipe"</b>. Réfléchissez aux personnes dont les idées emportent votre adhésion et que vous souhaiteriez voir être plus impliquées dans la vie politique de notre pays. Ne vous limitez pas à la seule recherche du prochain Président.
-3. <b>Réfléchissez par thèmes</b>. Quels sont vos thématiques de prédilection et vos sujets d'expertise ? L'écologie ? L'économie ? La santé ? Proposez les personnes qui portent les idées auxquelles vous adhérez.
-4. <b>Privilégiez celles et ceux qui "font"</b>. L'action est un bon moyen pour juger de la conviction d'un candidat : Privilégiez les candidats qui s'investissent personnellement pour mettre en oeuvre les idées qu'il défendent.
-5. <b>Soyez sérieux</b>. Ne proposez pas de faux candidats (fictifs, morts etc...), vous risqueriez le blocage pur et simple de votre compte.
+3. <b>Réfléchissez par thèmes</b>. Quels sont vos thématiques de prédilection et vos sujets d'expertise ? L'écologie ? L'économie ? La santé ? L'éducation ? L'emploi ? Proposez les personnes qui portent les idées auxquelles vous adhérez.
+4. <b>Privilégiez celles et ceux qui "font"</b>. L'action est un bon moyen pour juger de la conviction d'un(e) candidat(e) : Privilégiez les candidat(e)s qui s'investissent personnellement pour mettre en oeuvre les idées qu'ils/elles défendent.
+5. <b>Soyez sérieux</b>. Ne proposez pas de faux candidats (fictifs, décédés, etc.), vous risqueriez le blocage pur et simple de votre compte.
 END
 					:del_ask=><<-END,
 A quel candidat souhaitez-vous retirer votre soutien ?
@@ -62,9 +62,9 @@ Hmmmm... réessayons !
 END
 					:real_candidate=><<-END,
 Vous êtes le premier à soutenir ce candidat !
-Bien qu'il vous soit possible de soutenir n'importe quel(le) candidat(e), celui ou celle-ci doit être Français(e) et éligible en France sinon il sera rejeté.
-Soutenir un candidat ou une candidate fantaisiste irait à l'encontre de la charte que vous avez acceptée et vous prendriez le risque d'être exclu #{Bot.emoticons[:crying_face]}
-Sachant cela, confirmez-vous votre soutien à ce candidat ? 
+Bien qu'il vous soit possible de soutenir n'importe quel(le) candidat(e), celui ou celle-ci doit être Français(e) et éligible en France sinon il/elle sera rejeté(e).
+Soutenir un candidat ou une candidate fantaisiste irait à l'encontre de la Charte que vous avez acceptée et vous prendriez le risque d'être exclu #{Bot.emoticons[:crying_face]}
+Sachant cela, confirmez-vous votre soutien à ce(tte) candidat(e) ? 
 END
 					:real_candidate_ok=><<-END,
 Bien noté, merci !
@@ -88,7 +88,7 @@ END
 Désolé mais ce candidat est inconnu et vous avez atteint le maximum de candidats inconnus que vous pouvez proposer #{Bot.emoticons[:crying_face]}
 END
 					:error=><<-END,
-Hmmmm.... je me suis embrouillé les pinceaux, il va falloir recommencer s'il vous plait. Désolé #{Bot.emoticons[:confused]}
+Hmmmm.... je me suis embrouillée les pinceaux, il va falloir recommencer s'il vous plait. Désolé #{Bot.emoticons[:confused]}
 END
 				}
 			}

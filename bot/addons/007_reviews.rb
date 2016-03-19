@@ -32,7 +32,7 @@ END
 					:review_ask=><<-END,
 Les citoyens proposent beaucoup de candidats divers et variés pour LaPrimaire.org mais certains citoyens moins sérieux que d'autres proposent parfois des candidats fantaisistes.
 Vous pouvez nous aider à faire le tri entre les vrais candidats et les candidats fantaisistes en nous donnant votre opinion sur les candidats qui sont proposés.
-Le but n'est pas de juger de la pertinence des candidats mais d'écarter les candidats qui ne peuvent tout simplement pas participer car ils ne sont pas français, parce qu'ils sont morts, n'existent pas etc...
+Le but n'est pas de juger de la pertinence des candidats mais d'écarter les candidats qui ne peuvent tout simplement pas participer car ils ne sont pas français, parce qu'ils sont décédés, n'existent pas etc.
 Souhaitez-vous nous donner un coup de main pour faire le tri entre les vrais et les faux candidats ?
 END
 					:review_ok=><<-END,

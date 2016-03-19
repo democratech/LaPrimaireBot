@@ -40,7 +40,7 @@ END
 %{firstname}, parmi les candidats que vous avez proposés, un nombre trop important était de faux candidats. Je suis donc dans l'obligation de suspendre votre capacité à proposer de nouveaux candidats #{Bot.emoticons[:crying_face]}
 END
 					:ban_user=><<-END,
-%{firstname}, votre comportement sur LaPrimaire.org est en violation de la charte que vous avez acceptée, par conséquent je suis donc dans l'obligation de suspendre votre compte #{Bot.emoticons[:crying_face]}
+%{firstname}, votre comportement sur LaPrimaire.org est en violation de la Charte que vous avez acceptée. En conséquence, je suis donc dans l'obligation de suspendre votre compte #{Bot.emoticons[:crying_face]}
 END
 					:reset_user=><<-END,
 %{firstname}, votre compte vient d'être remis à zéro. Tapez /start pour continuer.

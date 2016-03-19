@@ -30,13 +30,13 @@ Merci beaucoup pour votre intérêt à devenir candidat(e).
 La possibilité de se déclarer candidat sur LaPrimaire.org sera mise en ligne très bientôt !
 END
 					:charte=><<-END,
-Pour être candidat, il vous faut accepter la charte du candidat.
+Pour être candidat, il vous faut accepter la Charte du candidat.
 END
 					:charte_ok=><<-END,
 Bien enregistré !
 END
 					:charte_ko=><<-END,
-Désolé vous devez accepter la charte du candidat pour pouvoir être candidat.
+Désolé vous devez accepter la Charte du candidat pour pouvoir être candidat.
 END
 					:gender=><<-END,
 Etes-vous un homme ou une femme ?

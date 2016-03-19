@@ -28,13 +28,13 @@ module Home
 Bonjour %{firstname} !
 Je suis Victoire, votre guide pour LaPrimaire #{Bot.emoticons[:blush]}
 Mon rôle est de vous accompagner et de vous informer tout au long du déroulement de La Primaire.
-Mais assez parlé, commençons !
+Mais assez discuté, commençons !
 END
 					:menu=><<-END,
 Que voulez-vous faire ?
 END
 					:abuse=><<-END,
-Désolé votre comportement sur LaPrimaire.org était en violation de la charte que vous aviez acceptée et vous a valu d'être exclu  #{Bot.emoticons[:crying_face]}
+Désolé votre comportement sur LaPrimaire.org est en violation de la Charte que vous avez acceptée et a entraîné votre exclusion  #{Bot.emoticons[:crying_face]}
 END
 					:not_allowed=><<-END,
 Désolé mais au vu des informations que vous nous avez fournies, vous ne remplissez pas les conditions pour pouvoir participer à LaPrimaire.org #{Bot.emoticons[:crying_face]}
@@ -43,9 +43,9 @@ END
 Parfait, reprenons !
 END
 					:first_help=><<-END,
-Désolé je ne comprends pas ce que vous m'écrivez #{Bot.emoticons[:crying_face]}
+Désolé, je ne comprends pas ce que vous m'écrivez #{Bot.emoticons[:crying_face]}
 Pour communiquer avec moi, il est plus simple d'utiliser les boutons qui s'affichent sur le clavier (en bas de l'écran) lorsque celui-ci apparaît.
-De temps en temps, je vous demanderai d'écrire mais le plus souvent, le clavier suffit #{Bot.emoticons[:smile]}
+De temps en temps, je vous demanderais d'écrire mais, le plus souvent, le clavier suffit #{Bot.emoticons[:smile]}
 Si, par une fausse manipulation, vous faîtes disparaître les boutons du clavier, vous pouvez toujours le réafficher en cliquant sur l'icône suivante :
 image:static/images/keyboard-button.png
 Cliquez-sur le bouton "OK bien compris !" du clavier ci-dessous pour continuer.

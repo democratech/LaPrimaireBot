@@ -42,13 +42,13 @@ END
 Confirmez-vous ne pas être privé de votre droit de vote suite à la perte de vos droits civils et politiques ou en situation d'incapacité prévue par la loi ?
 END
 					:condition_3=><<-END,
-Vous engagez-vous à vous inscrire sur les listes électorales d'ici au 31 décembre 2016 pour pouvoir voter en 2017 ?
+Vous engagez-vous à vous inscrire sur les listes électorales d'ici au 31 décembre 2016 afin de pouvoir voter en 2017 ?
 END
 					:condition_ok=><<-END,
 Merci, c'est bien enregistré ! C'était une première étape de validation, une vérification complémentaire vous sera demandée ultérieurement.
 END
 					:condition_bof=><<-END,
-Bien compris, nous espérons de tout coeur que LaPrimaire.org fera émerger un candidat qui vous donnera envie de voter en 2017 !
+Bien compris, nous espérons de tout coeur que LaPrimaire.org fera émerger un(e) candidat(e) qui vous donnera envie de voter en 2017 !
 Ceci était une première étape de validation, une vérification complémentaire vous sera demandée ultérieurement.
 END
 					:condition_ko=><<-END,
@@ -57,8 +57,8 @@ https://www.youtube.com/watch?v=B9PjBgWOkng
 END
 					:charte=><<-END,
 LaPrimaire.org étant une initiative ouverte à tous, pour que celle-ci se déroule au mieux, vous devez vous engager à :
-1. vous comporter avec respect, responsabilité et bienveillance envers les candidats et les autres citoyens, dans le respect de la Loi
-2. agir dans un esprit constructif et rechercher avant tout l'intérêt général et non servir des intérêts particuliers
+1. Vous comporter avec respect, responsabilité et bienveillance envers les candidats et les autres citoyens, dans le respect de la Loi
+2. Agir dans un esprit constructif et rechercher avant tout l'intérêt général et non servir des intérêts particuliers
 Vous engagez-vous à respecter ce code de conduite ?
 END
 					:charte_ok=><<-END,
@@ -72,7 +72,7 @@ END
 Quelle est votre adresse email ? Vous aurez besoin d'un email valide pour confirmer votre choix de candidat.
 END
 					:email_optin=><<-END,
-Est-ce que vous autorisez l'équipe de LaPrimaire.org (et seulement elle !) à vous envoyer un email de temps en temps ?
+Autorisez-vous l'équipe de LaPrimaire.org (et uniquement elle !) à vous adresser un email de temps en temps ?
 END
 					:email_optin_ok=><<-END,
 Merci de votre confiance !
@@ -96,7 +96,7 @@ Dans quel pays habitez-vous ?
 END
 					:country_error=><<-END,
 Hmmm... il ne me semble pas connaître ce pays #{Bot.emoticons[:thinking_face]}
-Pouvez-vous me redire dans quel pays vous habitez (en français) ?
+Pouvez-vous me m'indiquer à nouveau le pays dans lequel vous habitez (en français) ?
 END
 					:city=><<-END,
 Dans quelle ville habitez-vous ?
