@@ -50,7 +50,6 @@ module Bot
 		def self.query(name,params)
 			puts "db query: #{name} / values: #{params}" if DEBUG
 			if @@db.nil? or @@db.status!=PG::CONNECTION_OK then
-				puts "BIIIIIIIIIIIIIM LA CONNEXION !"
 				self.init 
 			end
 			@@db.exec_prepared(name,params)

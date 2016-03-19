@@ -20,12 +20,11 @@
 
 require_relative 'navigation.rb'
 
-
 module Democratech
 	class LaPrimaireBot < Grape::API
 		format :json
 		class << self
-			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token, :nav, :mixpanel
+			attr_accessor :mandrill, :tg_client, :nav, :mixpanel
 		end
 
 		helpers do
@@ -44,6 +43,7 @@ module Democratech
 				max=lines.length
 				idx=0
 				image=false
+				kbd_displayed=false
 				lines.each do |l|
 					next if l.empty?
 					idx+=1
@@ -73,7 +73,10 @@ module Democratech
 						sleep(writing_time)
 						options[:chat_id]=id
 						options[:text]=l
-						options[:reply_markup]=kbd if (idx==max)
+						if not kbd_displayed then
+							options[:reply_markup]=kbd
+							kbd_displayed=true
+						end
 						LaPrimaireBot.tg_client.api.sendMessage(options)
 					end
 				end

@@ -99,7 +99,7 @@ END
 					:answer=>"#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats",
 					:text=>messages[:fr][:mes_candidats][:mes_candidats],
 					:callback=>"mes_candidats/mes_candidats",
-					:kbd=>["mes_candidats/new","mes_candidats/del_ask","home/menu"],
+					:kbd=>["mes_candidats/new","mes_candidats/del_ask","mes_candidats/how","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:empty=>{
@@ -258,6 +258,7 @@ END
 	def mes_candidats_search(msg,user,screen)
 		candidate=user['session']['candidate']
 		name=candidate ? candidate["name"] : user['session']['buffer']
+		name=name.split(' ').map { |n| n.capitalize! }.join(' ') if name
 		if name.downcase.include?(user['firstname'].downcase) and name.downcase.include?(user['lastname'].downcase) then
 			return self.get_screen(self.find_by_name("moi_candidat/start"),user,msg)
 		end
@@ -288,9 +289,36 @@ END
 			elsif name
 				images = @web.search_image(name)
 			end
+			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if images.empty?
 			idx=candidate.nil? ? 0 : candidate['idx']
-			img,type=images[idx]
-			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if images.empty? or images[idx].nil?
+			photo=nil
+			while (idx<5 and photo.nil? and !images[idx].nil?) do
+				img,type=images[idx]
+				begin
+					web_img=MiniMagick::Image.open(img.link)
+					web_img.resize "x300"
+					photo=TMP_DIR+'image'+user[:id].to_s+"."+type
+					web_img.write(photo)
+					idx+=1
+					@users.update_session(user[:id],{'candidate'=>{'name'=>name,'photo'=>photo,'idx'=>idx}})
+					retry_screen=self.find_by_name("mes_candidats/confirm_no")
+					screen[:text]=retry_screen[:text]+screen[:text] if candidate
+					break
+				rescue
+					idx+=1
+					photo=nil
+				end
+			end
+		end
+		return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if photo.nil?
+		screen[:text]=screen[:text] % {media:"image:"+photo}
+		return self.get_screen(screen,user,msg)
+	end
+
+	def mes_candidats_get_image(images,idx)
+		img,type=images[idx]
+		return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if images.empty? or images[idx].nil?
+		begin
 			web_img=MiniMagick::Image.open(img.link)
 			web_img.resize "x300"
 			photo=TMP_DIR+'image'+user[:id].to_s+"."+type
@@ -299,9 +327,11 @@ END
 			@users.update_session(user[:id],{'candidate'=>{'name'=>name,'photo'=>photo,'idx'=>idx}})
 			retry_screen=self.find_by_name("mes_candidats/confirm_no")
 			screen[:text]=retry_screen[:text]+screen[:text] if candidate
+		rescue
+			idx=
+				img,type=images[idx+1]
+			photo=nil
 		end
-		screen[:text]=screen[:text] % {media:"image:"+photo}
-		return self.get_screen(screen,user,msg)
 	end
 
 	def mes_candidats_confirm_no(msg,user,screen)

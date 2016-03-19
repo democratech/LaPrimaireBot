@@ -98,6 +98,12 @@ END
 		end
 
 		def add_supporter(user_id,candidate_id)
+			res=self.supported_by(user_id)
+			if not res.num_tuples.zero? then
+				res.each do |r|
+					return if r['candidate_id']==candidate_id
+				end
+			end
 			return Bot::Db.query("add_supporter_to_candidate",[user_id,candidate_id])
 		end
 

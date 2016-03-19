@@ -158,9 +158,7 @@ END
 				'expected_input_size'=>-1,
 				'buffer'=>""
 			}
-			puts "AFTER #{@users[user[:id]]['session']}"
 			self.save_user_session(user[:id])
-			puts "AFTER DE MEREEEEERDE #{@users[user[:id]]['session']}"
 		end
 
 		def get_session(user_id)
