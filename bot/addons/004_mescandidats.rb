@@ -104,12 +104,11 @@ END
 				},
 				:empty=>{
 					:text=>messages[:fr][:mes_candidats][:empty],
-					:kbd_vertical=>true,
 					:kbd=>["mes_candidats/new","mes_candidats/how","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:how=>{
-					:answer=>"#{Bot.emoticons[:thinking_face]} Quels candidats soutenir ?",
+					:answer=>"#{Bot.emoticons[:thinking_face]} Qui soutenir ?",
 					:text=>messages[:fr][:mes_candidats][:how],
 					:disable_web_page_preview=>true,
 					:parse_mode=>"HTML",
@@ -117,12 +116,12 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:new=>{
-					:answer=>"#{Bot.emoticons[:finger_right]} Soutenir un candidat",
+					:answer=>"#{Bot.emoticons[:finger_right]} Soutenir",
 					:text=>messages[:fr][:mes_candidats][:new],
 					:callback=>"mes_candidats/new"
 				},
 				:del_ask=>{
-					:answer=>"#{Bot.emoticons[:cross_mark]} Supprimer un candidat",
+					:answer=>"#{Bot.emoticons[:cross_mark]} Supprimer",
 					:text=>messages[:fr][:mes_candidats][:del_ask],
 					:callback=>"mes_candidats/del_ask",
 					:kbd=>[],
@@ -138,13 +137,13 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:confirm_yes=>{
-					:answer=>"#{Bot.emoticons[:thumbs_up]} Oui, je confirme mon choix",
+					:answer=>"#{Bot.emoticons[:thumbs_up]} Oui, c'est mon choix",
 					:text=>messages[:fr][:mes_candidats][:confirm_yes],
 					:callback=>"mes_candidats/confirm_yes",
 					:jump_to=>"mes_candidats/real_candidate"
 				},
 				:confirm_no=>{
-					:answer=>"#{Bot.emoticons[:thumbs_down]} Non, ce n'est pas la bonne personne",
+					:answer=>"#{Bot.emoticons[:thumbs_down]} Non, mauvaise personne",
 					:text=>messages[:fr][:mes_candidats][:confirm_no],
 					:callback=>"mes_candidats/confirm_no",
 					:jump_to=>"mes_candidats/confirm"
@@ -155,14 +154,14 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:real_candidate_ok=>{
-					:answer=>"Je confirme mon soutien",
+					:answer=>"Oui je confirme",
 					:text=>messages[:fr][:mes_candidats][:real_candidate_ok],
 					:real=>true,
 					:callback=>"mes_candidats/real_candidate_cb",
 					:jump_to=>"mes_candidats/gender"
 				},
 				:real_candidate_ko=>{
-					:answer=>"Je retire mon soutien",
+					:answer=>"Non je ne confirme pas",
 					:text=>messages[:fr][:mes_candidats][:real_candidate_ko],
 					:real=>false,
 					:callback=>"mes_candidats/real_candidate_cb",
@@ -269,7 +268,7 @@ END
 		Democratech::LaPrimaireBot.tg_client.api.sendMessage({
 			:chat_id=>user[:id],
 			:text=>"Ok, je recherche...",
-			:reply_markup=>nil
+			:reply_markup=>Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
 		})
 		screen=self.find_by_name("mes_candidats/confirm")
 		res=@candidates.search_index(name) if candidate.nil?
@@ -338,7 +337,7 @@ END
 		candidate=user['session']['candidate']
 		puts "mes_candidats_confirm_no : #{candidate}" if DEBUG
 		image=candidate['photo']
-		File.delete(image) if File.exists?(image)
+		File.delete(image) if (image and File.exists?(image))
 		idx=candidate['idx'].nil? ? 1 : candidate['idx']
 		return idx==4 ? self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) : mes_candidats_search(msg,user,screen)
 	end
@@ -354,10 +353,10 @@ END
 				screen=self.find_by_name("mes_candidats/mes_candidats")
 			elsif user['settings']['blocked']['add_candidate'] # user is forbidden to add new candidates
 				screen=self.find_by_name("mes_candidats/blocked")
-				File.delete(image) if File.exists?(image)
+				File.delete(image) if (image and File.exists?(image))
 			elsif user['settings']['limits']['candidate_proposals'].to_i<=user['settings']['actions']['nb_candidates_proposed'].to_i # user has already added the maximum candidates he could add
 				screen=self.find_by_name("mes_candidats/max_reached")
-				File.delete(image) if File.exists?(image)
+				File.delete(image) if (image and File.exists?(image))
 			else # candidate needs to be registered in db
 				image=candidate['photo']
 				candidate=@candidates.add(candidate)

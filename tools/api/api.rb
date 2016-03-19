@@ -6,7 +6,7 @@ require 'json'
 require 'pg'
 require 'openssl'
 
-DEBUG=false
+DEBUG=true
 PGPWD=DEBUG ? PGPWD_TEST : PGPWD_LIVE
 PGNAME=DEBUG ? PGNAME_TEST : PGNAME_LIVE
 PGUSER=DEBUG ? PGUSER_TEST : PGUSER_LIVE
@@ -41,7 +41,7 @@ def send_command(data)
 	http = Net::HTTP.new(uri.host, uri.port)
 	http.use_ssl = true
 	http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-	request = Net::HTTP::Post.new("/command")
+	request = Net::HTTP::Post.new("/#{PREFIX}/command")
 	request.add_field("Secret-Key",SECRET)
 	request.add_field('Content-Type', 'application/json')
 	request.body = JSON.dump(data)

@@ -44,7 +44,7 @@ module Democratech
 				max=lines.length
 				idx=0
 				image=false
-				kbd_displayed=false
+				kbd_hidden=false
 				lines.each do |l|
 					next if l.empty?
 					idx+=1
@@ -70,13 +70,16 @@ module Democratech
 						end
 					else # sending 1 msg for every line
 						writing_time=l.length/TYPINGSPEED
+						writing_time=l.length/TYPINGSPEED_SLOW if max>1
 						LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
 						sleep(writing_time)
 						options[:chat_id]=id
 						options[:text]=l
-						if not kbd_displayed then
+						if idx<max and not kbd_hidden then
+							options[:reply_markup]=Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+							kbd_hidden=true
+						elsif (idx==max)
 							options[:reply_markup]=kbd
-							kbd_displayed=true
 						end
 						LaPrimaireBot.tg_client.api.sendMessage(options)
 					end

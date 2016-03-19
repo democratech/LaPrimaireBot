@@ -43,7 +43,7 @@ END
 %{firstname}, votre comportement sur LaPrimaire.org est en violation de la charte que vous avez acceptée, par conséquent je suis donc dans l'obligation de suspendre votre compte #{Bot.emoticons[:crying_face]}
 END
 					:reset_user=><<-END,
-%{firstname}, votre compte vient d'être remis à zéro.
+%{firstname}, votre compte vient d'être remis à zéro. Tapez /start pour continuer.
 END
 				}
 			}
