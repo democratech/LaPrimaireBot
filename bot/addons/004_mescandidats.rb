@@ -309,8 +309,8 @@ END
 					photo=nil
 				end
 			end
+			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if photo.nil?
 		end
-		return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if photo.nil?
 		screen[:text]=screen[:text] % {media:"image:"+photo}
 		return self.get_screen(screen,user,msg)
 	end
