@@ -20,34 +20,69 @@
 
 module About
 	def self.included(base)
-		puts "loading Home add-on" if DEBUG
+		puts "loading About add-on" if DEBUG
 		messages={
 			:fr=>{
 				:about=>{
-					:intro=><<-END,
-A propos de LaPrimaire.org
+					:laprimaire=><<-END,
+En savoir plus sur LaPrimaire.org
 END
-					:menu=><<-END,
-Que voulez-vous faire ?
+					:deroulement=><<-END,
+Cliquez pour voir <a href="https://laprimaire.org/deroulement">le déroulement de LaPrimaire</a>
+END
+					:equipe=><<-END,
+Cliquez pour voir <a href="https://laprimaire.org/deroulement">l'équipe derrière LaPrimaire.org</a>
+END
+					:info=><<-END,
+Cliquez pour <a href="https://laprimaire.org">découvrir LaPrimaire.org</a>
+END
+					:chiffres=><<-END,
+Accédez à tous les  <a href="https://laprimaire.org/transparence">les chiffres de LaPrimaire.org</a>
+END
+					:don=><<-END,
+Cliquez ici pour  <a href="https://laprimaire.org/financer">soutenir financièrement LaPrimaire.org</a>
 END
 				}
 			}
 		}
 		screens={
 			:about=>{
-				:intro=>{
-					:text=>messages[:fr][:about][:intro],
-					:callback=>"about/intro",
-					:jump_to=>"about/menu"
-				},
-				:menu=>{
-					:text=>messages[:fr][:about][:menu],
-					:kbd=>["home/menu"],
+				:laprimaire=>{
+					:answer=>"#{Bot.emoticons[:info]} A propos",
+					:text=>messages[:fr][:about][:laprimaire],
+					:disable_web_page_preview=>true,
+					:kbd=>["about/deroulement","about/equipe","about/info","about/chiffres","about/don","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
-				:laprimaire=>{
-					:answer=>"#{Bot.emoticons[:info]} A propos de LaPrimaire.org",
-					:jump_to=>"about/intro"
+				:deroulement=>{
+					:answer=>"Déroulement",
+					:text=>messages[:fr][:about][:deroulement],
+					:keep_kbd=>true,
+					:parse_mode=>"HTML"
+				},
+				:info=>{
+					:answer=>"Principe",
+					:text=>messages[:fr][:about][:info],
+					:keep_kbd=>true,
+					:parse_mode=>"HTML"
+				},
+				:chiffres=>{
+					:answer=>"Nos chiffres",
+					:text=>messages[:fr][:about][:chiffres],
+					:keep_kbd=>true,
+					:parse_mode=>"HTML"
+				},
+				:equipe=>{
+					:answer=>"L'équipe",
+					:text=>messages[:fr][:about][:equipe],
+					:keep_kbd=>true,
+					:parse_mode=>"HTML"
+				},
+				:don=>{
+					:answer=>"Faire un don",
+					:text=>messages[:fr][:about][:don],
+					:keep_kbd=>true,
+					:parse_mode=>"HTML"
 				}
 			}
 		}

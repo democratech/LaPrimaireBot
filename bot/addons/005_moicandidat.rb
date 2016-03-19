@@ -18,14 +18,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 =end
 
-module MeCandidat
+module MoiCandidat
 	def self.included(base)
-		puts "loading MeCandidat add-on" if DEBUG
+		puts "loading MoiCandidat add-on" if DEBUG
 		messages={
 			:fr=>{
-				:me_candidat=>{
-					:intro=><<-END,
-Merci pour votre intérêt à devenir candidat(e) !
+				:moi_candidat=>{
+					:start=><<-END,
+Mais... c'est vous %{firstname} %{lastname} !
+Merci beaucoup pour votre intérêt à devenir candidat(e).
+La possibilité de se déclarer candidat sur LaPrimaire.org sera mise en ligne très bientôt !
 END
 					:charte=><<-END,
 Pour être candidat, il vous faut accepter la charte du candidat.
@@ -64,28 +66,29 @@ END
 			}
 		}
 		screens={
-			:me_candidat=>{
-				:menu=>{
-					:answer=>"#{Bot.emoticons[:finger_up]} Etre candidat",
-					:text=>messages[:fr][:me_candidat][:intro],
-					:callback=>"me_candidat/intro",
-					:jump_to=>"me_candidat/gender"
+			:moi_candidat=>{
+				:start=>{
+					:text=>messages[:fr][:moi_candidat][:start],
+					:callback=>"moi_candidat/intro",
+					:disable_web_page_preview=>true,
+					:kbd=>["mes_candidats/back"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:gender=>{
-					:text=>messages[:fr][:me_candidat][:gender],
-					:kbd=>["me_candidat/gender_m","me_candidat/gender_f"],
+					:text=>messages[:fr][:moi_candidat][:gender],
+					:kbd=>["moi_candidat/gender_m","moi_candidat/gender_f"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true},
-					:jump_to=>"me_candidat/scope"
+					:jump_to=>"moi_candidat/scope"
 				},
 				:gender_m=>{
 					:answer=>"Un homme",
-					:callback=>"me_candidat/gender_m",
-					:jump_to=>"me_candidat/scope"
+					:callback=>"moi_candidat/gender_m",
+					:jump_to=>"moi_candidat/scope"
 				},
 				:gender_f=>{
 					:answer=>"Une femme",
-					:callback=>"me_candidat/gender_f",
-					:jump_to=>"me_candidat/scope"
+					:callback=>"moi_candidat/gender_f",
+					:jump_to=>"moi_candidat/scope"
 				}
 			}
 		}
@@ -93,19 +96,19 @@ END
 		Bot.updateMessages(messages)
 	end
 
-	def me_candidat_intro(msg,user,screen)
+	def moi_candidat_intro(msg,user,screen)
 		return self.get_screen(screen,user,msg)
 	end
 
-	def me_candidat_gender_m(msg,user,screen)
+	def moi_candidat_gender_m(msg,user,screen)
 		@candidates.set(user[:id],{:set=> 'gender',:value=>'M'})
 		return self.get_screen(screen,user,msg)
 	end
 
-	def me_candidat_gender_f(msg,user,screen)
+	def moi_candidat_gender_f(msg,user,screen)
 		@candidates.set(user[:id],{:set=> 'gender',:value=>'F'})
 		return self.get_screen(screen,user,msg)
 	end
 end
 
-include MeCandidat
+include MoiCandidat

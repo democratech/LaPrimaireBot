@@ -22,21 +22,27 @@ module MesCandidats
 	# is being called when the module is included
 	# here you need to update the Bot with your Add-on screens and hook your entry point into the Bot's menu
 	def self.included(base)
-		puts "loading Welcome add-on" if DEBUG
+		puts "loading MesCandidats add-on" if DEBUG
 		messages={
 			:fr=>{
 				:mes_candidats=>{
 					:new=><<-END,
-Qui souhaitez-vous proposer comme candidat(e) ?
+Quel(le) candidat(e) souhaitez-vous soutenir ?
 END
 					:mes_candidats=><<-END,
-Voici les candidats que vous supportez :
+Voici les candidats que vous soutenez :
 END
 					:empty=><<-END,
-Vous n'avez encore proposé aucun candidat !
+Vous n'avez encore apporté votre soutien à aucun candidat !
 END
 					:how=><<-END,
-Choisissez quelqu'un de bien et c'est bon :)
+Vous avez la possibilité de soutenir jusqu'à 5 candidats sur LaPrimaire.org.
+Vous pouvez littéralement soutenir qui vous voulez mais voici quelques conseils :
+1. <b>Tout le monde peut être candidat(e)</b> (même vous !). L'objectif de LaPrimaire.org est de faire émerger les meilleurs candidat(e)s <b>d'où qu'ils/elles viennent</b>. Ne vous limitez pas aux seules personnalités politiques connues.
+2. <b>Pensez "équipe"</b>. Réfléchissez aux personnes dont les idées emportent votre adhésion et que vous souhaiteriez voir être plus impliquées dans la vie politique de notre pays. Ne vous limitez pas à la seule recherche du prochain Président.
+3. <b>Réfléchissez par thèmes</b>. Quels sont vos thématiques de prédilection et vos sujets d'expertise ? L'écologie ? L'économie ? La santé ? Proposez les personnes qui portent les idées auxquelles vous adhérez.
+4. <b>Privilégiez celles et ceux qui "font"</b>. L'action est un bon moyen pour juger de la conviction d'un candidat : Privilégiez les candidats qui s'investissent personnellement pour mettre en oeuvre les idées qu'il défendent.
+5. <b>Soyez sérieux</b>. Ne proposez pas de faux candidats (fictifs, morts etc...), vous risqueriez le blocage pur et simple de votre compte.
 END
 					:del_ask=><<-END,
 A quel candidat souhaitez-vous retirer votre soutien ?
@@ -45,7 +51,6 @@ END
 %{name} n'a désormais plus votre soutien !
 END
 					:confirm=><<-END,
-Ok, je recherche...
 %{media}
 Est-ce bien votre choix ?
 END
@@ -55,8 +60,32 @@ END
 					:confirm_no=><<-END,
 Hmmmm... réessayons !
 END
+					:real_candidate=><<-END,
+Vous êtes le premier à soutenir ce candidat !
+Bien qu'il vous soit possible de soutenir n'importe quel(le) candidat(e), celui ou celle-ci doit être Français(e) et éligible en France sinon il sera rejeté.
+Soutenir un candidat ou une candidate fantaisiste irait à l'encontre de la charte que vous avez acceptée et vous prendriez le risque d'être exclu #{Bot.emoticons[:crying_face]}
+Sachant cela, confirmez-vous votre soutien à ce candidat ? 
+END
+					:real_candidate_ok=><<-END,
+Bien noté, merci !
+END
+					:real_candidate_ko=><<-END,
+Merci pour votre honnêteté #{Bot.emoticons[:smile]}
+END
+					:gender=><<-END,
+Ce candidat(e) est-il un homme ou une femme ?
+END
+					:gender_ok=><<-END,
+Parfait, merci !
+END
 					:not_found=><<-END,
-Malheureusement, je ne trouve personne avec ce nom #{Bot.emoticons[:crying_face]}
+Malheureusement, je ne trouve personne avec ce nom #{Bot.emoticons[:crying_face]}. Pour affiner la recherche, n'hésitez pas à réessayer en ajoutant des mots-clés derrière le nom de la personne que vous souhaitez soutenir. Exemple: Prénom Nom #motclé1 #motclé2
+END
+					:blocked=><<-END,
+Désolé mais ce candidat est inconnu et votre compte n'est plus autorisé à proposer de nouveaux candidats #{Bot.emoticons[:crying_face]}
+END
+					:max_reached=><<-END,
+Désolé mais ce candidat est inconnu et vous avez atteint le maximum de candidats inconnus que vous pouvez proposer #{Bot.emoticons[:crying_face]}
 END
 					:error=><<-END,
 Hmmmm.... je me suis embrouillé les pinceaux, il va falloir recommencer s'il vous plait. Désolé #{Bot.emoticons[:confused]}
@@ -70,26 +99,29 @@ END
 					:answer=>"#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats",
 					:text=>messages[:fr][:mes_candidats][:mes_candidats],
 					:callback=>"mes_candidats/mes_candidats",
-					:kbd=>["mes_candidats/del_ask","mes_candidats/new","home/menu"],
+					:kbd=>["mes_candidats/new","mes_candidats/del_ask","mes_candidats/how","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:empty=>{
 					:text=>messages[:fr][:mes_candidats][:empty],
-					:kbd=>["mes_candidats/how","mes_candidats/new","mes_candidats/back"],
+					:kbd=>["mes_candidats/new","mes_candidats/how","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:how=>{
-					:answer=>"#{Bot.emoticons[:thinking_face]} Quel candidats puis-je proposer ?",
+					:answer=>"#{Bot.emoticons[:thinking_face]} Qui soutenir ?",
 					:text=>messages[:fr][:mes_candidats][:how],
-					:jump_to=>"mes_candidats/empty"
+					:disable_web_page_preview=>true,
+					:parse_mode=>"HTML",
+					:kbd=>["mes_candidats/back"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:new=>{
-					:answer=>"#{Bot.emoticons[:finger_right]} Proposer un candidat",
+					:answer=>"#{Bot.emoticons[:finger_right]} Soutenir",
 					:text=>messages[:fr][:mes_candidats][:new],
 					:callback=>"mes_candidats/new"
 				},
 				:del_ask=>{
-					:answer=>"#{Bot.emoticons[:trash]} Supprimer un candidat",
+					:answer=>"#{Bot.emoticons[:cross_mark]} Supprimer",
 					:text=>messages[:fr][:mes_candidats][:del_ask],
 					:callback=>"mes_candidats/del_ask",
 					:kbd=>[],
@@ -105,16 +137,54 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:confirm_yes=>{
-					:answer=>"#{Bot.emoticons[:thumbs_up]} Oui, je confirme mon choix",
+					:answer=>"#{Bot.emoticons[:thumbs_up]} Oui, c'est mon choix",
 					:text=>messages[:fr][:mes_candidats][:confirm_yes],
 					:callback=>"mes_candidats/confirm_yes",
-					:jump_to=>"mes_candidats/mes_candidats"
+					:jump_to=>"mes_candidats/real_candidate"
 				},
 				:confirm_no=>{
-					:answer=>"#{Bot.emoticons[:thumbs_down]} Non, ce n'est pas la bonne personne",
+					:answer=>"#{Bot.emoticons[:thumbs_down]} Non, mauvaise personne",
 					:text=>messages[:fr][:mes_candidats][:confirm_no],
 					:callback=>"mes_candidats/confirm_no",
 					:jump_to=>"mes_candidats/confirm"
+				},
+				:real_candidate=>{
+					:text=>messages[:fr][:mes_candidats][:real_candidate],
+					:kbd=>["mes_candidats/real_candidate_ok","mes_candidats/real_candidate_ko"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:real_candidate_ok=>{
+					:answer=>"Oui je confirme",
+					:text=>messages[:fr][:mes_candidats][:real_candidate_ok],
+					:real=>true,
+					:callback=>"mes_candidats/real_candidate_cb",
+					:jump_to=>"mes_candidats/gender"
+				},
+				:real_candidate_ko=>{
+					:answer=>"Non je ne confirme pas",
+					:text=>messages[:fr][:mes_candidats][:real_candidate_ko],
+					:real=>false,
+					:callback=>"mes_candidats/real_candidate_cb",
+					:jump_to=>"mes_candidats/mes_candidats"
+				},
+				:gender=>{
+					:text=>messages[:fr][:mes_candidats][:gender],
+					:kbd=>["mes_candidats/gender_man","mes_candidats/gender_woman"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:gender_man=>{
+					:answer=>"#{Bot.emoticons[:man]} un homme",
+					:text=>messages[:fr][:mes_candidats][:gender_ok],
+					:man=>true,
+					:callback=>"mes_candidats/gender_cb",
+					:jump_to=>"mes_candidats/mes_candidats"
+				},
+				:gender_woman=>{
+					:answer=>"#{Bot.emoticons[:woman]} une femme",
+					:text=>messages[:fr][:mes_candidats][:gender_ok],
+					:woman=>true,
+					:callback=>"mes_candidats/gender_cb",
+					:jump_to=>"mes_candidats/mes_candidats"
 				},
 				:back=>{
 					:answer=>"#{Bot.emoticons[:back]} Retour",
@@ -125,9 +195,17 @@ END
 					:text=>messages[:fr][:mes_candidats][:not_found],
 					:jump_to=>"mes_candidats/mes_candidats"
 				},
+				:blocked=>{
+					:text=>messages[:fr][:mes_candidats][:blocked],
+					:jump_to=>"mes_candidats/mes_candidats"
+				},
+				:max_reached=>{
+					:text=>messages[:fr][:mes_candidats][:max_reached],
+					:jump_to=>"mes_candidats/mes_candidats"
+				},
 				:error=>{
 					:text=>messages[:fr][:mes_candidats][:error],
-					:jump_to=>"mes_candidats/new"
+					:jump_to=>"mes_candidats/mes_candidats"
 				}
 			}
 		}
@@ -150,7 +228,7 @@ END
 			screen=self.find_by_name("mes_candidats/empty")
 		elsif res.num_tuples>4 then # not allowed to chose more candidates
 			screen[:kbd_del]=["mes_candidats/new"]
-			screen[:text]+="Vous avez atteint le nombre maximum de candidats que vous pouvez proposer. Si vous voulez soutenir un autre candidat, vous devez au préalable enlever votre soutien à l'un des candidats ci-dessus.\n"
+			screen[:text]+="Vous avez atteint le nombre maximum de candidats que vous pouvez soutenir (5). Si vous voulez soutenir un autre candidat, vous devez au préalable retirer votre soutien à l'un des candidats ci-dessus.\n"
 		end
 		@users.next_answer(user[:id],'answer')
 		return self.get_screen(screen,user,msg)
@@ -158,6 +236,11 @@ END
 
 	def mes_candidats_back(msg,user,screen)
 		puts "mes_candidats_back" if DEBUG
+		candidate=user['session']['candidate']
+		photo=candidate['photo'] if candidate
+		if photo then
+			File.delete(photo) if File.exists?(photo)
+		end
 		@users.next_answer(user[:id],'answer')
 		@users.clear_session(user[:id],'candidate')
 		@users.clear_session(user[:id],'delete_candidates')
@@ -174,8 +257,19 @@ END
 	def mes_candidats_search(msg,user,screen)
 		candidate=user['session']['candidate']
 		name=candidate ? candidate["name"] : user['session']['buffer']
+		#name=input.split(' ').map { |n| n.capitalize! }.join(' ') if input
+		if name.downcase.include?(user['firstname'].downcase) and name.downcase.include?(user['lastname'].downcase) then
+			return self.get_screen(self.find_by_name("moi_candidat/start"),user,msg)
+		end
 		puts "mes_candidats_search : #{name}" if DEBUG
 		return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if not name
+		# immediately send a message to acknowledge we got the request as the search might take time
+		Democratech::LaPrimaireBot.tg_client.api.sendChatAction(chat_id: user[:id], action: "typing")
+		Democratech::LaPrimaireBot.tg_client.api.sendMessage({
+			:chat_id=>user[:id],
+			:text=>"Ok, je recherche...",
+			:reply_markup=>Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+		})
 		screen=self.find_by_name("mes_candidats/confirm")
 		res=@candidates.search_index(name) if candidate.nil?
 		@users.next_answer(user[:id],'answer')
@@ -186,10 +280,44 @@ END
 			@users.update_session(user[:id],{'candidate'=>candidate})
 		else
 			puts "mes_candidats_search: web" if DEBUG
-			images = @web.search_image(name) if name
-			idx=candidate.nil? ? 0 : candidate['idx']
-			img,type=images[idx]
-			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if images.empty? or images[idx].nil?
+			tags=name.scan(/#(\w+)/).flatten
+			name=name.gsub(/#\w+/,'').strip if tags
+			if name and tags then
+				tmp=name+" "+tags.join(' ')
+				images = @web.search_image(name+" "+tags.join(' '))
+			elsif name
+				images = @web.search_image(name)
+			end
+			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if images.empty?
+			idx=0
+			idx=candidate['idx'] if (!candidate.nil? and !candidate['idx'].nil?)
+			photo=nil
+			while (idx<5 and photo.nil? and !images[idx].nil?) do
+				img,type=images[idx]
+				begin
+					web_img=MiniMagick::Image.open(img.link)
+					web_img.resize "x300"
+					photo=TMP_DIR+'image'+user[:id].to_s+"."+type
+					web_img.write(photo)
+					break
+				rescue
+					photo=nil
+				ensure
+					idx+=1
+					@users.update_session(user[:id],{'candidate'=>{'name'=>name,'photo'=>photo,'idx'=>idx}})
+					retry_screen=self.find_by_name("mes_candidats/confirm_no")
+				end
+			end
+			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if photo.nil?
+		end
+		screen[:text]=screen[:text] % {media:"image:"+photo}
+		return self.get_screen(screen,user,msg)
+	end
+
+	def mes_candidats_get_image(images,idx)
+		img,type=images[idx]
+		return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if images.empty? or images[idx].nil?
+		begin
 			web_img=MiniMagick::Image.open(img.link)
 			web_img.resize "x300"
 			photo=TMP_DIR+'image'+user[:id].to_s+"."+type
@@ -198,16 +326,18 @@ END
 			@users.update_session(user[:id],{'candidate'=>{'name'=>name,'photo'=>photo,'idx'=>idx}})
 			retry_screen=self.find_by_name("mes_candidats/confirm_no")
 			screen[:text]=retry_screen[:text]+screen[:text] if candidate
+		rescue
+			idx=
+				img,type=images[idx+1]
+			photo=nil
 		end
-		screen[:text]=screen[:text] % {media:"image:"+photo}
-		return self.get_screen(screen,user,msg)
 	end
 
 	def mes_candidats_confirm_no(msg,user,screen)
 		candidate=user['session']['candidate']
 		puts "mes_candidats_confirm_no : #{candidate}" if DEBUG
 		image=candidate['photo']
-		File.delete(image) if File.exists?(image)
+		File.delete(image) if (image and File.exists?(image))
 		idx=candidate['idx'].nil? ? 1 : candidate['idx']
 		return idx==4 ? self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) : mes_candidats_search(msg,user,screen)
 	end
@@ -218,19 +348,51 @@ END
 		if candidate then
 			if candidate['candidate_id'] then # candidate already exists in db
 				res=@candidates.search({:by=>'candidate_id',:target=>candidate['candidate_id']})
-				@candidates.add(candidate) if res.num_tuples.zero? # candidate in index but not in db (weird case)
+				@candidates.add(candidate,true) if res.num_tuples.zero? # candidate in index but not in db (weird case)
 				@candidates.add_supporter(user[:id],candidate['candidate_id'])
+				screen=self.find_by_name("mes_candidats/mes_candidats")
+			elsif user['settings']['blocked']['add_candidate'] # user is forbidden to add new candidates
+				screen=self.find_by_name("mes_candidats/blocked")
+				File.delete(image) if (image and File.exists?(image))
+			elsif user['settings']['limits']['candidate_proposals'].to_i<=user['settings']['actions']['nb_candidates_proposed'].to_i # user has already added the maximum candidates he could add
+				screen=self.find_by_name("mes_candidats/max_reached")
+				File.delete(image) if (image and File.exists?(image))
 			else # candidate needs to be registered in db
 				image=candidate['photo']
 				candidate=@candidates.add(candidate)
-				puts "candidate #{candidate}"
+				nb_candidates_proposed=user['settings']['actions']['nb_candidates_proposed']+1
+				@users.update_settings(user[:id],{'actions'=>{'nb_candidates_proposed'=>nb_candidates_proposed}})
+				user['session']['candidate']['candidate_id']=candidate['candidate_id']
 				FileUtils.mv(image,CANDIDATS_DIR+candidate['photo'])
 				@candidates.add_supporter(user[:id],candidate['candidate_id'])
 			end
-			@users.clear_session(user[:id],'candidate')
 		else
 			screen=self.find_by_name("mes_candidats/error")
 		end
+		return self.get_screen(screen,user,msg)
+	end
+
+	def mes_candidats_real_candidate_cb(msg,user,screen)
+		candidate=user['session']['candidate']
+		puts "mes_candidates_real_candidate_cb : #{candidate}" if DEBUG
+		real_candidate = screen[:real]
+		if not real_candidate then
+			@candidates.delete(candidate['candidate_id'])
+			File.delete(CANDIDATS_DIR+candidate['photo']) if File.exists?(CANDIDATS_DIR+candidate['photo'])
+		else
+			slack_msg="Nouveau candidat(e) proposé(e) : #{candidate['name']} (<https://laprimaire.org/candidat/#{candidate['candidate_id']}|voir sa page>) par #{user['firstname']} #{user['lastname']}"
+			Bot.slack_notification(slack_msg,"candidats",":man:","LaPrimaire.org")
+			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'new_candidate_supported',{'name'=>candidate['name']})
+			Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'nb_candidates_proposed'=>1})
+		end
+		return self.get_screen(screen,user,msg)
+	end
+
+	def mes_candidats_gender_cb(msg,user,screen)
+		candidate=user['session']['candidate']
+		gender = screen[:man] ? 'M':'F'
+		@candidates.set(candidate['candidate_id'],{:set=> 'gender',:value=> gender})
+		@users.clear_session(user[:id],'candidate')
 		return self.get_screen(screen,user,msg)
 	end
 

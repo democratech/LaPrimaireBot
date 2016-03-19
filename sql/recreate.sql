@@ -1,3 +1,19 @@
+DROP TRIGGER update_candidate_timestamp ON candidates;
+DROP TRIGGER update_citizen_timestamp ON citizens;
+DROP TABLE beta_codes;
+DROP TABLE waiting_list;
+DROP TABLE conversations;
+DROP TABLE reviews;
+DROP TABLE humanbots;
+DROP TABLE reviewers;
+DROP TABLE donations;
+DROP TABLE supporters;
+DROP TABLE candidates;
+DROP TABLE citizens_tags;
+DROP TABLE tags;
+DROP TABLE citizens;
+DROP TABLE cities;
+DROP TABLE countries;
 CREATE TABLE countries (
 	name varchar(60) PRIMARY KEY,
 	name_accent varchar(60),
@@ -169,3 +185,23 @@ update_timestamp();
 CREATE TRIGGER update_candidate_timestamp BEFORE UPDATE
 ON candidates FOR EACH ROW EXECUTE PROCEDURE 
 update_timestamp();
+\COPY countries (name,name_accent,iso2,iso3,lat_deg,lon_deg) FROM 'countries.csv' CSV HEADER DELIMITER ',';
+\COPY cities (departement,slug,name,zipCode,num_commune,code_insee,num_canton,population,lon_deg,lat_deg) FROM 'villes_france.csv' CSV HEADER DELIMITER ',';
+\COPY candidates (name,gender,candidate_id,photo,country,email,zipCode,tel,program_theme,with_team,political_party,already_candidate,already_elected,website,twitter,facebook,other_media,summary,accepted) FROM 'candidats.csv' CSV HEADER DELIMITER ',';
+
+UPDATE candidates
+   SET city_id=c.city_id
+  FROM (
+		SELECT c.city_id, toto.name, toto.zipcode, c.name as ville
+		  FROM cities as c
+		 INNER JOIN (
+				SELECT ca.name, ca.zipCode, MAX(ci.population) as max_pop
+				  FROM cities AS ci
+				 INNER JOIN candidates AS ca
+				    ON (ci.zipcode=ca.zipcode)
+				 GROUP BY ca.name,ca.zipcode
+		       ) as toto
+		    ON c.zipcode=toto.zipcode
+		   AND c.population=toto.max_pop
+       ) as c
+ WHERE candidates.zipcode = c.zipcode;

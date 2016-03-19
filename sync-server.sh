@@ -1,1 +1,1 @@
-rsync -avz --delete --exclude=logs --exclude=pid . root@democratech-bot:/home/laprimaire/bot/
+rsync -avz --delete --exclude=logs --exclude=pid --exclude=static/candidats --exclude=static/tmp . root@democratech-bot:/home/laprimaire/bot/

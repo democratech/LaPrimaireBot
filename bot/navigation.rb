@@ -27,7 +27,6 @@ module Bot
 			end
 		end
 
-
 		def initialize
 			@users = Bot::Users.new()
 			@web = Bot::Web.new()
@@ -43,6 +42,7 @@ module Bot
 					end
 					if (!v1[:answer].nil?) then
 						@answers[v1[:answer]]={} if @answers[v1[:answer]].nil?
+						raise "Conflict of answers detected in add-on \"#{k}\" : \"#{v1[:answer]}\"" if not @answers[v1[:answer]][k].nil?
 						@answers[v1[:answer]][k]=k1
 					end
 				end
@@ -81,9 +81,10 @@ module Bot
 		def get(msg,update_id)
 			res,options=nil
 			user=@users.get(msg.from,msg.date)
-			# we check that this message has not already been answered (i.e. telegram sending a msg we alredy processed)
+			# we check that this message has not already been answered (i.e. telegram sending a msg we already processed)
 			return nil,nil if @users.already_answered(user[:id],update_id)
 			session=user['session']
+			@users.next_answer(user[:id],'free_text',1,msg.text) if update_id==-1
 			puts "user read session : #{user}" if DEBUG
 			input=session['expected_input']
 			session['current']="home/welcome" if msg.text=='/start'
@@ -93,7 +94,7 @@ module Bot
 					res,options=get_screen(screen,user,msg)
 					user['session']=@users.get_session(user[:id])
 					current=user['session']['current']
-					screen=self.find_by_name(current) if screen[:id]!=current
+					screen=self.find_by_name(current) if screen[:id]!=current and !current.nil?
 					jump_to=screen[:jump_to]
 					while !jump_to.nil? do
 						next_screen=find_by_name(jump_to)
@@ -101,11 +102,15 @@ module Bot
 						user['session']=@users.get_session(user[:id])
 						res="" unless res
 						res+=a unless a.nil?
-						options=b unless b.nil?
+						options.merge!(b) unless b.nil?
 						jump_to=next_screen[:jump_to]
 					end
 				else
-					res,options=self.dont_understand(user,msg)
+					if not user['settings']['actions']['first_help_given'] then
+						screen=self.find_by_name("home/first_help")
+					else
+						res,options=self.dont_understand(user,msg)
+					end
 				end
 			else # we expect the user to have answered by typing text manually
 				callback=self.to_callback(session['callback'].to_s)
@@ -119,21 +124,24 @@ module Bot
 						session=@users.update_session(user[:id],session_update)
 						user['session']=session
 						res,options=self.method(callback).call(msg,user,screen) if input_size==0
-						screen=self.find_by_name(session['current'])
+						screen=self.find_by_name(session['current']) if session['current']
 						jump_to=screen[:jump_to]
 						while !jump_to.nil? do
 							next_screen=find_by_name(jump_to)
 							user['session']=@users.get_session(user[:id])
 							a,b=get_screen(next_screen,user,msg)
 							res+=a unless a.nil?
-							options.merge(b) unless b.nil?
+							options.merge!(b) unless b.nil?
+							user['session']=@users.get_session(user[:id])
+							current=user['session']['current']
+							next_screen=self.find_by_name(current) if next_screen[:id]!=current and !current.nil?
 							jump_to=next_screen[:jump_to]
 						end
 
 					end
 				end
 			end
-			res,options=self.dont_understand(user,msg,true) if res.nil? # something is fishy
+			res,options=self.dont_understand(user,msg) if res.nil? # something is fishy
 			puts "user save session : #{@users.get_session(user[:id])}" if DEBUG
 			@users.save_user_session(user[:id])
 			return res,options
@@ -143,25 +151,32 @@ module Bot
 			# dedicated method to not affect user session
 			puts "dont_understand: #{msg}" if DEBUG
 			Democratech::LaPrimaireBot.tg_client.track('dont_understand',user[:id],msg.text) if PRODUCTION
-			screen=self.find_by_name("system/dont_understand")
-			res,options=self.format_answer(screen,user)
-			if reset then
-				screen=self.find_by_name("system/something_wrong")
-				a,b=get_screen(screen,user,msg)
-				res+=a unless a.nil?
-				options=b unless b.nil?
-				@users.next_answer(user[:id],'answer')
-				screen=self.find_by_answer("/start")
-				a,b=get_screen(screen,user,msg)
-				res+=a unless a.nil?
-				options=b unless b.nil?
-				jump_to=screen[:jump_to]
-				while !jump_to.nil? do
-					next_screen=find_by_name(jump_to)
-					a,b=get_screen(next_screen,user,msg)
+			if not user['settings']['actions']['first_help_given'] then
+				screen=self.find_by_name("home/first_help")
+				res,options=self.format_answer(screen,user)
+				callback=self.to_callback(screen[:callback].to_s)
+				self.method(callback).call(msg,user,screen) if self.respond_to?(callback)
+			else
+				screen=self.find_by_name("system/dont_understand")
+				res,options=self.format_answer(screen,user)
+				if reset then
+					screen=self.find_by_name("system/something_wrong")
+					a,b=get_screen(screen,user,msg)
 					res+=a unless a.nil?
 					options=b unless b.nil?
-					jump_to=next_screen[:jump_to]
+					@users.next_answer(user[:id],'answer')
+					screen=self.find_by_answer("/start")
+					a,b=get_screen(screen,user,msg)
+					res+=a unless a.nil?
+					options.merge!(b) unless b.nil?
+					jump_to=screen[:jump_to]
+					while !jump_to.nil? do
+						next_screen=find_by_name(jump_to)
+						a,b=get_screen(next_screen,user,msg)
+						res+=a unless a.nil?
+						options=b unless b.nil?
+						jump_to=next_screen[:jump_to]
+					end
 				end
 			end
 			return res,options
@@ -186,10 +201,14 @@ module Bot
 		def find_by_name(name)
 			puts "find_by_name: #{name}" if DEBUG
 			n1,n2=self.nodes(name)
-			screen=@screens[n1][n2]
-			if screen then
-				screen[:id]=name 
-				screen=screen.clone
+			begin
+				screen=@screens[n1][n2]
+				if screen then
+					screen[:id]=name 
+					screen=screen.clone
+				end
+			rescue
+				screen=nil
 			end
 			return screen
 		end
@@ -225,12 +244,13 @@ module Bot
 			end
 			screen[:kbd_add].each { |k| kbd.push(k) } if screen[:kbd_add]
 			if not kbd.nil? then
-				if kbd.length>4 then # display keyboard on several rows
+				if kbd.length>1 and not screen[:kbd_vertical] then # display keyboard on several rows
 					newkbd=[]
 					row=[]
 					kbd.each_with_index do |r,i|
+						idx=i+1
 						row.push(r)
-						if (i>0 and (i % 2)==0) then
+						if (idx%2)==0 then
 							newkbd.push(row)
 							row=[]
 						end

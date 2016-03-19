@@ -20,16 +20,19 @@
 
 require_relative 'navigation.rb'
 
-TYPINGSPEED=80
-
 module Democratech
 	class LaPrimaireBot < Grape::API
+		prefix PREFIX.to_sym
 		format :json
 		class << self
-			attr_accessor :db, :mg_client, :mandrill, :tg_client, :token, :nav, :mixpanel
+			attr_accessor :mandrill, :tg_client, :nav, :mixpanel
 		end
 
 		helpers do
+			def authorized
+				headers['Secret-Key']==SECRET
+			end
+
 			def send_msg(id,msg,options)
 				if options[:keep_kbd] then
 					options.delete(:keep_kbd)
@@ -41,6 +44,7 @@ module Democratech
 				max=lines.length
 				idx=0
 				image=false
+				kbd_hidden=false
 				lines.each do |l|
 					next if l.empty?
 					idx+=1
@@ -66,19 +70,33 @@ module Democratech
 						end
 					else # sending 1 msg for every line
 						writing_time=l.length/TYPINGSPEED
+						writing_time=l.length/TYPINGSPEED_SLOW if max>1
 						LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
 						sleep(writing_time)
 						options[:chat_id]=id
 						options[:text]=l
-						options[:reply_markup]=kbd if (idx==max)
-						#if (idx==1 and max>1) then
-						#	options[:reply_markup]=Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true) 
-						#elsif (idx==max)
-						#	options[:reply_markup]=kbd
-						#end
+						if idx<max and not kbd_hidden then
+							options[:reply_markup]=Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+							kbd_hidden=true
+						elsif (idx==max)
+							options[:reply_markup]=kbd
+						end
 						LaPrimaireBot.tg_client.api.sendMessage(options)
 					end
 				end
+			end
+		end
+
+		post '/command' do
+			error!('401 Unauthorized', 401) unless authorized
+			update = Telegram::Bot::Types::Update.new(params)
+			begin
+				msg,options=Democratech::LaPrimaireBot.nav.get(update.message,update.update_id)
+				send_msg(update.message.chat.id,msg,options) unless msg.nil?
+			rescue Exception=>e
+				Bot.slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect}) if PRODUCTION
+				STDERR.puts "#{e.message}\n#{e.backtrace.inspect}"
+				error! "Exception raised: #{e.message}", 200 # if you put an error code here, telegram will keep sending you the same msg until you die
 			end
 		end
 
@@ -88,9 +106,9 @@ module Democratech
 				msg,options=Democratech::LaPrimaireBot.nav.get(update.message,update.update_id)
 				send_msg(update.message.chat.id,msg,options) unless msg.nil?
 			rescue Exception=>e
-				slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect}) if PRODUCTION
+				Bot.slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect}) if PRODUCTION
 				STDERR.puts "#{e.message}\n#{e.backtrace.inspect}"
-				error! "Exception raised: #{e.message}", 500
+				error! "Exception raised: #{e.message}", 200 # if you put an error code here, telegram will keep sending you the same msg until you die
 			end
 		end
 	end

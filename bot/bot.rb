@@ -22,6 +22,7 @@ module Bot
 	@@emoticons={ # see http://unicode.org/emoji/charts/full-emoji-list.html
 		:blush=>"\u{1F60A}",
 		:grinning=>"\u{1F600}",
+		:frowning=>"\u{2639}",
 		:info=>"\u{2139}",
 		:halo=>"\u{1F607}",
 		:tongue=>"\u{1F60B}",
@@ -70,7 +71,7 @@ module Bot
 Aucun programme n'est actuellement chargé dans ce bot, ses capacités sont donc très limitées... mais vous pouvez toujours essayer :)
 END
 				:dont_understand=><<-END,
-Aïe, désolé %{firstname} j'ai peur de ne pas avoir compris ce que vous me demandez #{@@emoticons[:crying_face]}
+Aïe, désolé %{firstname} j'ai peur de ne pas avoir compris ce que vous me demandez #{@@emoticons[:crying_face]} Utilisez les boutons du clavier ci-dessous pour communiquer avec moi s'il vous plait. Et si vous ne voyez pas de clavier, tapez "/start" pour revenir au menu principal.
 END
 				:something_wrong=><<-END,
 Apparemment, un petit souci informatique est survenu #{@@emoticons[:head_bandage_face]} il va nous falloir reprendre depuis le début, désolé #{@@emoticons[:confused]}
@@ -107,7 +108,7 @@ END
 	def self.mergeMenu(old_path,new_path)
 		return old_path.merge(new_path) do |key,oldval,newval| 
 			if key==:kbd then
-				oldval.unshift(newval) 
+				oldval.push(newval) 
 			else
 				self.mergeMenu(oldval,newval)
 			end
