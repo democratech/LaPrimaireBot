@@ -258,7 +258,7 @@ END
 	def mes_candidats_search(msg,user,screen)
 		candidate=user['session']['candidate']
 		name=candidate ? candidate["name"] : user['session']['buffer']
-		name=name.split(' ').map { |n| n.capitalize! }.join(' ') if name
+		#name=input.split(' ').map { |n| n.capitalize! }.join(' ') if input
 		if name.downcase.include?(user['firstname'].downcase) and name.downcase.include?(user['lastname'].downcase) then
 			return self.get_screen(self.find_by_name("moi_candidat/start"),user,msg)
 		end
@@ -290,7 +290,8 @@ END
 				images = @web.search_image(name)
 			end
 			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if images.empty?
-			idx=candidate.nil? ? 0 : candidate['idx']
+			idx=0
+			idx=candidate['idx'] if (!candidate.nil? and !candidate['idx'].nil?)
 			photo=nil
 			while (idx<5 and photo.nil? and !images[idx].nil?) do
 				img,type=images[idx]
@@ -299,14 +300,13 @@ END
 					web_img.resize "x300"
 					photo=TMP_DIR+'image'+user[:id].to_s+"."+type
 					web_img.write(photo)
+					break
+				rescue
+					photo=nil
+				ensure
 					idx+=1
 					@users.update_session(user[:id],{'candidate'=>{'name'=>name,'photo'=>photo,'idx'=>idx}})
 					retry_screen=self.find_by_name("mes_candidats/confirm_no")
-					screen[:text]=retry_screen[:text]+screen[:text] if candidate
-					break
-				rescue
-					idx+=1
-					photo=nil
 				end
 			end
 			return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if photo.nil?
