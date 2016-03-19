@@ -22,6 +22,7 @@ require_relative 'navigation.rb'
 
 module Democratech
 	class LaPrimaireBot < Grape::API
+		prefix PREFIX.to_sym
 		format :json
 		class << self
 			attr_accessor :mandrill, :tg_client, :nav, :mixpanel
