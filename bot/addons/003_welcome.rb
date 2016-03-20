@@ -124,6 +124,7 @@ Réessayez s'il vous plait.
 END
 					:account_created=><<-END,
 Merci ! Votre compte a été créé avec succès.
+<i>Un conseil</i> : Pour dialoguer avec moi dans les meilleures conditions, je vous invite à installer l'application <b>Telegram</b> sur votre smartphone ou sur votre ordinateur : <a href='https://telegram.org/dl'>Télécharger Telegram</a>. Telegram est l'application de messagerie sécurisée utilisée pour organiser LaPrimaire.org.
 END
 				}
 			}
@@ -299,6 +300,7 @@ END
 				},
 				:account_created=>{
 					:text=>messages[:fr][:welcome][:account_created],
+					:parse_mode=>"HTML",
 					:callback=>"welcome/account_created_cb",
 					:jump_to=>"home/menu"
 				}

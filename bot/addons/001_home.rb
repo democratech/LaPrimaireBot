@@ -45,7 +45,7 @@ END
 					:first_help=><<-END,
 Désolé, je ne comprends pas ce que vous m'écrivez #{Bot.emoticons[:crying_face]}
 Pour communiquer avec moi, il est plus simple d'utiliser les boutons qui s'affichent sur le clavier (en bas de l'écran) lorsque celui-ci apparaît.
-De temps en temps, je vous demanderais d'écrire mais, le plus souvent, le clavier suffit #{Bot.emoticons[:smile]}
+De temps en temps, je vous demanderai d'écrire mais, le plus souvent, le clavier suffit #{Bot.emoticons[:smile]}
 Si, par une fausse manipulation, vous faîtes disparaître les boutons du clavier, vous pouvez toujours le réafficher en cliquant sur l'icône suivante :
 image:static/images/keyboard-button.png
 Cliquez-sur le bouton "OK bien compris !" du clavier ci-dessous pour continuer.
