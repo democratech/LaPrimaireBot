@@ -102,6 +102,7 @@ END
 		if screen[:save_session] then
 			current= user['session']['current'].nil? ? "home/welcome" :user['session']['current']
 			previous_screen=self.find_by_name(current)
+			@users.next_answer(user[:id],'answer')
 			@users.update_session(user[:id],{'previous_screen'=>previous_screen}) if previous_screen[:id]!="home/first_help"
 		else
 			previous_screen=user['session']['previous_screen'].nil? ? "home/welcome" : user['session']['previous_screen']

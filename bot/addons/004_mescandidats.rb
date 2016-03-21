@@ -219,9 +219,11 @@ END
 		res=@candidates.supported_by(user[:id])
 		res.each_with_index do |r,i|
 			name=r['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
+			soutiens=r['nb_supporters'].to_i
+			soutiens_txt= soutiens>1 ? "#{soutiens} soutiens" : "#{soutiens} soutien"
 			i+=1
 			fig="nb_"+i.to_s
-			screen[:text]+="* #{name} (<a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>voir sa page</a>)\n"
+			screen[:text]+="* #{name} (<a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>voir sa page</a>) - #{soutiens_txt} sur 500 nécessaires\n"
 			screen[:parse_mode]='HTML'
 		end
 		if res.num_tuples<1 then # no candidates supported yet
@@ -257,10 +259,6 @@ END
 	def mes_candidats_search(msg,user,screen)
 		candidate=user['session']['candidate']
 		name=candidate ? candidate["name"] : user['session']['buffer']
-		#name=input.split(' ').map { |n| n.capitalize! }.join(' ') if input
-		if name.downcase.include?(user['firstname'].downcase) and name.downcase.include?(user['lastname'].downcase) then
-			return self.get_screen(self.find_by_name("moi_candidat/start"),user,msg)
-		end
 		puts "mes_candidats_search : #{name}" if DEBUG
 		return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if not name
 		# immediately send a message to acknowledge we got the request as the search might take time
@@ -278,6 +276,9 @@ END
 			candidate=res['hits'][0]
 			photo=CANDIDATS_DIR+candidate['photo']
 			@users.update_session(user[:id],{'candidate'=>candidate})
+		elsif name.downcase.include?(user['firstname'].downcase) and name.downcase.include?(user['lastname'].downcase) then
+			@users.next_answer(user[:id],'answer')
+			return self.get_screen(self.find_by_name("moi_candidat/start"),user,msg)
 		else
 			puts "mes_candidats_search: web" if DEBUG
 			tags=name.scan(/#(\w+)/).flatten

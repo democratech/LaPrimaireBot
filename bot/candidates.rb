@@ -45,7 +45,18 @@ END
 SELECT z.*,c.firstname,c.lastname FROM candidates AS z LEFT JOIN citizens AS c ON (c.user_id=z.user_id) WHERE z.candidate_id=$1
 END
 			'get_candidates_supported_by_user_id'=><<END,
-SELECT z.*,s.* FROM candidates AS z INNER JOIN supporters AS s ON (s.candidate_id=z.candidate_id) WHERE s.user_id=$1
+SELECT y.candidate_id, y.name, y.gender, count(y.user_id) as nb_supporters
+  FROM (
+	  SELECT z.candidate_id,z.name,z.gender,s.user_id
+          FROM candidates AS z
+          INNER JOIN supporters AS s
+	  ON (s.candidate_id = z.candidate_id)
+	  WHERE s.user_id = $1
+  ) as y
+  INNER JOIN supporters AS x
+  ON (x.candidate_id = y.candidate_id)
+  GROUP BY y.candidate_id,y.name,y.gender
+  ORDER BY nb_supporters DESC
 END
 			'set_gender'=><<END,
 UPDATE candidates SET gender=$1 WHERE candidate_id=$2
