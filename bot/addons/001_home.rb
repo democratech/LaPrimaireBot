@@ -107,7 +107,18 @@ END
 		else
 			previous_screen=user['session']['previous_screen'].nil? ? "home/welcome" : user['session']['previous_screen']
 			screen=self.find_by_name(previous_screen['id'])
-			screen[:text]="Parfait, reprenons !\n"+screen[:text] if screen[:text]
+			if screen[:text] then
+				keywords=screen[:text].scan(/%{(.*?)}/).flatten
+				if not keywords.empty? then
+					keywords.each do |k|
+						var=user[k] ? user[k] : "variable_inconnue"
+						screen[:text].gsub!("%{#{k}}",var)
+					end
+				end
+				screen[:text]="Parfait, reprenons !\n"+screen[:text]
+			else
+				screen[:text]="Parfait, reprenons !"
+			end
 			@users.update_settings(user[:id],{'actions'=>{'first_help_given'=> true}})
 			@users.clear_session(user[:id],'previous_screen')
 		end
