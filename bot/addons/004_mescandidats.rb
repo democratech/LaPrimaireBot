@@ -274,9 +274,13 @@ END
 		if candidate.nil? and res['hits'].length>0  then
 			puts "mes_candidats_search: index hit" if DEBUG
 			candidate=res['hits'][0]
-			photo=CANDIDATS_DIR+candidate['photo']
+			if candidate['photo'] then
+				photo=CANDIDATS_DIR+candidate['photo']
+			else
+				photo=IMAGE_DIR+'missing-photo-M.jpg'
+			end
 			@users.update_session(user[:id],{'candidate'=>candidate})
-		elsif name.downcase.include?(user['firstname'].downcase) and name.downcase.include?(user['lastname'].downcase) then
+		elsif not name.scan(/\b#{user['firstname']}\b/i).empty? and not name.scan(/\b#{user['lastname']}\b/i).empty? then
 			@users.next_answer(user[:id],'answer')
 			return self.get_screen(self.find_by_name("moi_candidat/start"),user,msg)
 		else
@@ -383,8 +387,8 @@ END
 		else
 			slack_msg="Nouveau candidat(e) proposé(e) : #{candidate['name']} (<https://laprimaire.org/candidat/#{candidate['candidate_id']}|voir sa page>) par #{user['firstname']} #{user['lastname']}"
 			Bot.slack_notification(slack_msg,"candidats",":man:","LaPrimaire.org")
-			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'new_candidate_supported',{'name'=>candidate['name']})
-			Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'nb_candidates_proposed'=>1})
+			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'new_candidate_supported',{'name'=>candidate['name']}) if PRODUCTION
+			Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'nb_candidates_proposed'=>1}) if PRODUCTION
 		end
 		return self.get_screen(screen,user,msg)
 	end

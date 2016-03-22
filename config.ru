@@ -20,7 +20,7 @@ puts "connect to database : #{PGNAME} with user : #{PGUSER}"
 Democratech::LaPrimaireBot.mandrill=Mandrill::API.new(MANDRILLKEY)
 Democratech::LaPrimaireBot.tg_client=Telegram::Bot::Client.new(DEBUG ? TG_TEST_TOKEN : TG_LIVE_TOKEN)
 Democratech::LaPrimaireBot.tg_client.enable_botan!(BOTAN_TOKEN) if PRODUCTION
-Democratech::LaPrimaireBot.mixpanel =Mixpanel::Tracker.new("3cb923f3507e91e8a2d4a4417f70944e")
+Democratech::LaPrimaireBot.mixpanel =Mixpanel::Tracker.new("3cb923f3507e91e8a2d4a4417f70944e") if PRODUCTION
 Bot::Navigation.load_addons()
 Democratech::LaPrimaireBot.nav=Bot::Navigation.new()
 Algolia.init :application_id=>ALGOLIA_ID, :api_key=>ALGOLIA_KEY
