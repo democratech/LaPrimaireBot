@@ -351,6 +351,7 @@ END
 		candidate=user['session']['candidate']
 		puts "mes_candidats_confirm_yes : #{candidate}" if DEBUG
 		if candidate then
+			image=candidate['photo']
 			if candidate['candidate_id'] then # candidate already exists in db
 				res=@candidates.search({:by=>'candidate_id',:target=>candidate['candidate_id']})
 				@candidates.add(candidate,true) if res.num_tuples.zero? # candidate in index but not in db (weird case)
@@ -363,7 +364,6 @@ END
 				screen=self.find_by_name("mes_candidats/max_reached")
 				File.delete(image) if (image and File.exists?(image))
 			else # candidate needs to be registered in db
-				image=candidate['photo']
 				candidate=@candidates.add(candidate)
 				nb_candidates_proposed=user['settings']['actions']['nb_candidates_proposed']+1
 				@users.update_settings(user[:id],{'actions'=>{'nb_candidates_proposed'=>nb_candidates_proposed}})
