@@ -6,7 +6,7 @@ require 'json'
 require 'pg'
 require 'openssl'
 
-DEBUG=true
+DEBUG=false
 PGPWD=DEBUG ? PGPWD_TEST : PGPWD_LIVE
 PGNAME=DEBUG ? PGNAME_TEST : PGNAME_LIVE
 PGUSER=DEBUG ? PGUSER_TEST : PGUSER_LIVE
@@ -78,7 +78,7 @@ data2=<<END
 END
 
 db=PG.connect(
-	:dbname=>PGNAME,
+	"dbname"=>PGNAME,
 	"user"=>PGUSER,
 	"password"=>PGPWD,
 	"host"=>PGHOST,
@@ -142,16 +142,22 @@ END
 when 'grantaccess'
 	case cmd
 	when 'search'
-		search_waiting_list="SELECT user_id,firstname,lastname,registered FROM waiting_list WHERE lastname ILIKE $1 ORDER BY registered ASC"
-		res=db.exec_params(search_waiting_list,[value])
+		if value then
+			search_waiting_list="SELECT user_id,firstname,lastname,registered FROM waiting_list WHERE lastname ILIKE $1 ORDER BY registered ASC"
+			res=db.exec_params(search_waiting_list,[value])
+		else
+			search_waiting_list="SELECT user_id,firstname,lastname,registered FROM waiting_list ORDER BY registered ASC"
+			res=db.exec(search_waiting_list)
+		end
 		if not res.num_tuples.zero? then
-			res.each do |r|
-				puts "(#{r['registered']}) #{r['firstname']} #{r['lastname']} : #{r['user_id']}"
+			res.each_with_index do |r,i|
+				i+=1
+				puts "#{i} (#{r['registered']}) #{r['firstname']} #{r['lastname']} : #{r['user_id']}"
 			end
 		end
 	when 'nb'
-		read_waiting_list="SELECT user_id FROM waiting_list ORDER BY registered ASC LIMIT $1"
-		res=db.exec_params('read_waiting_list',[value])
+		read_waiting_list="SELECT user_id,firstname,lastname,registered FROM waiting_list ORDER BY registered ASC LIMIT $1"
+		res=db.exec_params(read_waiting_list,[value])
 		if not res.num_tuples.zero? then
 			res.each do |r|
 				send_command(JSON.parse(data2 % {
@@ -162,6 +168,7 @@ when 'grantaccess'
 					username:r['username'],
 					date:Time.now().to_i
 				}))
+				puts "Access granted to user #{r['user_id']} : #{r['firstname']} #{r['lastname']} registered on #{r['registered']}"
 				sleep(1)
 			end
 		end
