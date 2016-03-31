@@ -342,7 +342,7 @@ END
 		candidate=user['session']['candidate']
 		puts "mes_candidats_confirm_no : #{candidate}" if DEBUG
 		image=candidate['photo']
-		File.delete(image) if (image and File.exists?(image))
+		File.delete(image) if (!image.nil? and File.exists?(image))
 		idx=candidate['idx'].nil? ? 1 : candidate['idx']
 		return idx==4 ? self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) : mes_candidats_search(msg,user,screen)
 	end
@@ -359,10 +359,10 @@ END
 				screen=self.find_by_name("mes_candidats/mes_candidats")
 			elsif user['settings']['blocked']['add_candidate'] # user is forbidden to add new candidates
 				screen=self.find_by_name("mes_candidats/blocked")
-				File.delete(image) if (image and File.exists?(image))
+				File.delete(image) if (!image.nil? and File.exists?(image))
 			elsif user['settings']['limits']['candidate_proposals'].to_i<=user['settings']['actions']['nb_candidates_proposed'].to_i # user has already added the maximum candidates he could add
 				screen=self.find_by_name("mes_candidats/max_reached")
-				File.delete(image) if (image and File.exists?(image))
+				File.delete(image) if (!image.nil? and File.exists?(image))
 			else # candidate needs to be registered in db
 				candidate=@candidates.add(candidate)
 				nb_candidates_proposed=user['settings']['actions']['nb_candidates_proposed']+1
