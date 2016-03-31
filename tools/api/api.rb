@@ -6,7 +6,7 @@ require 'json'
 require 'pg'
 require 'openssl'
 
-DEBUG=false
+DEBUG=true
 PGPWD=DEBUG ? PGPWD_TEST : PGPWD_LIVE
 PGNAME=DEBUG ? PGNAME_TEST : PGNAME_LIVE
 PGUSER=DEBUG ? PGUSER_TEST : PGUSER_LIVE
@@ -32,6 +32,8 @@ if ctx.nil? or cmd.nil? then
 * unblock:user_id <id>
 * betacodes:gen <nb>
 * betacodes:search
+* broadcast:all
+* broadcast:user_id
 END
 	exit
 end
@@ -300,6 +302,39 @@ when 'reset'
 				username:res[0]['username'],
 				date:Time.now().to_i
 			}))
+		end
+	end
+when 'broadcast'
+	case cmd
+	when 'user_id'
+		get_user="SELECT user_id FROM citizens WHERE user_id=$1"
+		res=db.exec_params(get_user, [value])
+		if not res.num_tuples.zero? then
+			send_command(JSON.parse(data2 % {
+				cmd:"api/reset_user",
+				user_id:res[0]['user_id'],
+				firstname:res[0]['firstname'],
+				lastname:res[0]['lastname'],
+				username:res[0]['username'],
+				date:Time.now().to_i
+			}))
+		end
+	when 'all'
+		read_waiting_list="SELECT user_id,firstname,lastname,registered FROM waiting_list ORDER BY registered ASC LIMIT $1"
+		res=db.exec_params(read_waiting_list,[value])
+		if not res.num_tuples.zero? then
+			res.each do |r|
+				send_command(JSON.parse(data2 % {
+					cmd:"api/access_granted",
+					user_id:r['user_id'],
+					firstname:r['firstname'],
+					lastname:r['lastname'],
+					username:r['username'],
+					date:Time.now().to_i
+				}))
+				puts "Access granted to user #{r['user_id']} : #{r['firstname']} #{r['lastname']} registered on #{r['registered']}"
+				sleep(1)
+			end
 		end
 	end
 end
