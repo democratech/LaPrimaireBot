@@ -360,7 +360,7 @@ END
 			elsif user['settings']['blocked']['add_candidate'] # user is forbidden to add new candidates
 				screen=self.find_by_name("mes_candidats/blocked")
 				File.delete(image) if (!image.nil? and File.exists?(image))
-			elsif user['settings']['limits']['candidate_proposals'].to_i<=user['settings']['actions']['nb_candidates_proposed'].to_i # user has already added the maximum candidates he could add
+			elsif !ADMINS.include?(user[:id]) && user['settings']['limits']['candidate_proposals'].to_i<=user['settings']['actions']['nb_candidates_proposed'].to_i # user has already added the maximum candidates he could add
 				screen=self.find_by_name("mes_candidats/max_reached")
 				File.delete(image) if (!image.nil? and File.exists?(image))
 			else # candidate needs to be registered in db

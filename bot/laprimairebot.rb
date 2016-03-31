@@ -49,14 +49,14 @@ module Democratech
 					next if l.empty?
 					idx+=1
 					image=(l.start_with?("image:") && (['.jpg','.png','.gif','.jpeg'].include? File.extname(l)))
-					if !image.nil? && !image.empty? && !buffer.empty? then # flush buffer before sending image
+					if image && !buffer.empty? then # flush buffer before sending image
 						writing_time=buffer.length/TYPINGSPEED
 						LaPrimaireBot.tg_client.api.send_chat_action(chat_id: id, action: "typing")
 						sleep(writing_time)
 						LaPrimaireBot.tg_client.api.sendMessage(chat_id: id, text: buffer)
 						buffer=""
 					end
-					if !image.nil? && !image.empty? then # sending image
+					if image then # sending image
 						LaPrimaireBot.tg_client.api.send_chat_action(chat_id: id, action: "upload_photo")
 						LaPrimaireBot.tg_client.api.send_photo(chat_id: id, photo: File.new(l.split(":")[1]))
 					elsif options[:groupsend] # grouping lines into 1 single message # buggy
