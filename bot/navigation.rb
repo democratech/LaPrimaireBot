@@ -87,7 +87,7 @@ module Bot
 			@users.next_answer(user[:id],'free_text',1,msg.text) if update_id==-1
 			puts "user read session : #{user}" if DEBUG
 			input=session['expected_input']
-			session['current']="home/welcome" if msg.text=='/start'
+			session['current']="home/welcome" if RESET_WORDS.include?(msg.text)
 			if (input=='answer' or msg.text=="/start") then # we expect the user to have used the proposed keyboard to answer
 				screen=self.find_by_answer(msg.text,self.context(session['current']))
 				if not screen.nil? then
