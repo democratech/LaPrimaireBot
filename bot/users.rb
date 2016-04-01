@@ -210,8 +210,8 @@ END
 						'beta_waiting_list_pos_checked'=>0,
 						'nb_candidates_proposed'=>0
 					}
-					Democratech::LaPrimaireBot.mixpanel.track(user_info.id,'new_user')
-					Democratech::LaPrimaireBot.mixpanel.people.set(user_info.id,tag)
+					Democratech::LaPrimaireBot.mixpanel.track(user_info.id,'new_user') if PRODUCTION
+					Democratech::LaPrimaireBot.mixpanel.people.set(user_info.id,tag) if PRODUCTION
 				end
 				user=self.add(user_info)
 			else

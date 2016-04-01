@@ -486,12 +486,12 @@ END
 		slack_msg+=" #{user['zipcode']}," if user['zipcode']
 		slack_msg+=" #{user['city']}, #{user['country']}"
 		Bot.slack_notification(slack_msg,"inscrits",":laprimaire:","LaPrimaire.org")
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_account_created')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_account_created') if PRODUCTION
 		Democratech::LaPrimaireBot.mixpanel.people.append(user[:id],{
 			'city'=>user['city'],
 			'country'=>user['country'],
 			'zipcode'=>user['zipcode']
-		})
+		}) if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 end

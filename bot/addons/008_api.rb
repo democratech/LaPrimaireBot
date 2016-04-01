@@ -95,7 +95,7 @@ END
 		puts "api_access_granted" if DEBUG
 		@users.remove_from_waiting_list(user)
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_grant_beta_access')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_grant_beta_access') if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -103,7 +103,7 @@ END
 		puts "api_allow_user" if DEBUG
 		@users.update_settings(user[:id],{'blocked'=>{'not_allowed'=>false }})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_reallow_user')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_reallow_user') if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -111,7 +111,7 @@ END
 		puts "api_block_candidate_proposals" if DEBUG
 		@users.update_settings(user[:id],{'blocked'=>{'add_candidate'=>true }})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_block_add_candidate')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_block_add_candidate') if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -119,7 +119,7 @@ END
 		puts "api_block_candidate_reviews" if DEBUG
 		@users.update_settings(user[:id],{'blocked'=>{'reviews'=>true }})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_block_candidate_reviews')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_block_candidate_reviews') if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -127,7 +127,7 @@ END
 		puts "api_ban_user" if DEBUG
 		@users.update_settings(user[:id],{'blocked'=>{'abuse'=>true }})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_ban_user')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_ban_user') if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -135,7 +135,7 @@ END
 		puts "api_reset_user" if DEBUG
 		@users.reset(user)
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_reset_user')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_reset_user') if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -148,7 +148,7 @@ END
 			'review'=>false
 		}})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_unblock_user')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_unblock_user') if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 end

@@ -127,8 +127,8 @@ END
 			screen=self.find_by_name("beta/code_ok")
 			@users.remove_from_waiting_list(user)
 			@users.update_settings(user[:id],{'roles'=>{'betatester'=> true}})
-			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_enters_beta_test',{'with_code'=>code})
-			Democratech::LaPrimaireBot.mixpanel.people.append(user[:id],{'betatest_code'=>code})
+			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_enters_beta_test',{'with_code'=>code}) if PRODUCTION
+			Democratech::LaPrimaireBot.mixpanel.people.append(user[:id],{'betatest_code'=>code}) if PRODUCTION
 		else
 			screen=self.find_by_name("beta/code_wrong")
 		end
@@ -142,7 +142,7 @@ END
 			@users.add_to_waiting_list(user)
 			res=@users.get_position_on_wait_list(user[:id])
 			pos=res['position'].to_i
-			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_added_to_waiting_list',{'position'=>pos.to_s})
+			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_added_to_waiting_list',{'position'=>pos.to_s}) if PRODUCTION
 		end
 		pos= (pos==1) ? "1er" : "#{pos}ème"
 		screen[:text] = screen[:text] % {position: pos}
@@ -156,7 +156,7 @@ END
 		behind=(tot-pos).to_s
 		nb_times=user['settings']['actions']['beta_nb_position_checked'].to_i+1
 		@users.update_settings(user[:id],{'actions'=>{'beta_nb_position_checked'=>nb_times}})
-		Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'beta_waiting_list_pos_checked'=>1})
+		Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'beta_waiting_list_pos_checked'=>1}) if PRODUCTION
 		pos= (pos==1) ? "1er" : "#{pos}ème"
 		screen[:text] = screen[:text] % {position: pos, behind: behind}
 		return self.get_screen(screen,user,msg)
