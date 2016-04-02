@@ -17,6 +17,7 @@ ctx,cmd=ARGV[0].split(':') if ARGV[0]
 value=ARGV[1]
 if ctx.nil? or cmd.nil? then
 	puts <<END
+LIVE ? #{!DEBUG}
 * search:user <lastname>
 * search:candidate <name>
 * reallow:search
@@ -32,8 +33,8 @@ if ctx.nil? or cmd.nil? then
 * unblock:user_id <id>
 * betacodes:gen <nb>
 * betacodes:search
-* broadcast:all
-* broadcast:user_id
+* broadcast:all <input_file>
+* broadcast:user_id <user_id> <input_file>
 END
 	exit
 end
@@ -74,7 +75,7 @@ data2=<<END
 			"type": "private"
 		},
 		"date": %{date},
-		"text": "%{cmd}"
+		"text": %{cmd}
 	}
 }
 END
@@ -132,7 +133,7 @@ END
 		res=db.exec_params(get_user_from_waiting_list, [value])
 		if not res.num_tuples.zero? then
 			send_command(JSON.parse(data2 % {
-				cmd:"api/allow_user",
+				cmd:"api/allow_user".to_json,
 				user_id:res[0]['user_id'],
 				firstname:res[0]['firstname'],
 				lastname:res[0]['lastname'],
@@ -163,7 +164,7 @@ when 'grantaccess'
 		if not res.num_tuples.zero? then
 			res.each do |r|
 				send_command(JSON.parse(data2 % {
-					cmd:"api/access_granted",
+					cmd:"api/access_granted".to_json,
 					user_id:r['user_id'],
 					firstname:r['firstname'],
 					lastname:r['lastname'],
@@ -179,7 +180,7 @@ when 'grantaccess'
 		res=db.exec_params(get_user_from_waiting_list, [value])
 		if not res.num_tuples.zero? then
 			send_command(JSON.parse(data2 % {
-				cmd:"api/access_granted",
+				cmd:"api/access_granted".to_json,
 				user_id:res[0]['user_id'],
 				firstname:res[0]['firstname'],
 				lastname:res[0]['lastname'],
@@ -203,7 +204,7 @@ when 'blockaddcandidate'
 		res=db.exec_params(get_user_from_waiting_list, [value])
 		if not res.num_tuples.zero? then
 			send_command(JSON.parse(data2 % {
-				cmd:"api/block_candidate_proposals",
+				cmd:"api/block_candidate_proposals".to_json,
 				user_id:res[0]['user_id'],
 				firstname:res[0]['firstname'],
 				lastname:res[0]['lastname'],
@@ -219,7 +220,7 @@ when 'banuser'
 		res=db.exec_params(get_user, [value])
 		if not res.num_tuples.zero? then
 			send_command(JSON.parse(data2 % {
-				cmd:"api/ban_user",
+				cmd:"api/ban_user".to_json,
 				user_id:res[0]['user_id'],
 				firstname:res[0]['firstname'],
 				lastname:res[0]['lastname'],
@@ -235,7 +236,7 @@ when 'unblock'
 		res=db.exec_params(get_user, [value])
 		if not res.num_tuples.zero? then
 			send_command(JSON.parse(data2 % {
-				cmd:"api/unblock_user",
+				cmd:"api/unblock_user".to_json,
 				user_id:res[0]['user_id'],
 				firstname:res[0]['firstname'],
 				lastname:res[0]['lastname'],
@@ -251,7 +252,7 @@ when 'blockcandidatereview'
 		res=db.exec_params(get_user, [value])
 		if not res.num_tuples.zero? then
 			send_command(JSON.parse(data2 % {
-				cmd:"api/block_candidate_reviews",
+				cmd:"api/block_candidate_reviews".to_json,
 				user_id:res[0]['user_id'],
 				firstname:res[0]['firstname'],
 				lastname:res[0]['lastname'],
@@ -295,7 +296,7 @@ when 'reset'
 		res=db.exec_params(get_user, [value])
 		if not res.num_tuples.zero? then
 			send_command(JSON.parse(data2 % {
-				cmd:"api/reset_user",
+				cmd:"api/reset_user".to_json,
 				user_id:res[0]['user_id'],
 				firstname:res[0]['firstname'],
 				lastname:res[0]['lastname'],
@@ -307,11 +308,14 @@ when 'reset'
 when 'broadcast'
 	case cmd
 	when 'user_id'
+		input_file=ARGV[2]
+		exit("missing input file") if input_file.nil? or !File.exist?(input_file)
+		msg=File.read(input_file).strip
 		get_user="SELECT user_id FROM citizens WHERE user_id=$1"
 		res=db.exec_params(get_user, [value])
 		if not res.num_tuples.zero? then
 			send_command(JSON.parse(data2 % {
-				cmd:"api/reset_user",
+				cmd: "api/broadcast\n#{msg.strip}".to_json,
 				user_id:res[0]['user_id'],
 				firstname:res[0]['firstname'],
 				lastname:res[0]['lastname'],
@@ -320,20 +324,23 @@ when 'broadcast'
 			}))
 		end
 	when 'all'
-		read_waiting_list="SELECT user_id,firstname,lastname,registered FROM waiting_list ORDER BY registered ASC LIMIT $1"
-		res=db.exec_params(read_waiting_list,[value])
+		input_file=ARGV[1]
+		exit("missing input file") if input_file.nil? or !File.exist?(input_file)
+		msg=File.read(input_file).strip
+		get_users="SELECT user_id,firstname,lastname FROM citizens"
+		res=db.exec(get_users)
 		if not res.num_tuples.zero? then
 			res.each do |r|
 				send_command(JSON.parse(data2 % {
-					cmd:"api/access_granted",
+					cmd: "api/broadcast\n#{msg.strip}".to_json,
 					user_id:r['user_id'],
 					firstname:r['firstname'],
 					lastname:r['lastname'],
 					username:r['username'],
 					date:Time.now().to_i
 				}))
-				puts "Access granted to user #{r['user_id']} : #{r['firstname']} #{r['lastname']} registered on #{r['registered']}"
-				sleep(1)
+				puts "Broadcast msg sent to #{r['user_id']} : #{r['firstname']} #{r['lastname']}"
+				sleep(1.0/3.0)
 			end
 		end
 	end

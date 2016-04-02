@@ -9,10 +9,12 @@ end
 
 DEBUG=(ENV['RACK_ENV']!='production')
 PRODUCTION=(ENV['RACK_ENV']=='production')
-TYPINGSPEED=DEBUG ? 100 : 70
-TYPINGSPEED_SLOW=DEBUG ? 40 : 40
+require 'pp' if DEBUG
+TYPINGSPEED= DEBUG ? 200 : 70
+TYPINGSPEED_SLOW= DEBUG ? 40 : 40
 MAX_CANDIDATES_PROPOSAL=10
 RESET_WORDS=['/start','start','/accueil','accueil','/reset','reset','/retour','retour','/sortir','sortir']
+IGNORE_CONTEXT=["api","help"]
 PGPWD=DEBUG ? PGPWD_TEST : PGPWD_LIVE
 PGNAME=DEBUG ? PGNAME_TEST : PGNAME_LIVE
 PGUSER=DEBUG ? PGUSER_TEST : PGUSER_LIVE

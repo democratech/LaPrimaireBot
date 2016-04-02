@@ -114,7 +114,7 @@ END
 		end
 
 		def reset(user)
-			puts "USER #{user}"
+			puts "reset user #{user}"
 			bot_session={
 				'last_update_id'=>nil,
 				'current'=>nil,
@@ -149,7 +149,6 @@ END
 					'email_optin'=>false
 				}
 			}
-			puts "BEFORE #{@users[user[:id]]['session']}"
 			self.update_settings(user[:id],user_settings)
 			@users[user[:id]]['session']={
 				'last_update_id'=>nil,
@@ -265,6 +264,15 @@ END
 			res=Bot::Db.query("delete_beta_code",[code])
 			ok=!res.num_tuples.zero?
 			return ok
+		end
+
+		def previous_state(user_id)
+			user=@users[user_id]
+			screen=user['session']['previous_screen'].nil? ? self.find_by_name("home/welcome") : user['session']['previous_screen']
+			screen=Hash[screen.map{|(k,v)| [k.to_sym,v]}] # pas recursif
+			screen[:kbd_options]=Hash[screen[:kbd_options].map{|(k,v)| [k.to_sym,v]}] unless screen[:kbd_options].nil?
+			@users[user_id]['session']=user['session']['previous_session'].clone
+			return screen
 		end
 	end
 end

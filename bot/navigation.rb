@@ -84,11 +84,16 @@ module Bot
 			# we check that this message has not already been answered (i.e. telegram sending a msg we already processed)
 			return nil,nil if @users.already_answered(user[:id],update_id)
 			session=user['session']
-			@users.next_answer(user[:id],'free_text',1,msg.text) if update_id==-1
+			if update_id==-1 then # msg comes from api and not from telegram
+				api_cb,api_payload=msg.text.split("\n",2).each {|x| x.strip!}
+				raise "no callback given" if api_cb.nil?
+				@users.next_answer(user[:id],'free_text',1,api_cb)
+				session=@users.update_session(user[:id],{'api_payload'=>api_payload}) if !api_payload.nil?
+			end
 			puts "user read session : #{user}" if DEBUG
 			input=session['expected_input']
 			session['current']="home/welcome" if RESET_WORDS.include?(msg.text)
-			if (input=='answer' or msg.text=="/start") then # we expect the user to have used the proposed keyboard to answer
+			if (input=='answer' or RESET_WORDS.include?(msg.text)) then # we expect the user to have used the proposed keyboard to answer
 				screen=self.find_by_answer(msg.text,self.context(session['current']))
 				if not screen.nil? then
 					res,options=get_screen(screen,user,msg)
@@ -106,8 +111,8 @@ module Bot
 						jump_to=next_screen[:jump_to]
 					end
 				else
-					if not user['settings']['actions']['first_help_given'] then
-						screen=self.find_by_name("home/first_help")
+					if not user['settings']['actions']['first_help_given'] and not DONT_SAVE_SCREENS.include?(user['session']['current']) then
+						screen=self.find_by_name("help/first_help")
 					else
 						res,options=self.dont_understand(user,msg)
 					end
@@ -152,32 +157,13 @@ module Bot
 			puts "dont_understand: #{msg}" if DEBUG
 			Democratech::LaPrimaireBot.tg_client.track('dont_understand',user[:id],msg.text) if PRODUCTION
 			if not user['settings']['actions']['first_help_given'] then
-				screen=self.find_by_name("home/first_help")
+				screen=self.find_by_name("help/first_help")
 				res,options=self.format_answer(screen,user)
 				callback=self.to_callback(screen[:callback].to_s)
 				self.method(callback).call(msg,user,screen) if self.respond_to?(callback)
 			else
 				screen=self.find_by_name("system/dont_understand")
 				res,options=self.format_answer(screen,user)
-				if reset then
-					screen=self.find_by_name("system/something_wrong")
-					a,b=get_screen(screen,user,msg)
-					res+=a unless a.nil?
-					options=b unless b.nil?
-					@users.next_answer(user[:id],'answer')
-					screen=self.find_by_answer("/start")
-					a,b=get_screen(screen,user,msg)
-					res+=a unless a.nil?
-					options.merge!(b) unless b.nil?
-					jump_to=screen[:jump_to]
-					while !jump_to.nil? do
-						next_screen=find_by_name(jump_to)
-						a,b=get_screen(next_screen,user,msg)
-						res+=a unless a.nil?
-						options=b unless b.nil?
-						jump_to=next_screen[:jump_to]
-					end
-				end
 			end
 			return res,options
 		end
@@ -189,7 +175,15 @@ module Bot
 			return nil,nil if screen.nil?
 			callback=self.to_callback(screen[:callback].to_s) unless screen[:callback].nil?
 			previous=caller_locations(1,1)[0].label
-			@users.update_session(user[:id],{'current'=>screen[:id]})
+			session_update={ 'current'=>screen[:id] }
+			unless IGNORE_CONTEXT.include?(self.context(screen[:id])) then
+				session_update['previous_screen']=screen
+				backup_session=user['session'].clone
+				backup_session.delete('previous_session')
+				backup_session.delete('previous_screen')
+				session_update['previous_session']=backup_session
+			end
+			@users.update_session(user[:id],session_update)
 			if !callback.nil? && previous!=callback && self.respond_to?(callback)
 				res,options=self.method(callback).call(msg,user,screen.clone)
 			else
