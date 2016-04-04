@@ -13,6 +13,7 @@ require 'pp' if DEBUG
 TYPINGSPEED= DEBUG ? 200 : 70
 TYPINGSPEED_SLOW= DEBUG ? 40 : 40
 MAX_CANDIDATES_PROPOSAL=10
+MAX_CANDIDATES_SUPPORT=5
 RESET_WORDS=['/start','start','/accueil','accueil','/reset','reset','/retour','retour','/sortir','sortir']
 IGNORE_CONTEXT=["api","help"]
 PGPWD=DEBUG ? PGPWD_TEST : PGPWD_LIVE

@@ -8,6 +8,7 @@ DROP TABLE humanbots;
 DROP TABLE reviewers;
 DROP TABLE donations;
 DROP TABLE supporters;
+DROP TABLE candidates_views;
 DROP TABLE candidates;
 DROP TABLE citizens_tags;
 DROP TABLE tags;

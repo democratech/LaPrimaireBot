@@ -51,15 +51,122 @@ SELECT y.candidate_id, y.name, y.gender, count(y.user_id) as nb_supporters
           FROM candidates AS z
           INNER JOIN supporters AS s
 	  ON (s.candidate_id = z.candidate_id)
-	  WHERE s.user_id = $1
+	  WHERE s.user_id = $1 AND z.verified
   ) as y
   INNER JOIN supporters AS x
   ON (x.candidate_id = y.candidate_id)
   GROUP BY y.candidate_id,y.name,y.gender
   ORDER BY nb_supporters DESC
 END
+			'get_citizens_supported_by_user_id'=><<END,
+SELECT y.candidate_id, y.name, y.gender, count(y.user_id) as nb_supporters
+  FROM (
+	  SELECT z.candidate_id,z.name,z.gender,s.user_id
+          FROM candidates AS z
+          INNER JOIN supporters AS s
+	  ON (s.candidate_id = z.candidate_id)
+	  WHERE s.user_id = $1 AND (NOT z.verified OR z.verified IS NULL)
+  ) as y
+  INNER JOIN supporters AS x
+  ON (x.candidate_id = y.candidate_id)
+  GROUP BY y.candidate_id,y.name,y.gender
+  ORDER BY nb_supporters DESC
+END
+
 			'set_gender'=><<END,
 UPDATE candidates SET gender=$1 WHERE candidate_id=$2
+END
+			'get_stats_by_user_id'=><<END,
+SELECT count(c.user_id) as total, sum(
+	       case
+	       when verified then 1
+	       else 0
+	       end
+       ) AS verified, count(cv.user_id) AS viewed
+  FROM candidates AS c
+  LEFT JOIN candidates_views AS cv
+    ON (
+	       cv.candidate_id = c.candidate_id
+	   AND cv.user_id=$1
+       )
+ WHERE c.user_id IS NOT null;
+END
+			'get_candidate_by_id'=><<END,
+SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
+  FROM candidates as ca
+ INNER JOIN (
+		SELECT c.candidate_id, (
+			       case
+			       when cv.nb_views is null then 0
+			       else cv.nb_views
+			       end
+		       ) as nb_views, count(s.user_id) as nb_soutiens, (
+			       case
+			       when s2.user_id is not null then true
+			       else false
+			       end
+		       ) as mon_soutien
+		  FROM candidates as c
+		  LEFT JOIN candidates_views as cv
+		    ON (
+			       cv.candidate_id=c.candidate_id
+			   AND cv.user_id=$2
+		       )
+		  LEFT JOIN supporters as s
+		    ON ( s.candidate_id=c.candidate_id)
+		  LEFT JOIN supporters as s2
+		    ON (
+			       s2.candidate_id=c.candidate_id
+			   AND s2.user_id=$2
+		       )
+		 WHERE c.verified AND c.candidate_id=$1
+		 GROUP BY c.candidate_id, cv.nb_views, s2.user_id
+       ) as z
+    ON (z.candidate_id = ca.candidate_id)
+END
+
+			'get_next_candidate_by_user_id'=><<END,
+SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
+  FROM candidates as ca
+ INNER JOIN (
+		SELECT c.candidate_id, (
+			       case
+			       when cv.nb_views is null then 0
+			       else cv.nb_views
+			       end
+		       ) as nb_views, count(s.user_id) as nb_soutiens, (
+			       case
+			       when s2.user_id is not null then true
+			       else false
+			       end
+		       ) as mon_soutien
+		  FROM candidates as c
+		  LEFT JOIN candidates_views as cv
+		    ON (
+			       cv.candidate_id=c.candidate_id
+			   AND cv.user_id=$1
+		       )
+		  LEFT JOIN supporters as s
+		    ON ( s.candidate_id=c.candidate_id)
+		  LEFT JOIN supporters as s2
+		    ON (
+			       s2.candidate_id=c.candidate_id
+			   AND s2.user_id=$1
+		       )
+		 WHERE c.verified
+		 GROUP BY c.candidate_id, cv.nb_views, s2.user_id
+       ) as z
+    ON (z.candidate_id = ca.candidate_id)
+    ORDER BY z.nb_views ASC
+END
+			'update_views_by_user_id'=><<END,
+UPDATE candidates_views SET nb_views=nb_views+1, last_view=now() WHERE candidate_id=$1 AND user_id=$2
+END
+			'add_viewer_for_candidate_id'=><<END,
+INSERT INTO candidates_views (candidate_id,user_id) VALUES ($1,$2) RETURNING *
+END
+			'search_candidate_by_name'=><<END,
+SELECT c.* FROM candidates AS c WHERE c.name ~* $1 AND c.verified LIMIT $2
 END
 			}
 			queries.each { |k,v| Bot::Db.prepare(k,v) }
@@ -90,6 +197,15 @@ END
 			return Bot::Db.query("register_candidate_from_user",[user['id'],uuid,name.join(' '),user['zipcode'],user['country'],user['city_id'],user['email'],true,Time.now()])[0]
 		end
 
+		def find(candidate_id,user_id)
+			res=Bot::Db.query("get_candidate_by_id",[candidate_id,user_id])
+			return nil if res.num_tuples.zero?
+			candidate=res[0]
+			self.add_viewer(candidate['candidate_id'].to_i,user_id) if candidate['nb_views'].to_i==0
+			self.increment_view_count(candidate['candidate_id'].to_i,user_id)
+			return candidate
+		end
+
 		def get(candidate_info)
 			res=self.search({
 				:by=>"candidate_id",
@@ -108,12 +224,24 @@ END
 			return Bot::Db.query("get_candidates_supported_by_user_id",[user_id])
 		end
 
+		def proposed_by(user_id)
+			return Bot::Db.query("get_citizens_supported_by_user_id",[user_id])
+		end
+
 		def add_supporter(user_id,candidate_id)
-			res=self.supported_by(user_id)
+			res=Bot::Db.query("get_candidate_by_id",[candidate_id,user_id])
+			return nil if res.num_tuples.zero?
+			candidate=res[0]
+			res= candidate['verified'].to_b ? self.supported_by(user_id) : self.proposed_by(user_id)
 			if not res.num_tuples.zero? then
 				res.each do |r|
-					return if r['candidate_id']==candidate_id
+					return if r['candidate_id'].to_i==candidate_id.to_i
 				end
+			end
+			if candidate['verified'].to_b then
+				return if res.num_tuples>4
+			else
+				return if res.num_tuples>9
 			end
 			return Bot::Db.query("add_supporter_to_candidate",[user_id,candidate_id])
 		end
@@ -126,8 +254,37 @@ END
 			return Bot::Candidates.index.search(name,{hitsPerPage:1})
 		end
 
+		def search_candidate(name,limit=6)
+			return Bot::Db.query("search_candidate_by_name",[name,limit]) 
+		end
+
 		def search(query)
 			return Bot::Db.query("get_candidate_by_"+query[:by],[query[:target]]) 
+		end
+
+		def add_viewer(candidate_id,user_id)
+			return Bot::Db.query('add_viewer_for_candidate_id',[candidate_id,user_id])
+		end
+
+		def increment_view_count(candidate_id,user_id)
+			return Bot::Db.query('update_views_by_user_id',[candidate_id,user_id])
+		end
+
+		def next_candidate(user_id)
+			candidate=Bot::Db.query('get_next_candidate_by_user_id',[user_id])[0]
+			self.add_viewer(candidate['candidate_id'].to_i,user_id) if candidate['nb_views'].to_i==0
+			self.increment_view_count(candidate['candidate_id'].to_i,user_id)
+			return candidate
+		end
+
+		def stats(user_id)
+			res=Bot::Db.query('get_stats_by_user_id',[user_id])
+			return nil if res.num_tuples.zero?
+			return {
+				'total'=>res[0]['total'],
+				'verified'=>res[0]['verified'],
+				'viewed'=>res[0]['viewed']
+			}
 		end
 	end
 end

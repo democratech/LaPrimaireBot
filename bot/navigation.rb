@@ -111,7 +111,7 @@ module Bot
 						jump_to=next_screen[:jump_to]
 					end
 				else
-					if not user['settings']['actions']['first_help_given'] and not DONT_SAVE_SCREENS.include?(user['session']['current']) then
+					if not user['settings']['actions']['first_help_given'] and not IGNORE_CONTEXT.include?(self.context(user['session']['current'])) then
 						screen=self.find_by_name("help/first_help")
 					else
 						res,options=self.dont_understand(user,msg)
@@ -236,7 +236,7 @@ module Bot
 					kbd.delete(@screens[n1][n2][:answer])
 				end
 			end
-			screen[:kbd_add].each { |k| kbd.push(k) } if screen[:kbd_add]
+			screen[:kbd_add].each { |k| kbd.unshift(k) } if screen[:kbd_add]
 			if not kbd.nil? then
 				if kbd.length>1 and not screen[:kbd_vertical] then # display keyboard on several rows
 					newkbd=[]

@@ -21,6 +21,8 @@
 module Bot
 	@@emoticons={ # see http://unicode.org/emoji/charts/full-emoji-list.html
 		:blush=>"\u{1F60A}",
+		:bust=>"\u{1F464}",
+		:busts=>"\u{1F465}",
 		:grinning=>"\u{1F600}",
 		:frowning=>"\u{2639}",
 		:info=>"\u{2139}",
@@ -62,7 +64,8 @@ module Bot
 		:man=>"\u{1F468}",
 		:inbox=>"\u{1F4E5}",
 		:trash=>"\u{1F5D1}",
-		:back=>"\u{21A9}"
+		:back=>"\u{21A9}",
+		:loupe=>"\u{1F50E}"
 	}
 	@@messages={
 		:fr=>{

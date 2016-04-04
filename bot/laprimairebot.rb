@@ -74,6 +74,10 @@ module Democratech
 						LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
 						sleep(writing_time)
 						options[:chat_id]=id
+						if l.start_with?("no_preview:") then
+							l=l.split(':',2)[1]
+							options[:disable_web_page_preview]=true
+						end
 						options[:text]=l
 						if idx<max and not kbd_hidden then
 							options[:reply_markup]=Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
