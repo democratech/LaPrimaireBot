@@ -74,7 +74,9 @@ module Democratech
 						LaPrimaireBot.tg_client.api.sendChatAction(chat_id: id, action: "typing")
 						sleep(writing_time)
 						options[:chat_id]=id
+						temp_web_page_preview_disabling=false
 						if l.start_with?("no_preview:") then
+							temp_web_page_preview_disabling=true
 							l=l.split(':',2)[1]
 							options[:disable_web_page_preview]=true
 						end
@@ -86,6 +88,7 @@ module Democratech
 							options[:reply_markup]=kbd
 						end
 						LaPrimaireBot.tg_client.api.sendMessage(options)
+						options.delete(:disable_web_page_preview) if temp_web_page_preview_disabling
 					end
 				end
 			end
