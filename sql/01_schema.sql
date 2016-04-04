@@ -63,7 +63,7 @@ CREATE TABLE citizens_tags (
 );
 
 CREATE TABLE candidates (
-	candidate_id bigint UNIQUE, -- the candidate official ID (used to construct URL)
+	candidate_id bigint PRIMARY KEY, -- the candidate official ID (used to construct URL)
 	user_id integer REFERENCES citizens(user_id), -- if the candidate is also registered as a participating citizen
 	name varchar(60),
 	gender varchar(1) DEFAULT 'M',
@@ -88,6 +88,8 @@ CREATE TABLE candidates (
 	linkedin varchar(250),
 	tumblr varchar(250),
 	blog varchar(250),
+	wikipedia varchar(250),
+	instagram varchar(250),
 	other_media text,
 	summary text,
 	date_added timestamp DEFAULT CURRENT_TIMESTAMP, -- date when the candidate has been addeed

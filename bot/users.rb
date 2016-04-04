@@ -64,6 +64,9 @@ END
 			'delete_beta_code'=><<END,
 DELETE FROM beta_codes WHERE code=$1 RETURNING code
 END
+			'count_citizens'=><<END,
+SELECT COUNT(*) as nb_citizens FROM citizens; 
+END
 			'get_user_position_in_wait_list'=><<END,
 SELECT a.position, b.total FROM (SELECT COUNT(w.user_id) AS position FROM waiting_list AS w, (SELECT user_id,registered FROM waiting_list WHERE user_id=$1) AS z WHERE w.registered<=z.registered) AS a, (SELECT count(*) AS total FROM waiting_list) AS b;
 END
@@ -114,7 +117,7 @@ END
 		end
 
 		def reset(user)
-			puts "USER #{user}"
+			puts "reset user #{user}"
 			bot_session={
 				'last_update_id'=>nil,
 				'current'=>nil,
@@ -149,7 +152,6 @@ END
 					'email_optin'=>false
 				}
 			}
-			puts "BEFORE #{@users[user[:id]]['session']}"
 			self.update_settings(user[:id],user_settings)
 			@users[user[:id]]['session']={
 				'last_update_id'=>nil,
@@ -261,10 +263,23 @@ END
 			return Bot::Db.query("get_user_position_in_wait_list",[user_id])[0]
 		end
 
+		def get_total()
+			return Bot::Db.query("count_citizens",[]) 
+		end
+
 		def beta_code_ok(code)
 			res=Bot::Db.query("delete_beta_code",[code])
 			ok=!res.num_tuples.zero?
 			return ok
+		end
+
+		def previous_state(user_id)
+			user=@users[user_id]
+			screen=user['session']['previous_screen'].nil? ? self.find_by_name("home/welcome") : user['session']['previous_screen']
+			screen=Hash[screen.map{|(k,v)| [k.to_sym,v]}] # pas recursif
+			screen[:kbd_options]=Hash[screen[:kbd_options].map{|(k,v)| [k.to_sym,v]}] unless screen[:kbd_options].nil?
+			@users[user_id]['session']=user['session']['previous_session'].clone
+			return screen
 		end
 	end
 end

@@ -45,6 +45,11 @@ END
 					:reset_user=><<-END,
 %{firstname}, votre compte vient d'être remis à zéro. Tapez /start pour continuer.
 END
+					:broadcast=><<-END,
+Excusez-moi pour cette interruption mais je viens de recevoir le message suivant de la part de LaPrimaire.org qu'on m'a chargé de vous transmettre :
+"%{broadcast_msg}"
+Cliquez sur le bouton "#{Bot.emoticons[:back]} Retour" dès que vous souhaitez reprendre où vous en étiez.
+END
 				}
 			}
 		}
@@ -84,6 +89,18 @@ END
 					:text=>messages[:fr][:api][:block_candidate_proposals],
 					:disable_web_page_preview=>true,
 					:jump_to=>"home/welcome"
+				},
+				:broadcast=>{
+					:text=>messages[:fr][:api][:broadcast],
+					:save_session=>true,
+					:disable_web_page_preview=>true,
+					:kbd=>["api/back"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true},
+					:callback=>"api/broadcast"
+				},
+				:back=>{
+					:answer=>"#{Bot.emoticons[:back]} Retour",
+					:callback=>"api/broadcast"
 				}
 			}
 		}
@@ -149,6 +166,26 @@ END
 		}})
 		@users.next_answer(user[:id],'answer')
 		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_unblock_user') if PRODUCTION
+		return self.get_screen(screen,user,msg)
+	end
+
+	def api_broadcast(msg,user,screen)
+		puts "api_broadcast" if DEBUG
+		if screen[:save_session] then
+			current= user['session']['current'].nil? ? "home/welcome" :user['session']['current']
+			broadcast_msg=user['session']['api_payload']
+			previous_screen=self.find_by_name(current)
+			@users.next_answer(user[:id],'answer')
+			@users.clear_session(user[:id],'api_payload')
+			screen[:text]=screen[:text] % {broadcast_msg: broadcast_msg}
+		else
+			screen=@users.previous_state(user[:id])
+			if !screen[:text].nil? and !screen[:text].empty? then
+				screen[:text]="Merci pour votre attention ! Reprenons...\n"+screen[:text]
+			else
+				screen[:text]="Merci pour votre attention ! Reprenons..."
+			end
+		end
 		return self.get_screen(screen,user,msg)
 	end
 end

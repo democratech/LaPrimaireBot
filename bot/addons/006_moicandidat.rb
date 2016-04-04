@@ -24,6 +24,9 @@ module MoiCandidat
 		messages={
 			:fr=>{
 				:moi_candidat=>{
+					:menu=><<-END,
+La possibilité de se déclarer candidat depuis l'application sera disponible très prochainement. En attendant, n'hésitez pas à <a href='https://laprimaire.org/contact/'>nous contacter</a> si vous souhaitez vous déclarer candidat.
+END
 					:start=><<-END,
 Mais... c'est vous %{firstname} %{lastname} !
 Merci beaucoup pour votre intérêt à devenir candidat(e).
@@ -67,6 +70,12 @@ END
 		}
 		screens={
 			:moi_candidat=>{
+				:menu=>{
+					:answer=>"#{Bot.emoticons[:raising_hand]} Etre candidat",
+					:text=>messages[:fr][:moi_candidat][:menu],
+					:jump_to=>"mes_citoyens/menu",
+					:parse_mode=>"HTML"
+				},
 				:start=>{
 					:text=>messages[:fr][:moi_candidat][:start],
 					:callback=>"moi_candidat/intro",

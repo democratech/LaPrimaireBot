@@ -21,6 +21,9 @@
 module Bot
 	@@emoticons={ # see http://unicode.org/emoji/charts/full-emoji-list.html
 		:blush=>"\u{1F60A}",
+		:bust=>"\u{1F464}",
+		:envelope=>"\u{2709}",
+		:busts=>"\u{1F465}",
 		:grinning=>"\u{1F600}",
 		:frowning=>"\u{2639}",
 		:info=>"\u{2139}",
@@ -34,6 +37,8 @@ module Bot
 		:finger_up=>"\u{261D}",
 		:french_flag=>"\u{1F1EB}",
 		:finger_right=>"\u{1F449}",
+		:finger_up=>"\u{261D}",
+		:raising_hand=>"\u{1F64B}",
 		:home=>"\u{1F3E0}",
 		:thumbs_up=>"\u{1F44D}",
 		:thumbs_down=>"\u{1F44E}",
@@ -62,7 +67,8 @@ module Bot
 		:man=>"\u{1F468}",
 		:inbox=>"\u{1F4E5}",
 		:trash=>"\u{1F5D1}",
-		:back=>"\u{21A9}"
+		:back=>"\u{21A9}",
+		:loupe=>"\u{1F50E}"
 	}
 	@@messages={
 		:fr=>{

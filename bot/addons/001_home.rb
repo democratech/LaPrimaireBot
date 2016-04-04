@@ -31,24 +31,20 @@ Mon rôle est de vous accompagner et de vous informer tout au long du dérouleme
 Mais assez discuté, commençons !
 END
 					:menu=><<-END,
+no_preview:Avec LaPrimaire.org, vous pouvez :
+* <b>#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Voir les candidats</b> pour voir et soutenir la candidature de candidats déjà déclarés
+* <b>#{Bot.emoticons[:speech_balloon]} Proposer un candidat</b> pour suggérer des citoyens que vous souhaiteriez voir se présenter en tant que candidat
+* <b>#{Bot.emoticons[:raising_hand]} Etre candidat</b> pour porter vous-mêmes les idées que vous défendez
 Que voulez-vous faire ?
 END
 					:abuse=><<-END,
 Désolé votre comportement sur LaPrimaire.org est en violation de la Charte que vous avez acceptée et a entraîné votre exclusion  #{Bot.emoticons[:crying_face]}
 END
+					:nous_contacter=><<-END,
+N'hésitez à <a href='https://laprimaire.org/contact/'>nous contacter</a> si jamais vous avez des questions ou bien si quelque chose ne fonctionne pas. Nous essaierons de vous répondre dans les plus brefs délais.
+END
 					:not_allowed=><<-END,
 Désolé mais au vu des informations que vous nous avez fournies, vous ne remplissez pas les conditions pour pouvoir participer à LaPrimaire.org #{Bot.emoticons[:crying_face]}
-END
-					:first_help_ok=><<-END,
-Parfait, reprenons !
-END
-					:first_help=><<-END,
-Désolé, je ne comprends pas ce que vous m'écrivez #{Bot.emoticons[:crying_face]}
-Pour communiquer avec moi, il est plus simple d'utiliser les boutons qui s'affichent sur le clavier (en bas de l'écran) lorsque celui-ci apparaît.
-De temps en temps, je vous demanderai d'écrire mais, le plus souvent, le clavier suffit #{Bot.emoticons[:smile]}
-Si, par une fausse manipulation, vous faîtes disparaître les boutons du clavier, vous pouvez toujours le réafficher en cliquant sur l'icône suivante :
-image:static/images/keyboard-button.png
-Cliquez-sur le bouton "OK bien compris !" du clavier ci-dessous pour continuer.
 END
 				}
 			}
@@ -66,6 +62,7 @@ END
 					:answer=>"#{Bot.emoticons[:home]} Accueil",
 					:text=>messages[:fr][:home][:menu],
 					:callback=>"home/menu",
+					:parse_mode=>"HTML",
 					:kbd=>[],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
@@ -73,18 +70,10 @@ END
 					:text=>messages[:fr][:home][:abuse],
 					:disable_web_page_preview=>true
 				},
-				:first_help_ok=>{
-					:answer=>"Ok bien compris #{Bot.emoticons[:thumbs_up]}",
-					:text=>messages[:fr][:home][:first_help_ok],
-					:callback=>"home/first_help_cb",
-				},
-				:first_help=>{
-					:text=>messages[:fr][:home][:first_help],
-					:callback=>"home/first_help_cb",
-					:save_session=>true,
-					:kbd=>["home/first_help_ok"],
-					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true},
-					:disable_web_page_preview=>true
+				:nous_contacter=>{
+					:answer=>"#{Bot.emoticons[:envelope]} Nous contacter",
+					:text=>messages[:fr][:home][:nous_contacter],
+					:parse_mode=>"HTML"
 				},
 				:not_allowed=>{
 					:text=>messages[:fr][:home][:not_allowed],
@@ -97,34 +86,6 @@ END
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"home/menu"}}})
 	end
 
-	def home_first_help_cb(msg,user,screen)
-		puts "home_first_help_cb" if DEBUG
-		if screen[:save_session] then
-			current= user['session']['current'].nil? ? "home/welcome" :user['session']['current']
-			previous_screen=self.find_by_name(current)
-			@users.next_answer(user[:id],'answer')
-			@users.update_session(user[:id],{'previous_screen'=>previous_screen}) if previous_screen[:id]!="home/first_help"
-		else
-			previous_screen=user['session']['previous_screen'].nil? ? "home/welcome" : user['session']['previous_screen']
-			screen=self.find_by_name(previous_screen['id'])
-			if screen[:text] then
-				keywords=screen[:text].scan(/%{(.*?)}/).flatten
-				if not keywords.empty? then
-					keywords.each do |k|
-						var=user[k] ? user[k] : "variable_inconnue"
-						screen[:text].gsub!("%{#{k}}",var)
-					end
-				end
-				screen[:text]="Parfait, reprenons !\n"+screen[:text]
-			else
-				screen[:text]="Parfait, reprenons !"
-			end
-			@users.update_settings(user[:id],{'actions'=>{'first_help_given'=> true}})
-			@users.clear_session(user[:id],'previous_screen')
-		end
-		return self.get_screen(screen,user,msg)
-	end
-
 	def home_welcome(msg,user,screen)
 		puts "home_welcome" if DEBUG
 		betatester=user['settings']['roles']['betatester'].to_b
@@ -135,13 +96,11 @@ END
 			screen=self.find_by_name("home/abuse")
 		elsif not_allowed then
 			screen=self.find_by_name("home/not_allowed")
-		elsif betatester and (not (user['email'] or user['city'] or user['country']) or not can_vote)then
-			screen=self.find_by_name("welcome/hello")
-		elsif betatester and can_vote and user['email'] and user['city'] and user['country'] then
+		elsif can_vote and user['email'] and user['city'] and user['country'] then
 			screen=self.find_by_name("home/menu")
 			screen[:kbd_del]=["home/menu"]
 		else
-			screen=self.find_by_name("beta/welcome")
+			screen=self.find_by_name("welcome/hello")
 		end
 		return self.get_screen(screen,user,msg)
 	end

@@ -24,14 +24,17 @@ module About
 		messages={
 			:fr=>{
 				:about=>{
-					:laprimaire=><<-END,
-En savoir plus sur LaPrimaire.org
+					:menu=><<-END,
+no_preview:LaPrimaire.org est une initiative citoyenne qui vise à faire émerger des candidats crédibles et représentatifs pour l’élection présidentielle de 2017, en dehors du cadre des partis politiques.
+A l’issue de la Primaire, un nouveau parti politique sera créé et une campagne de financement participatif lancée afin de permettre au candidat issu de LaPrimaire.org de concourir à l'élection présidentielle.
+no_preview:L'objectif est de parvenir à rassembler au minimum 100.000 citoyens pour donner du poids au candidat qui sera issu de LaPrimaire.org. Nous sommes actuellement %{nb} participants (soit %{percentage}/100 de l'objectif).
+no_preview:<i>PS: Si le nombre de participants est plus petit que celui affiché sur le site web, c'est parce que l'application vient d'etre lancée et il faut laisser un peu de temps aux 22.000 citoyens pré-inscrits sur le site pour s'enregistrer sur l'application LaPrimaire.org #{Bot.emoticons[:smile]}</i>
 END
 					:deroulement=><<-END,
 Cliquez pour voir <a href="https://laprimaire.org/deroulement">le déroulement de LaPrimaire</a>
 END
 					:equipe=><<-END,
-Cliquez pour voir <a href="https://laprimaire.org/deroulement">l'équipe derrière LaPrimaire.org</a>
+Cliquez pour voir <a href="https://laprimaire.org/equipe">l'équipe derrière LaPrimaire.org</a>
 END
 					:info=><<-END,
 Cliquez pour <a href="https://laprimaire.org">découvrir LaPrimaire.org</a>
@@ -47,10 +50,12 @@ END
 		}
 		screens={
 			:about=>{
-				:laprimaire=>{
+				:menu=>{
 					:answer=>"#{Bot.emoticons[:info]} A propos",
-					:text=>messages[:fr][:about][:laprimaire],
+					:text=>messages[:fr][:about][:menu],
 					:disable_web_page_preview=>true,
+					:callback=>"about/menu_cb",
+					:parse_mode=>"HTML",
 					:kbd=>["about/deroulement","about/equipe","about/info","about/chiffres","about/don","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
@@ -88,7 +93,17 @@ END
 		}
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
-		Bot.addMenu({:home=>{:menu=>{:kbd=>"about/laprimaire"}}})
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"about/menu"}}})
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"home/nous_contacter"}}})
+	end
+
+	def about_menu_cb(msg,user,screen)
+		puts "about_menu_cb" if DEBUG
+		res=@users.get_total()
+		nb=res[0]['nb_citizens'].to_i
+		percentage=(100*(nb.to_f/100000.to_f)).to_i
+		screen[:text]=screen[:text] % {nb:nb.to_s,percentage:percentage.to_s} 
+		return self.get_screen(screen,user,msg)
 	end
 
 	def about_intro(msg,user,screen)
