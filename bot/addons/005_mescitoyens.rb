@@ -18,6 +18,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 =end
 
+#La possibilité de se déclarer candidat depuis l'application sera disponible très prochainement. En attendant, n'hésitez pas à nous envoyer un email à <a href='https://laprimaire.org/contact/?topic=Je%20souhaite%20%C3%AAtre%20candidat%20%C3%A0%20LaPrimaire.org'>nous contacter</a> si vous souhaitez vous déclarer candidat.
 # Si aucun candidat ne vous plait, vous pouvez proposer les citoyen(ne)s que vous souhaiteriez voir être candidat(e)s et ainsi les inciter à se présenter.
 #
 module MesCitoyens
@@ -35,7 +36,7 @@ END
 no_preview:Vous avez à l'esprit un(e) citoyen(e) qui devrait participer activement à la vie politique du pays ? Quel sont ses nom et prénom ?
 END
 					:empty=><<-END,
-no_preview:Pour le moment, vous n'avez proposé aucun(e) citoyen(ne). Si vous avez en tête un(e) citoyen(ne) dont les compétences seraient utiles pour construire l'avenir du pays, dites-le nous en utilisant le bouton <i>#{Bot.emoticons[:finger_right]} Proposer un citoyen</i> ci-dessous. Nous démarcherons les citoyens les plus plébiscités pour les convaincre de se présenter sur LaPrimaire.org !
+no_preview:Pour le moment, vous n'avez proposé aucun(e) citoyen(ne). Si vous avez en tête un(e) citoyen(ne) dont les compétences seraient utiles pour construire l'avenir du pays, dites-le nous en utilisant le bouton <i>#{Bot.emoticons[:speech_balloon]} Proposer un citoyen</i> ci-dessous. Nous démarcherons les citoyens les plus plébiscités pour les convaincre de se présenter sur LaPrimaire.org !
 END
 					:how=><<-END,
 Vous avez la possibilité de proposer jusqu'à 5 citoyens que vous aimeriez voir se porter candidat sur LaPrimaire.org.
@@ -95,17 +96,20 @@ END
 					:already_candidate=><<-END,
 no_preview:Bonne nouvelle ! %{name} est déjà officiellement %{candidat} sur LaPrimaire.org, vous pouvez d'ores et déjà aller soutenir sa candidature. 
 END
+					:use_keyboard=><<-END,
+Désolé, je n'ai pas compris qui vous souhaitiez supprimer de votre liste... utilisez les boutons du clavier pour choisir le ou la candidate que vous souhaitez supprimer s'il vous plait.
+END
 				}
 			}
 		}
 		screens={
 			:mes_citoyens=>{
 				:menu=>{
-					:answer=>"#{Bot.emoticons[:finger_right]} Proposer un candidat",
+					:answer=>"#{Bot.emoticons[:speech_balloon]} Proposer un candidat",
 					:text=>messages[:fr][:mes_citoyens][:menu],
 					:callback=>"mes_citoyens/menu_cb",
 					:disable_web_page_preview=>true,
-					:kbd=>["mes_citoyens/new","mes_citoyens/del_ask","mes_citoyens/how","home/menu"],
+					:kbd=>["mes_citoyens/new","mes_citoyens/del_ask","mes_citoyens/how","moi_candidat/menu","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:empty=>{
@@ -123,7 +127,7 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:new=>{
-					:answer=>"#{Bot.emoticons[:finger_right]} Proposer un citoyen",
+					:answer=>"#{Bot.emoticons[:speech_balloon]} Proposer un citoyen",
 					:text=>messages[:fr][:mes_citoyens][:new],
 					:callback=>"mes_citoyens/new"
 				},
@@ -221,7 +225,12 @@ END
 				:already_candidate=>{
 					:text=>messages[:fr][:mes_citoyens][:already_candidate],
 					:jump_to=>"mes_citoyens/menu"
+				},
+				:use_keyboard=>{
+					:text=>messages[:fr][:mes_citoyens][:use_keyboard],
+					:jump_to=>"mes_citoyens/del_ask"
 				}
+
 			}
 		}
 		Bot.updateScreens(screens)
@@ -444,6 +453,7 @@ END
 		buffer=user['session']['buffer']
 		puts "mes_citoyens_del : #{buffer}" if DEBUG
 		return self.get_screen(self.find_by_name("mes_citoyens/error"),user,msg) unless buffer
+		return self.get_screen(self.find_by_name("mes_citoyens/use_keyboard"),user,msg) if buffer.match(/\d\./).nil?
 		idx,name=buffer.split('. ')
 		name=name.strip.split(' ').each{|n| n.capitalize!}.join(' ') if name
 		candidate_id=user['session']['delete_candidates'][idx]['candidate_id'].to_i

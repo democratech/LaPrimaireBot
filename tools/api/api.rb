@@ -6,7 +6,7 @@ require 'json'
 require 'pg'
 require 'openssl'
 
-DEBUG=true
+DEBUG=false
 PGPWD=DEBUG ? PGPWD_TEST : PGPWD_LIVE
 PGNAME=DEBUG ? PGNAME_TEST : PGNAME_LIVE
 PGUSER=DEBUG ? PGUSER_TEST : PGUSER_LIVE
@@ -172,7 +172,7 @@ when 'grantaccess'
 					date:Time.now().to_i
 				}))
 				puts "Access granted to user #{r['user_id']} : #{r['firstname']} #{r['lastname']} registered on #{r['registered']}"
-				sleep(1)
+				sleep(1.0/4.0)
 			end
 		end
 	when 'user_id'

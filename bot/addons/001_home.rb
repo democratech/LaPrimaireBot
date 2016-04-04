@@ -31,10 +31,17 @@ Mon rôle est de vous accompagner et de vous informer tout au long du dérouleme
 Mais assez discuté, commençons !
 END
 					:menu=><<-END,
+no_preview:Avec LaPrimaire.org, vous pouvez :
+* <b>#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Voir les candidats</b> pour voir et soutenir la candidature de candidats déjà déclarés
+* <b>#{Bot.emoticons[:speech_balloon]} Proposer un candidat</b> pour suggérer des citoyens que vous souhaiteriez voir se présenter en tant que candidat
+* <b>#{Bot.emoticons[:raising_hand]} Etre candidat</b> pour porter vous-mêmes les idées que vous défendez
 Que voulez-vous faire ?
 END
 					:abuse=><<-END,
 Désolé votre comportement sur LaPrimaire.org est en violation de la Charte que vous avez acceptée et a entraîné votre exclusion  #{Bot.emoticons[:crying_face]}
+END
+					:nous_contacter=><<-END,
+N'hésitez à <a href='https://laprimaire.org/contact/'>nous contacter</a> si jamais vous avez des questions ou bien si quelque chose ne fonctionne pas. Nous essaierons de vous répondre dans les plus brefs délais.
 END
 					:not_allowed=><<-END,
 Désolé mais au vu des informations que vous nous avez fournies, vous ne remplissez pas les conditions pour pouvoir participer à LaPrimaire.org #{Bot.emoticons[:crying_face]}
@@ -55,12 +62,18 @@ END
 					:answer=>"#{Bot.emoticons[:home]} Accueil",
 					:text=>messages[:fr][:home][:menu],
 					:callback=>"home/menu",
+					:parse_mode=>"HTML",
 					:kbd=>[],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:abuse=>{
 					:text=>messages[:fr][:home][:abuse],
 					:disable_web_page_preview=>true
+				},
+				:nous_contacter=>{
+					:answer=>"#{Bot.emoticons[:envelope]} Nous contacter",
+					:text=>messages[:fr][:home][:nous_contacter],
+					:parse_mode=>"HTML"
 				},
 				:not_allowed=>{
 					:text=>messages[:fr][:home][:not_allowed],
@@ -83,13 +96,11 @@ END
 			screen=self.find_by_name("home/abuse")
 		elsif not_allowed then
 			screen=self.find_by_name("home/not_allowed")
-		elsif betatester and (not (user['email'] or user['city'] or user['country']) or not can_vote)then
-			screen=self.find_by_name("welcome/hello")
-		elsif betatester and can_vote and user['email'] and user['city'] and user['country'] then
+		elsif can_vote and user['email'] and user['city'] and user['country'] then
 			screen=self.find_by_name("home/menu")
 			screen[:kbd_del]=["home/menu"]
 		else
-			screen=self.find_by_name("beta/welcome")
+			screen=self.find_by_name("welcome/hello")
 		end
 		return self.get_screen(screen,user,msg)
 	end

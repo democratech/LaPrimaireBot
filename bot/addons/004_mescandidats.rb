@@ -27,12 +27,14 @@ module MesCandidats
 			:fr=>{
 				:mes_candidats=>{
 					:menu=><<-END,
-Il y a actuellement %{nb_candidats_complets} candidat(e)s dont le profil est complet (dont %{nb_candidats_non_vus} que vous n'avez pas encore %{vus}) et %{nb_candidats_incomplets} dont le profil est en cours de création.
+Il y a actuellement %{nb_candidats_complets} candidat(e)s dont le profil est complet (dont %{nb_candidats_non_vus} que vous n'avez pas encore %{vus}) et %{nb_candidats_incomplets} dont le profil est en cours de création. Pour se qualifier au deuxième tour de LaPrimaire.org, un candidat doit obtenir <b>500 soutiens</b> de citoyens.
+En tant que citoyen, vous ne pouvez soutenir que <b>5 candidats</b> au maximum. Bien entendu, à tout moment vous pouvez retirer votre soutien à un candidat que vous aviez soutenu auparavant.
+Et si aucun candidat ne vous plait, vous pouvez proposer les citoyen(ne)s que vous souhaiteriez voir être candidat(e)s et ainsi les inciter à se présenter.
+* <b>#{Bot.emoticons[:busts]} Voir les candidats</b> vous permet de consulter la fiche des candidats déjà enregistrés
+* <b>#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats</b> affichent les candidats que vous soutenez.
+* <b>#{Bot.emoticons[:loupe]} Chercher un candidat</b> vous permet de chercher un candidat spécifique parmi les candidats déclarés.
+Que voulez-vous faire ? 
 END
-#Pour se qualifier au deuxième tour de LaPrimaire.org, les candidats doivent obtenir <b>500 soutiens</b> de citoyens au total.
-#Vous ne pouvez soutenir que <b>5 candidats</b> au maximum. Bien entendu, à tout moment vous pouvez retirer votre soutien à un candidat que vous aviez soutenu auparavant.
-#Cliquez sur le bouton #{Bot.emoticons[:busts]}<i>Voir les candidats</i> pour voir un des candidats déjà enregistré et sur le bouton #{Bot.emoticons[:woman]}#{Bot.emoticons[:man]}<i>Mes candidats</i> pour voir les candidats que vous soutenez.
-# Si aucun candidat ne vous plait, vous pouvez proposer les citoyen(ne)s que vous souhaiteriez voir être candidat(e)s et ainsi les inciter à se présenter.
 					:show=><<-END,
 <b>%{name}</b> (<a href='https://laprimaire.org/candidat/%{candidate_id}'>voir sa page</a>) a %{soutiens_txt} sur 500 nécessaires pour se qualifier
 END
@@ -41,7 +43,7 @@ END
 no_preview:Si vous souhaitez que %{name} participe à LaPrimaire.org pour y apporter ses idées et participe à la construction de l'avenir du pays ? Apporter lui votre soutien en cliquant sur le bouton <i>#{Bot.emoticons[:thumbs_up]} Soutenir</i> ci-dessous. Pour voir un autre candidat, cliquez sur <i>#{Bot.emoticons[:finger_right]} Voir un autre candidat</i>
 END
 					:chercher_candidat=><<-END,
-Quel(le) candidat(e) cherchez-vous ? (ou tapez 'menu' pour revenir au menu)
+Quel(le) candidat(e) cherchez-vous ? (ou tapez '/start' pour revenir au menu)
 END
 					:soutenir=><<-END,
 Bien noté ! Vous avez apporté votre soutien à %{name}
@@ -433,6 +435,7 @@ END
 		@candidates.add_supporter(user[:id],candidate['candidate_id'])
 		screen[:text]=screen[:text] % {name: name}
 		@users.clear_session(user[:id],'candidate')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'support_candidate',{'name'=>name}) if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -443,6 +446,7 @@ END
 		@candidates.remove_supporter(user[:id],candidate['candidate_id'])
 		screen[:text]=screen[:text] % {name: name}
 		@users.clear_session(user[:id],'candidate')
+		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'remove_support',{'name'=>name}) if PRODUCTION
 		return self.get_screen(screen,user,msg)
 	end
 
