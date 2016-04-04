@@ -38,10 +38,10 @@ END
 END
 					:voir_candidat=><<-END,
 <b>%{name}</b> (<a href='https://laprimaire.org/candidat/%{candidate_id}'>voir sa page</a>) a %{soutiens_txt} sur 500 nécessaires
-no_preview:Si vous souhaitez que %{name} participe à LaPrimaire.org pour y apporter ses idées et participe à la construction de l'avenir du pays ? Apporter lui votre soutien en cliquant sur le bouton <i>#{Bot.emoticons[:thumbs_up]} Soutenir</i> ci-dessous. Pour voir un autre candidat, cliquez sur <i>#{Bot.emoticons[:finger_right]} Candidat suivant</i>
+no_preview:Si vous souhaitez que %{name} participe à LaPrimaire.org pour y apporter ses idées et participe à la construction de l'avenir du pays ? Apporter lui votre soutien en cliquant sur le bouton <i>#{Bot.emoticons[:thumbs_up]} Soutenir</i> ci-dessous. Pour voir un autre candidat, cliquez sur <i>#{Bot.emoticons[:finger_right]} Voir un autre candidat</i>
 END
 					:chercher_candidat=><<-END,
-Quel(le) candidat(e) cherchez-vous ?
+Quel(le) candidat(e) cherchez-vous ? (ou tapez 'menu' pour revenir au menu)
 END
 					:soutenir=><<-END,
 Bien noté ! Vous avez apporté votre soutien à %{name}

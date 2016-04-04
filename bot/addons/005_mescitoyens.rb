@@ -32,10 +32,10 @@ module MesCitoyens
 no_preview:Voici les citoyens que vous aimeriez voir se présenter en tant que candidat sur LaPrimaire.org :
 END
 					:new=><<-END,
-no_preview:Vous avez en tête un(e) citoyen(e) qui devrait participer activement à la vie politique du pays ? Quel est son nom ?
+no_preview:Vous avez à l'esprit un(e) citoyen(e) qui devrait participer activement à la vie politique du pays ? Quel sont ses nom et prénom ?
 END
 					:empty=><<-END,
-no_preview:Pour le moment, vous n'avez proposé aucun(e) citoyen(ne). Si vous avez en tête un(e) citoyen(ne) dont les compétences seraient utiles pour construire l'avenir du pays, dites-le nous et nous essaierons de le convaincre de se présenter sur LaPrimaire.org !
+no_preview:Pour le moment, vous n'avez proposé aucun(e) citoyen(ne). Si vous avez en tête un(e) citoyen(ne) dont les compétences seraient utiles pour construire l'avenir du pays, dites-le nous en utilisant le bouton <i>#{Bot.emoticons[:finger_right]} Proposer un citoyen</i> ci-dessous. Nous démarcherons les citoyens les plus plébiscités pour les convaincre de se présenter sur LaPrimaire.org !
 END
 					:how=><<-END,
 Vous avez la possibilité de proposer jusqu'à 5 citoyens que vous aimeriez voir se porter candidat sur LaPrimaire.org.
@@ -57,7 +57,7 @@ END
 Est-ce bien votre choix ?
 END
 					:confirm_yes=><<-END,
-Parfait, c'est bien enregistré !
+Parfait, c'est bien enregistré
 END
 					:confirm_no=><<-END,
 Hmmmm... réessayons !
@@ -110,6 +110,7 @@ END
 				},
 				:empty=>{
 					:text=>messages[:fr][:mes_citoyens][:empty],
+					:parse_mode=>"HTML",
 					:kbd=>["mes_citoyens/new","mes_citoyens/how","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
@@ -370,7 +371,12 @@ END
 				@candidates.add(candidate,true) if res.num_tuples.zero? # candidate in index but not in db (weird case)
 				@candidates.add_supporter(user[:id],candidate['candidate_id'])
 				screen=self.find_by_name("mes_citoyens/menu")
-				screen=self.find_by_name("mes_citoyens/already_candidate") if res[0]['verified'].to_b
+				if res[0]['verified'].to_b then
+					screen=self.find_by_name("mes_citoyens/already_candidate") 
+					name=res[0]['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
+					var= res[0]['gender']=='F' ? "candidate" : "candidat"
+					screen[:text]=screen[:text] % {name: name, candidat: var }
+				end
 
 			elsif user['settings']['blocked']['add_candidate'] # user is forbidden to add new candidates
 				screen=self.find_by_name("mes_citoyens/blocked")

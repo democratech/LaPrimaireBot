@@ -91,7 +91,7 @@ SELECT count(c.user_id) as total, sum(
        )
  WHERE c.user_id IS NOT null;
 END
-			'get_candidate_by_id'=><<END,
+			'get_verified_candidate_by_id'=><<END,
 SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
   FROM candidates as ca
  INNER JOIN (
@@ -124,6 +124,40 @@ SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
        ) as z
     ON (z.candidate_id = ca.candidate_id)
 END
+			'get_candidate_by_id'=><<END,
+SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
+  FROM candidates as ca
+ INNER JOIN (
+		SELECT c.candidate_id, (
+			       case
+			       when cv.nb_views is null then 0
+			       else cv.nb_views
+			       end
+		       ) as nb_views, count(s.user_id) as nb_soutiens, (
+			       case
+			       when s2.user_id is not null then true
+			       else false
+			       end
+		       ) as mon_soutien
+		  FROM candidates as c
+		  LEFT JOIN candidates_views as cv
+		    ON (
+			       cv.candidate_id=c.candidate_id
+			   AND cv.user_id=$2
+		       )
+		  LEFT JOIN supporters as s
+		    ON ( s.candidate_id=c.candidate_id)
+		  LEFT JOIN supporters as s2
+		    ON (
+			       s2.candidate_id=c.candidate_id
+			   AND s2.user_id=$2
+		       )
+		 WHERE c.candidate_id=$1
+		 GROUP BY c.candidate_id, cv.nb_views, s2.user_id
+       ) as z
+    ON (z.candidate_id = ca.candidate_id)
+END
+
 
 			'get_next_candidate_by_user_id'=><<END,
 SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
@@ -157,7 +191,7 @@ SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
 		 GROUP BY c.candidate_id, cv.nb_views, s2.user_id
        ) as z
     ON (z.candidate_id = ca.candidate_id)
-    ORDER BY z.nb_views ASC
+    ORDER BY z.nb_views ASC, z.nb_soutiens DESC
 END
 			'update_views_by_user_id'=><<END,
 UPDATE candidates_views SET nb_views=nb_views+1, last_view=now() WHERE candidate_id=$1 AND user_id=$2
@@ -198,7 +232,7 @@ END
 		end
 
 		def find(candidate_id,user_id)
-			res=Bot::Db.query("get_candidate_by_id",[candidate_id,user_id])
+			res=Bot::Db.query("get_verified_candidate_by_id",[candidate_id,user_id])
 			return nil if res.num_tuples.zero?
 			candidate=res[0]
 			self.add_viewer(candidate['candidate_id'].to_i,user_id) if candidate['nb_views'].to_i==0
