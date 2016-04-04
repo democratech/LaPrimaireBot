@@ -96,11 +96,11 @@ END
 			screen=self.find_by_name("home/abuse")
 		elsif not_allowed then
 			screen=self.find_by_name("home/not_allowed")
-		elsif can_vote and user['email'] and user['city'] and user['country'] then
+		elsif not (can_vote and user['email'] and user['city'] and user['country']) then
+			screen=self.find_by_name("welcome/hello")
+		else
 			screen=self.find_by_name("home/menu")
 			screen[:kbd_del]=["home/menu"]
-		else
-			screen=self.find_by_name("welcome/hello")
 		end
 		return self.get_screen(screen,user,msg)
 	end

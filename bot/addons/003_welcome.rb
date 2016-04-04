@@ -31,10 +31,10 @@ Je suis Victoire, votre guide pour LaPrimaire #{Bot.emoticons[:blush]}
 END
 					:start=><<-END,
 Mon rôle est de vous accompagner et de vous informer tout au long du déroulement de La Primaire.
-Un petit conseil avant de commencer : Pour communiquer avec moi, et être certain que je vous comprenne bien, le plus simple est d'utiliser les boutons qui s'affichent en bas de l'écran.
+Un petit conseil avant de commencer : je voudrais être certaine de bien vous comprendre. Pour cela le plus simple est d'utiliser les boutons qui s'affichent en bas de l'écran
 END
 					:condition_1=><<-END,
-Avant tout, vous devez nous confirmer que vous remplissez les conditions légales afin de pouvoir voter à la prochaine élection présidentielle française.
+Avant tout, vous devez me confirmer que vous remplissez les conditions légales afin de pouvoir voter à la prochaine élection présidentielle française.
 Etes-vous de nationalité française ou étrangère ?
 END
 					:condition_2=><<-END,
