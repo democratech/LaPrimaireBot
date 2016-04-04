@@ -108,7 +108,6 @@ END
 					:answer=>"#{Bot.emoticons[:speech_balloon]} Proposer un candidat",
 					:text=>messages[:fr][:mes_citoyens][:menu],
 					:callback=>"mes_citoyens/menu_cb",
-					:disable_web_page_preview=>true,
 					:kbd=>["mes_citoyens/new","mes_citoyens/del_ask","mes_citoyens/how","moi_candidat/menu","home/menu"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
