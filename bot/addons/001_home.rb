@@ -73,7 +73,9 @@ END
 				:nous_contacter=>{
 					:answer=>"#{Bot.emoticons[:envelope]} Nous contacter",
 					:text=>messages[:fr][:home][:nous_contacter],
-					:parse_mode=>"HTML"
+					:parse_mode=>"HTML",
+					:kbd=>["home/menu"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:not_allowed=>{
 					:text=>messages[:fr][:home][:not_allowed],
