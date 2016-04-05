@@ -305,7 +305,17 @@ END
 		end
 
 		def next_candidate(user_id)
-			candidate=Bot::Db.query('get_next_candidate_by_user_id',[user_id])[0]
+			res=Bot::Db.query('get_next_candidate_by_user_id',[user_id])
+			nb_views=res[0]['nb_views'].to_i
+			idx=0
+			candidates={}
+			random=[]
+			res.each_with_index do |r,i|
+				break if r['nb_views'].to_i>nb_views
+				candidates[r['candidate_id']]=r
+				random.push(r['candidate_id'])
+			end
+			candidate=candidates[random[rand(random.length)]]
 			self.add_viewer(candidate['candidate_id'].to_i,user_id) if candidate['nb_views'].to_i==0
 			self.increment_view_count(candidate['candidate_id'].to_i,user_id)
 			return candidate
