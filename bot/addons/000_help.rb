@@ -65,6 +65,7 @@ END
 			@users.next_answer(user[:id],'answer')
 		else
 			screen=@users.previous_state(user[:id])
+			screen=self.find_by_name("home/welcome") if screen.nil?
 			if !screen[:text].nil? then
 				screen[:text]="Parfait, reprenons !\n"+screen[:text]
 			else

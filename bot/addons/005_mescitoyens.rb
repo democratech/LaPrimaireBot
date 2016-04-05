@@ -18,9 +18,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 =end
 
-#La possibilité de se déclarer candidat depuis l'application sera disponible très prochainement. En attendant, n'hésitez pas à nous envoyer un email à <a href='https://laprimaire.org/contact/?topic=Je%20souhaite%20%C3%AAtre%20candidat%20%C3%A0%20LaPrimaire.org'>nous contacter</a> si vous souhaitez vous déclarer candidat.
-# Si aucun candidat ne vous plait, vous pouvez proposer les citoyen(ne)s que vous souhaiteriez voir être candidat(e)s et ainsi les inciter à se présenter.
-#
 module MesCitoyens
 	# is being called when the module is included
 	# here you need to update the Bot with your Add-on screens and hook your entry point into the Bot's menu
@@ -36,7 +33,9 @@ END
 no_preview:Vous avez à l'esprit un(e) citoyen(e) qui devrait participer activement à la vie politique du pays ? Quel sont ses nom et prénom ?
 END
 					:empty=><<-END,
-no_preview:Pour le moment, vous n'avez proposé aucun(e) citoyen(ne). Si vous avez en tête un(e) citoyen(ne) dont les compétences seraient utiles pour construire l'avenir du pays, dites-le nous en utilisant le bouton <i>#{Bot.emoticons[:speech_balloon]} Proposer un citoyen</i> ci-dessous. Nous démarcherons les citoyens les plus plébiscités pour les convaincre de se présenter sur LaPrimaire.org !
+Pour le moment, vous n'avez proposé aucun(e) citoyen(ne).
+no_preview:Si vous avez en tête un(e) citoyen(ne) dont , dites-le nous :
+* <i>#{Bot.emoticons[:speech_balloon]} Proposer un citoyen</b> : Plébisciter les citoyen(ne)s que vous appréciez et dont les compétences seraient utiles pour construire l'avenir du pays. Nous démarcherons activement les citoyens les plus plébiscités pour les convaincre de devenir officiellement candidats !
 END
 					:how=><<-END,
 Vous avez la possibilité de proposer jusqu'à 5 citoyens que vous aimeriez voir se porter candidat sur LaPrimaire.org.
@@ -91,13 +90,13 @@ END
 Désolé mais ce citoyen n'a encore jamais été proposé et vous avez atteint le nombre maximum de citoyens que vous pouvez proposer #{Bot.emoticons[:crying_face]}
 END
 					:error=><<-END,
-Hmmmm.... je me suis embrouillée les pinceaux, il va falloir recommencer s'il vous plait. Désolé #{Bot.emoticons[:confused]}
+Hmmmm.... je me suis embrouillée les pinceaux, il va falloir recommencer s'il vous plaît. Désolé #{Bot.emoticons[:confused]}
 END
 					:already_candidate=><<-END,
 no_preview:Bonne nouvelle ! %{name} est déjà officiellement %{candidat} sur LaPrimaire.org, vous pouvez d'ores et déjà aller soutenir sa candidature. 
 END
 					:use_keyboard=><<-END,
-Désolé, je n'ai pas compris qui vous souhaitiez supprimer de votre liste... utilisez les boutons du clavier pour choisir le ou la candidate que vous souhaitez supprimer s'il vous plait.
+Désolé, je n'ai pas compris qui vous souhaitiez supprimer de votre liste... utilisez les boutons du clavier pour choisir le ou la candidate que vous souhaitez supprimer s'il vous plaît.
 END
 				}
 			}

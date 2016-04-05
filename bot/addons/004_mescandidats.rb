@@ -28,11 +28,11 @@ module MesCandidats
 				:mes_candidats=>{
 					:menu=><<-END,
 Il y a actuellement %{nb_candidats_complets} candidat(e)s dont le profil est complet (dont %{nb_candidats_non_vus} que vous n'avez pas encore %{vus}) et %{nb_candidats_incomplets} dont le profil est en cours de création. Pour se qualifier au deuxième tour de LaPrimaire.org, un candidat doit obtenir <b>500 soutiens</b> de citoyens.
-En tant que citoyen, vous ne pouvez soutenir que <b>5 candidats</b> au maximum. Bien entendu, à tout moment vous pouvez retirer votre soutien à un candidat que vous aviez soutenu auparavant.
-Et si aucun candidat ne vous plait, vous pouvez proposer les citoyen(ne)s que vous souhaiteriez voir être candidat(e)s et ainsi les inciter à se présenter.
-* <b>#{Bot.emoticons[:busts]} Voir les candidats</b> vous permet de consulter la fiche des candidats déjà enregistrés
-* <b>#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats</b> affichent les candidats que vous soutenez.
-* <b>#{Bot.emoticons[:loupe]} Chercher un candidat</b> vous permet de chercher un candidat spécifique parmi les candidats déclarés.
+En tant que citoyen, vous ne pouvez soutenir que <b>5 candidats</b> au maximum. A tout moment vous êtes libre de retirer votre soutien à un candidat que vous aviez soutenu auparavant.
+no_preview:Vous pouvez également proposer votre propre candidat à LaPrimaire.org en proposant les citoyen(ne)s que vous souhaiteriez voir être candidat(e)s pour les inciter à se présenter.
+* <b>#{Bot.emoticons[:busts]} Voir les candidats</b> : consulter la fiche des candidats déjà déclarés
+* <b>#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats</b> : afficher les candidats que vous soutenez.
+* <b>#{Bot.emoticons[:loupe]} Chercher un candidat</b> : chercher un candidat spécifique parmi les candidats déjà déclarés.
 Que voulez-vous faire ? 
 END
 					:show=><<-END,
@@ -40,7 +40,7 @@ END
 END
 					:voir_candidat=><<-END,
 <b>%{name}</b> (<a href='https://laprimaire.org/candidat/%{candidate_id}'>voir sa page</a>) a %{soutiens_txt} sur 500 nécessaires
-no_preview:Si vous souhaitez que %{name} participe à LaPrimaire.org pour y apporter ses idées et participe à la construction de l'avenir du pays ? Apportez lui votre soutien en cliquant sur le bouton <i>#{Bot.emoticons[:thumbs_up]} Soutenir</i> ci-dessous. Pour voir un autre candidat, cliquez sur <i>#{Bot.emoticons[:bust]} Voir un autre candidat</i>
+no_preview:Vous souhaitez que %{name} participe à LaPrimaire.org pour y apporter ses idées et participe à la construction de l'avenir du pays ? Apportez lui votre soutien en cliquant sur le bouton <i>#{Bot.emoticons[:thumbs_up]} Soutenir</i> ci-dessous. Pour voir un autre candidat, cliquez sur <i>#{Bot.emoticons[:bust]} Voir un autre candidat</i>
 END
 					:chercher_candidat=><<-END,
 Quel(le) candidat(e) cherchez-vous ? (ou tapez '/start' pour revenir au menu)
@@ -55,7 +55,7 @@ END
 Plusieurs candidat(e)s correspondent à votre recherche, lequel cherchez-vous ?
 END
 					:too_large=><<-END,
-Votre recherche n'est pas assez précise, soyez plus précis s'il vous plait !
+Votre recherche n'est pas assez précise, soyez plus précis s'il vous plaît !
 END
 					:new=><<-END,
 Quel(le) candidat(e) souhaitez-vous soutenir ?
@@ -125,7 +125,7 @@ END
 Désolé, vous avez atteint le nombre maximum de candidat(e)s que vous pouvez soutenir (5) #{Bot.emoticons[:crying_face]}. Si vous souhaitez soutenir ce(te) candidat(e), il vous faut d'abord retirer votre soutien à un(e) autre candidat(e).
 END
 					:error=><<-END,
-Hmmmm.... je me suis embrouillée les pinceaux, il va falloir recommencer s'il vous plait. Désolé #{Bot.emoticons[:confused]}
+Hmmmm.... je me suis embrouillée les pinceaux, il va falloir recommencer s'il vous plaît. Désolé #{Bot.emoticons[:confused]}
 END
 				}
 			}

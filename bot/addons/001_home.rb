@@ -32,9 +32,9 @@ Mais assez discuté, commençons !
 END
 					:menu=><<-END,
 no_preview:Avec LaPrimaire.org, vous pouvez :
-* <b>#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Voir les candidats</b> pour voir et soutenir la candidature de candidats déjà déclarés
-* <b>#{Bot.emoticons[:speech_balloon]} Proposer un candidat</b> pour suggérer des citoyens que vous souhaiteriez voir se présenter en tant que candidat
-* <b>#{Bot.emoticons[:raising_hand]} Etre candidat</b> pour porter vous-mêmes les idées que vous défendez
+* <b>#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Voir les candidats</b> : voir et soutenir la candidature de candidats déjà déclarés
+* <b>#{Bot.emoticons[:speech_balloon]} Proposer un candidat</b> : suggérer des citoyens que vous souhaiteriez voir se présenter en tant que candidat
+* <b>#{Bot.emoticons[:raising_hand]} Etre candidat</b> : porter vous-mêmes les idées que vous défendez en vous déclarant candidat
 Que voulez-vous faire ?
 END
 					:abuse=><<-END,

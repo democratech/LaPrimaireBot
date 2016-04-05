@@ -180,6 +180,7 @@ END
 			screen[:text]=screen[:text] % {broadcast_msg: broadcast_msg}
 		else
 			screen=@users.previous_state(user[:id])
+			screen=self.find_by_name("home/welcome") if screen.nil?
 			if !screen[:text].nil? and !screen[:text].empty? then
 				screen[:text]="Merci pour votre attention ! Reprenons...\n"+screen[:text]
 			else

@@ -41,7 +41,7 @@ END
 Quel sera votre âge à la veille du 1er tour de l'élection présidentielle française de 2017 ?
 END
 					:condition_2bis=><<-END,
-Confirmez-vous ne pas être privé de votre droit de vote suite à la perte de vos droits civils et politiques ou en situation d'incapacité prévue par la loi ?
+Confirmez-vous ne pas être privé(e) de votre droit de vote suite à la perte de vos droits civils et politiques ou en situation d'incapacité prévue par la loi ?
 END
 					:condition_3=><<-END,
 Vous engagez-vous à vous inscrire sur les listes électorales d'ici au 31 décembre 2016 afin de pouvoir voter en 2017 ?

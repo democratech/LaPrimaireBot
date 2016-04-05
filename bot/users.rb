@@ -275,7 +275,8 @@ END
 
 		def previous_state(user_id)
 			user=@users[user_id]
-			screen=user['session']['previous_screen'].nil? ? self.find_by_name("home/welcome") : user['session']['previous_screen']
+			screen=user['session']['previous_screen']
+			return nil if screen.nil?
 			screen=Hash[screen.map{|(k,v)| [k.to_sym,v]}] # pas recursif
 			screen[:kbd_options]=Hash[screen[:kbd_options].map{|(k,v)| [k.to_sym,v]}] unless screen[:kbd_options].nil?
 			@users[user_id]['session']=user['session']['previous_session'].clone
