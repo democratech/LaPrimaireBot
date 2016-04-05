@@ -474,7 +474,6 @@ END
 
 	def mes_candidats_back_cb(msg,user,screen)
 		puts "mes_candidats_back" if DEBUG
-		puts "CURRENT #{user['session']['previous_session']['current']}\n"
 		from=user['session']['previous_session']['current']
 		case from
 		when "mes_candidats/voir_candidat"
