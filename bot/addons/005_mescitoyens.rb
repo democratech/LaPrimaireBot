@@ -35,7 +35,7 @@ END
 					:empty=><<-END,
 Pour le moment, vous n'avez proposé aucun(e) citoyen(ne).
 no_preview:Si vous avez en tête un(e) citoyen(ne) dont , dites-le nous :
-* <i>#{Bot.emoticons[:speech_balloon]} Proposer un citoyen</b> : Plébisciter les citoyen(ne)s que vous appréciez et dont les compétences seraient utiles pour construire l'avenir du pays. Nous démarcherons activement les citoyens les plus plébiscités pour les convaincre de devenir officiellement candidats !
+* <b>#{Bot.emoticons[:speech_balloon]} Proposer un citoyen</b> : Plébisciter les citoyen(ne)s que vous appréciez et dont les compétences seraient utiles pour construire l'avenir du pays. Nous démarcherons activement les citoyens les plus plébiscités pour les convaincre de devenir officiellement candidats !
 END
 					:how=><<-END,
 Vous avez la possibilité de proposer jusqu'à 5 citoyens que vous aimeriez voir se porter candidat sur LaPrimaire.org.
