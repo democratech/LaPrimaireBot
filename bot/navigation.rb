@@ -122,7 +122,8 @@ module Bot
 			        if input=='free_text' and self.respond_to?(callback) then
 					if session['expected_input_size']>0 then
 						input_size=session['expected_input_size']-1
-						session=@users.update_session(user[:id],{'buffer'=>session['buffer']+msg.text})
+						buffer= session['buffer'].nil? ? msg.text : session['buffer']+msg.text
+						session=@users.update_session(user[:id],{'buffer'=>buffer})
 						screen=self.find_by_name(session['callback'])
 						session_update={'expected_input_size'=>input_size}
 						session_update['callback']=nil if input_size==0

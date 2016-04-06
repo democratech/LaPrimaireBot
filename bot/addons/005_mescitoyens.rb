@@ -362,7 +362,7 @@ END
 	def mes_citoyens_confirm_no(msg,user,screen)
 		candidate=user['session']['candidate']
 		puts "mes_citoyens_confirm_no : #{candidate}" if DEBUG
-		image=candidate['photo']
+		image=candidate.nil? ? nil : candidate['photo']
 		File.delete(image) if (!image.nil? and File.exists?(image))
 		idx=candidate['idx'].nil? ? 1 : candidate['idx']
 		return idx==4 ? self.get_screen(self.find_by_name("mes_citoyens/not_found"),user,msg) : mes_citoyens_search(msg,user,screen)
