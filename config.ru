@@ -10,8 +10,8 @@ end
 DEBUG=(ENV['RACK_ENV']!='production')
 PRODUCTION=(ENV['RACK_ENV']=='production')
 require 'pp' if DEBUG
-TYPINGSPEED= DEBUG ? 200 : 80
-TYPINGSPEED_SLOW= DEBUG ? 200 : 60
+TYPINGSPEED= DEBUG ? 200 : 120
+TYPINGSPEED_SLOW= DEBUG ? 200 : 80
 MAX_CANDIDATES_PROPOSAL=10
 MAX_CANDIDATES_SUPPORT=5
 RESET_WORDS=['/start','start','/accueil','accueil','/reset','reset','/retour','retour','/sortir','sortir','/menu','menu']

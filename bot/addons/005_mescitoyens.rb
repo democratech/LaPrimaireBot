@@ -30,7 +30,7 @@ module MesCitoyens
 no_preview:Voici les citoyens que vous aimeriez voir se présenter en tant que candidat sur LaPrimaire.org :
 END
 					:new=><<-END,
-no_preview:Vous avez à l'esprit un(e) citoyen(e) qui devrait participer activement à la vie politique du pays ? Quel sont ses nom et prénom ?
+no_preview:Vous avez à l'esprit un(e) citoyen(e) qui devrait participer activement à la vie politique du pays ? Quels sont ses nom et prénom ?
 END
 					:empty=><<-END,
 Pour le moment, vous n'avez proposé aucun(e) citoyen(ne).
