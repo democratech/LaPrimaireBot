@@ -156,7 +156,6 @@ module Bot
 		def dont_understand(user,msg,reset=false)
 			# dedicated method to not affect user session
 			puts "dont_understand: #{msg}" if DEBUG
-			Democratech::LaPrimaireBot.tg_client.track('dont_understand',user[:id],msg.text) if PRODUCTION
 			if not user['settings']['actions']['first_help_given'] then
 				screen=self.find_by_name("help/first_help")
 				res,options=self.format_answer(screen,user)
@@ -171,7 +170,6 @@ module Bot
 
 		def get_screen(screen,user,msg)
 			puts "get_screen: #{screen}" if DEBUG
-			Democratech::LaPrimaireBot.tg_client.track(screen[:id],user[:id],screen) if PRODUCTION
 			res,options=nil
 			return nil,nil if screen.nil?
 			callback=self.to_callback(screen[:callback].to_s) unless screen[:callback].nil?
