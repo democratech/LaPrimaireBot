@@ -202,6 +202,9 @@ END
 			'search_candidate_by_name'=><<END,
 SELECT c.* FROM candidates AS c WHERE c.name ~* $1 AND c.verified LIMIT $2
 END
+			'does_viewer_exists'=><<END,
+SELECT * FROM candidates_views WHERE candidate_id=$1 AND user_id=$2
+END
 			}
 			queries.each { |k,v| Bot::Db.prepare(k,v) }
 		end
@@ -297,7 +300,10 @@ END
 		end
 
 		def add_viewer(candidate_id,user_id)
-			return Bot::Db.query('add_viewer_for_candidate_id',[candidate_id,user_id])
+			res=Bot::Db.query('does_viewer_exists',[candidate_id,user_id])
+			view=nil
+			view=Bot::Db.query('add_viewer_for_candidate_id',[candidate_id,user_id]) if res.num_tuples.zero?
+			return view
 		end
 
 		def increment_view_count(candidate_id,user_id)

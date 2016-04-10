@@ -113,6 +113,7 @@ module Democratech
 				msg,options=Democratech::LaPrimaireBot.nav.get(update.message,update.update_id)
 				send_msg(update.message.chat.id,msg,options) unless msg.nil?
 			rescue Exception=>e
+				Democratech::LaPrimaireBot.mixpanel.people.append(update.message.from.id,{'blocked_bot'=>1}) unless e.message.match(/Bot was blocked by the user/).nil?
 				Bot.slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect+"\n"+update.inspect}) if PRODUCTION
 				STDERR.puts "#{e.message}\n#{e.backtrace.inspect}\n#{update.inspect}"
 				error! "Exception raised: #{e.message}", 200 # if you put an error code here, telegram will keep sending you the same msg until you die

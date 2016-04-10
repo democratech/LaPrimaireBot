@@ -386,7 +386,7 @@ END
 	def welcome_save_country(msg,user,screen)
 		country=user['session']['buffer']
 		answer=Bot::Geo.countries.search(country,{hitsPerPage:1})
-		return self.get_screen(msg,user,self.find_by_name("welcome/country_error")) if answer["hits"].length==0
+		return self.get_screen(self.find_by_name("welcome/country_error"),user,msg) if answer["hits"].length==0
 		country=answer["hits"][0]["name"]
 		puts "welcome_save_country: #{country}" if DEBUG
 		@users.next_answer(user[:id],'answer')

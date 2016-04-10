@@ -125,7 +125,7 @@ END
 Désolé, vous avez atteint le nombre maximum de candidat(e)s que vous pouvez soutenir (5) #{Bot.emoticons[:crying_face]}. Si vous souhaitez soutenir ce(te) candidat(e), il vous faut d'abord retirer votre soutien à un(e) autre candidat(e).
 END
 					:error=><<-END,
-Hmmmm.... je me suis embrouillée les pinceaux, il va falloir recommencer s'il vous plaît. Désolé #{Bot.emoticons[:confused]}
+Hmmmm.... je n'ai pas compris, il va falloir recommencer s'il vous plaît. Désolé #{Bot.emoticons[:confused]}
 END
 				}
 			}
@@ -673,6 +673,8 @@ END
 		return self.get_screen(self.find_by_name("mes_candidats/error"),user,msg) unless buffer
 		idx,name=buffer.split('. ')
 		name=name.strip.split(' ').each{|n| n.capitalize!}.join(' ') if name
+		candidate=user['session']['delete_candidates'][idx]
+		return self.get_screen(self.find_by_name("mes_candidats/error"),user,msg) if candidate.nil?
 		candidate_id=user['session']['delete_candidates'][idx]['candidate_id'].to_i
 		@candidates.remove_supporter(user[:id],candidate_id)
 		@users.clear_session(user[:id],'delete_candidates')
