@@ -90,7 +90,7 @@ END
 Désolé mais ce citoyen n'a encore jamais été proposé et vous avez atteint le nombre maximum de citoyens que vous pouvez proposer #{Bot.emoticons[:crying_face]}
 END
 					:error=><<-END,
-Hmmmm.... je me suis embrouillée les pinceaux, il va falloir recommencer s'il vous plaît. Désolé #{Bot.emoticons[:confused]}
+Hmmmm.... je n'ai pas compris, il va falloir recommencer s'il vous plaît. Désolé #{Bot.emoticons[:confused]}
 END
 					:already_candidate=><<-END,
 no_preview:Bonne nouvelle ! %{name} est déjà officiellement %{candidat} sur LaPrimaire.org, vous pouvez d'ores et déjà aller soutenir sa candidature. 
@@ -423,9 +423,10 @@ END
 
 	def mes_citoyens_gender_cb(msg,user,screen)
 		candidate=user['session']['candidate']
+		@users.clear_session(user[:id],'candidate')
+		return self.get_screen(self.find_by_name("mes_citoyens/error"),user,msg) if candidate.nil?
 		gender = screen[:man] ? 'M':'F'
 		@candidates.set(candidate['candidate_id'],{:set=> 'gender',:value=> gender})
-		@users.clear_session(user[:id],'candidate')
 		return self.get_screen(screen,user,msg)
 	end
 
