@@ -116,6 +116,7 @@ module Democratech
 				Democratech::LaPrimaireBot.mixpanel.people.append(update.message.from.id,{'blocked_bot'=>1}) unless e.message.match(/Bot was blocked by the user/).nil?
 				Bot.slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect+"\n"+update.inspect}) if PRODUCTION
 				STDERR.puts "#{e.message}\n#{e.backtrace.inspect}\n#{update.inspect}"
+				send_msg(update.message.chat.id,"Désolé une erreur est survenue... j'ai prévenue l'équipe technique du souci ! Si jamais vous êtes coincé, tapez /start pour revenir au menu. Encore désolé pour cet incident #{Bot.emoticons[:confused]}",{:keep_kbd=>true})
 				error! "Exception raised: #{e.message}", 200 # if you put an error code here, telegram will keep sending you the same msg until you die
 			end
 		end
