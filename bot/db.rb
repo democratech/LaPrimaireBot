@@ -23,7 +23,7 @@ module Bot
 		@@db=nil
 
 		def self.init
-			Db.close
+			Db.close()
 			@@db=PG.connect(
 				"dbname"=>PGNAME,
 				"user"=>PGUSER,
@@ -41,10 +41,10 @@ module Bot
 		end
 
 		def self.close
-			if @@db then
-				@@db.flush
-				@@db.close
+			if not @@db.nil? and @@db.status!=PG::CONNECTION_OK then
+				@@db.flush()
 			end
+			@@db.close()
 		end
 
 		def self.query(name,params)
