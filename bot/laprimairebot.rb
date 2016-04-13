@@ -96,28 +96,31 @@ module Democratech
 
 		post '/command' do
 			error!('401 Unauthorized', 401) unless authorized
-			update = Telegram::Bot::Types::Update.new(params)
 			begin
+				Bot::Db.init()
+				update = Telegram::Bot::Types::Update.new(params)
 				msg,options=Democratech::LaPrimaireBot.nav.get(update.message,update.update_id)
 				send_msg(update.message.chat.id,msg,options) unless msg.nil?
 			rescue Exception=>e
-				Bot.slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect}) if PRODUCTION
 				STDERR.puts "#{e.message}\n#{e.backtrace.inspect}"
 				error! "Exception raised: #{e.message}", 200 # if you put an error code here, telegram will keep sending you the same msg until you die
+			ensure
+				Bot::Db.close()
 			end
 		end
 
 		post '/' do
-			update = Telegram::Bot::Types::Update.new(params)
 			begin
+				Bot::Db.init()
+				update = Telegram::Bot::Types::Update.new(params)
 				msg,options=Democratech::LaPrimaireBot.nav.get(update.message,update.update_id)
 				send_msg(update.message.chat.id,msg,options) unless msg.nil?
 			rescue Exception=>e
-				Democratech::LaPrimaireBot.mixpanel.people.append(update.message.from.id,{'blocked_bot'=>1}) unless e.message.match(/Bot was blocked by the user/).nil?
-				Bot.slack_notification(e.message,"errors",":bomb:","bot",{"fallback"=>"Bot error stack trace","color"=>"warning","text"=>e.backtrace.inspect+"\n"+update.inspect}) if PRODUCTION
+				# Having external services called here was a VERY bad idea as exceptions would not be rescued, it would make the worker crash... good job stupid !
 				STDERR.puts "#{e.message}\n#{e.backtrace.inspect}\n#{update.inspect}"
-				send_msg(update.message.chat.id,"Désolé une erreur est survenue... j'ai prévenue l'équipe technique du souci ! Si jamais vous êtes coincé, tapez /start pour revenir au menu. Encore désolé pour cet incident #{Bot.emoticons[:confused]}",{:keep_kbd=>true})
 				error! "Exception raised: #{e.message}", 200 # if you put an error code here, telegram will keep sending you the same msg until you die
+			ensure
+				Bot::Db.close()
 			end
 		end
 	end
