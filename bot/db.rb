@@ -21,9 +21,9 @@
 module Bot
 	class Db
 		@@db=nil
+		@@queries={}
 
 		def self.init
-			Db.close()
 			@@db=PG.connect(
 				"dbname"=>PGNAME,
 				"user"=>PGUSER,
@@ -31,28 +31,25 @@ module Bot
 				"host"=>PGHOST, 
 				"port"=>PGPORT
 			)
+		end
+
+		def self.load_queries
 			Bot::Users.load_queries
 			Bot::Geo.load_queries
 			Bot::Candidates.load_queries
 		end
 
 		def self.prepare(name,query)
-			@@db.prepare(name,query)
+			@@queries[name]=query
 		end
 
 		def self.close
-			if not @@db.nil? and @@db.status!=PG::CONNECTION_OK then
-				@@db.flush()
-			end
 			@@db.close()
 		end
 
 		def self.query(name,params)
 			puts "db query: #{name} / values: #{params}" if DEBUG
-			if @@db.nil? or @@db.status!=PG::CONNECTION_OK then
-				self.init 
-			end
-			@@db.exec_prepared(name,params)
+			@@db.exec_params(@@queries[name],params)
 		end
 	end
 end
