@@ -29,7 +29,7 @@ Bot::Navigation.load_addons()
 Democratech::LaPrimaireBot.nav=Bot::Navigation.new()
 Algolia.init :application_id=>ALGOLIA_ID, :api_key=>ALGOLIA_KEY
 Bot::Geo.countries=Algolia::Index.new("countries")
-index_candidats=DEBUG ? "candidates_test" : "candidates"
+index_candidats=DEBUG ? "search_test" : "search"
 puts "using index #{index_candidats}" 
 Bot::Candidates.index=Algolia::Index.new(index_candidats)
 
