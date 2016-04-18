@@ -33,6 +33,18 @@ module Democratech
 				headers['Secret-Key']==SECRET
 			end
 
+			def send_msg_fb(msg)
+				uri = URI.parse('https://graph.facebook.com')
+				http = Net::HTTP.new(uri.host, uri.port)
+				http.use_ssl = true
+				#http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+				request = Net::HTTP::Post.new("/v2.6/me/messages?access_token=#{FBPAGEACCTOKEN}")
+				request.add_field('Content-Type', 'application/json')
+				request.body = JSON.dump(msg)
+				a=http.request(request)
+				puts a.inspect
+			end
+
 			def send_msg(id,msg,options)
 				if options[:keep_kbd] then
 					options.delete(:keep_kbd)
@@ -90,6 +102,100 @@ module Democratech
 						LaPrimaireBot.tg_client.api.sendMessage(options)
 						options.delete(:disable_web_page_preview) if temp_web_page_preview_disabling
 					end
+				end
+			end
+		end
+
+		get '/fbmessenger' do
+			if params['hub.verify_token']==SECRET then
+				return params['hub.challenge'].to_i
+			else
+				return "nope"
+			end
+		end
+
+		post '/fbmessenger' do
+			messaging_events=params['entry'][0].messaging
+			messaging_events.each do |e|
+				sender=e.sender.id
+				if !e.message.nil? and !e.message.text.nil? then
+					puts "sending msg"
+=begin
+					msg={
+						"recipient"=>{"id"=>sender},
+						"message"=> {
+							"attachment"=> {
+								"type"=> "template",
+								"payload"=> {
+									"template_type"=> "generic",
+									"elements"=> [{
+										"title"=> "First card",
+										"subtitle"=> "Element #1 of an hscroll",
+										"image_url"=> "http://messengerdemo.parseapp.com/img/rift.png",
+										"buttons"=> [{
+											"type"=> "web_url",
+											"url"=> "https://www.messenger.com/",
+											"title"=> "Web url"
+										}, {
+											"type"=> "postback",
+											"title"=> "Postback",
+											"payload"=> "Payload for first element in a generic bubble",
+										}],
+									},{
+											"title"=> "Second card",
+											"subtitle"=> "Element #2 of an hscroll",
+											"image_url"=> "http://messengerdemo.parseapp.com/img/gearvr.png",
+											"buttons"=> [{
+												"type"=> "postback",
+												"title"=> "Postback",
+												"payload"=> "Payload for second element in a generic bubble",
+											}],
+										}]
+								}
+							}
+						}
+					}
+=end
+=begin
+					msg={
+						"recipient"=>{"id"=>sender},
+						"message"=>{"text"=>"https://laprimaire.org/candidat/178159928076"}
+					}
+=end
+					msg={
+						"recipient"=>{
+							"id"=>sender
+						},
+						"message"=>{
+							"attachment"=>{
+								"type"=>"template",
+								"payload"=>{
+									"template_type"=>"button",
+									"text"=>"What do you want to do next?",
+									"buttons"=>[
+										{
+											"type"=>"web_url",
+											"url"=>"https://petersapparel.parseapp.com",
+											"title"=>"Show Website"
+										},
+										{
+											"type"=>"postback",
+											"title"=>"Start Chatting",
+											"payload"=>"USER_DEFINED_PAYLOAD"
+										}
+									]
+								}
+							}
+						}
+					}
+					send_msg_fb(msg)
+				elsif !e.postback.nil? then
+					puts e.postback.payload
+					msg={
+						"recipient"=>{"id"=>sender},
+						"message"=>{"text"=>"postback received: "+e.postback.payload}
+					}
+					send_msg_fb(msg)
 				end
 			end
 		end
