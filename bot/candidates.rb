@@ -45,18 +45,18 @@ END
 SELECT z.*,c.firstname,c.lastname FROM candidates AS z LEFT JOIN citizens AS c ON (c.user_id=z.user_id) WHERE z.candidate_id=$1
 END
 			'get_candidates_supported_by_user_id'=><<END,
-SELECT y.candidate_id, y.name, y.gender, count(y.user_id) as nb_supporters
+SELECT y.candidate_id, y.name, y.gender, y.verified, y.nb_days_added,y.nb_days_verified, count(y.user_id) as nb_supporters
   FROM (
-	  SELECT z.candidate_id,z.name,z.gender,s.user_id
+	  SELECT z.candidate_id,z.name,z.gender,s.user_id,z.verified,date_part('day',now()-z.date_added) as nb_days_added,date_part('day',now() - z.date_verified) as nb_days_verified
           FROM candidates AS z
           INNER JOIN supporters AS s
 	  ON (s.candidate_id = z.candidate_id)
-	  WHERE s.user_id = $1 AND z.verified
+	  WHERE s.user_id = $1
   ) as y
   INNER JOIN supporters AS x
   ON (x.candidate_id = y.candidate_id)
-  GROUP BY y.candidate_id,y.name,y.gender
-  ORDER BY nb_supporters DESC
+  GROUP BY y.candidate_id,y.name,y.gender,y.verified,y.nb_days_added,y.nb_days_verified
+  ORDER BY y.verified ASC, nb_supporters DESC
 END
 			'get_citizens_supported_by_user_id'=><<END,
 SELECT y.candidate_id, y.name, y.gender, count(y.user_id) as nb_supporters

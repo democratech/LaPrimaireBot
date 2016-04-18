@@ -216,7 +216,7 @@ END
 					:callback=>"mes_candidats/new"
 				},
 				:del_ask=>{
-					:answer=>"#{Bot.emoticons[:cross_mark]} Supprimer",
+					:answer=>"#{Bot.emoticons[:cross_mark]} Retirer un soutien",
 					:text=>messages[:fr][:mes_candidats][:del_ask],
 					:callback=>"mes_candidats/del_ask",
 					:kbd=>[],
@@ -284,7 +284,7 @@ END
 				:back=>{
 					:answer=>"#{Bot.emoticons[:back]} Retour",
 					:callback=>"mes_candidats/back_cb",
-					:jump_to=>"mes_candidats/mes_candidats"
+					:jump_to=>"home/menu"
 				},
 				:inconnu=>{
 					:text=>messages[:fr][:mes_candidats][:inconnu],
@@ -310,7 +310,7 @@ END
 		}
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
-		Bot.addMenu({:home=>{:menu=>{:kbd=>"mes_candidats/menu"}}})
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"mes_candidats/mes_candidats"}}})
 	end
 
 	def mes_candidats_menu_cb(msg,user,screen)
@@ -456,17 +456,26 @@ END
 		res.each_with_index do |r,i|
 			name=r['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
 			soutiens=r['nb_supporters'].to_i
-			soutiens_txt= soutiens>1 ? "#{soutiens} soutiens" : "#{soutiens} soutien"
+			nb_days_added=r['nb_days_added'].to_i
+			nb_days_verified=r['nb_days_verified'].to_i
 			i+=1
 			fig="nb_"+i.to_s
-			screen[:text]+="* #{name} (<a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>voir sa page</a>) - #{soutiens_txt} sur 500 nécessaires\n"
+			if r['verified'].to_b then
+				soutiens_txt= soutiens>1 ? "#{soutiens} soutiens" : "#{soutiens} soutien"
+				days_verified=nb_days_verified>1 ? "#{nb_days_verified} jours" : "#{nb_days_verified} jour"
+				screen[:text]+="*  <a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>#{name}</a> a reçu #{soutiens_txt} depuis #{days_verified}\n"
+			else
+				soutiens_txt= soutiens>1 ? "#{soutiens} plébiscites" : "#{soutiens} plébiscite"
+				days_added=nb_days_added>1 ? "#{nb_days_added} jours" : "#{nb_days_added} jour"
+				screen[:text]+="*  <a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>#{name}</a> a reçu #{soutiens_txt} depuis #{days_added}\n"
+			end
 			screen[:parse_mode]='HTML'
 		end
 		if res.num_tuples<1 then # no candidates supported yet
 			screen=self.find_by_name("mes_candidats/aucun_soutien")
-		elsif res.num_tuples>4 then # not allowed to chose more candidates
+		elsif res.num_tuples>9 then # not allowed to chose more candidates
 			screen[:kbd_del]=["mes_candidats/new"]
-			screen[:text]+="Vous avez atteint le nombre maximum de candidat(e)s que vous pouvez soutenir (5). Si vous voulez soutenir un(e) autre candidat(e), vous devez au préalable retirer votre soutien à l'un(e) des candidat(e)s ci-dessus.\n"
+			screen[:text]+="Vous avez atteint le nombre maximum de candidat(e)s que vous pouvez soutenir (10). Si vous voulez soutenir un(e) autre candidat(e), vous devez au préalable retirer votre soutien à l'un(e) des candidat(e)s ci-dessus.\n"
 		end
 		@users.next_answer(user[:id],'answer')
 		return self.get_screen(screen,user,msg)
@@ -483,7 +492,7 @@ END
 		when "mes_candidats/chercher_candidat"
 			screen=self.find_by_name("mes_candidats/menu")
 		when "mes_candidats/mes_candidats"
-			screen=self.find_by_name("mes_candidats/menu")
+			screen=self.find_by_name("home/menu")
 		else
 			candidate=user['session']['candidate']
 			photo=candidate['photo'] if candidate
