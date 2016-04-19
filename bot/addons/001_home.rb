@@ -20,7 +20,7 @@
 
 module Home
 	def self.included(base)
-		puts "loading Home add-on" if DEBUG
+		Bot.log.info "loading Home add-on"
 		messages={
 			:fr=>{
 				:home=>{
@@ -89,7 +89,7 @@ END
 	end
 
 	def home_welcome(msg,user,screen)
-		puts "home_welcome" if DEBUG
+		Bot.log.info "home_welcome"
 		betatester=user['settings']['roles']['betatester'].to_b
 		can_vote=user['settings']['legal']['can_vote'].to_b
 		abuse=user['settings']['blocked']['abuse']
@@ -108,7 +108,7 @@ END
 	end
 
 	def home_menu(msg,user,screen)
-		puts "home_menu" if DEBUG
+		Bot.log.info "home_menu"
 		screen[:kbd_del]=["home/menu"]
 		@users.next_answer(user[:id],'answer')
 		@users.clear_session(user[:id],'candidate')

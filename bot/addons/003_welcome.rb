@@ -20,7 +20,7 @@
 
 module Welcome
 	def self.included(base)
-		puts "loading Welcome add-on" if DEBUG
+		Bot.log.info "loading Welcome add-on"
 		messages={
 			:fr=>{
 				:welcome=>{
@@ -313,7 +313,7 @@ END
 	end
 
 	def welcome_condition_ko_cb(msg,user,screen)
-		puts "welcome_condition_ko_cb" if DEBUG
+		Bot.log.info "welcome_condition_ko_cb"
 		@users.update_settings(user[:id],{
 			'legal'=>{'can_vote'=> false},
 			'blocked'=>{'not_allowed'=> true}
@@ -322,7 +322,7 @@ END
 	end
 
 	def welcome_condition_ok_cb(msg,user,screen)
-		puts "welcome_condition_ok_cb" if DEBUG
+		Bot.log.info "welcome_condition_ok_cb"
 		update={'legal'=>{'can_vote'=> true}}
 		update['legal']['not_sure']=true if screen[:bof]
 		@users.update_settings(user[:id],update)
@@ -330,7 +330,7 @@ END
 	end
 
 	def welcome_charte_ko_cb(msg,user,screen)
-		puts "welcome_charte_ko_cb" if DEBUG
+		Bot.log.info "welcome_charte_ko_cb"
 		@users.update_settings(user[:id],{
 			'legal'=>{'charte'=> false},
 			'blocked'=>{'not_allowed'=> true}
@@ -339,20 +339,20 @@ END
 	end
 
 	def welcome_charte_ok_cb(msg,user,screen)
-		puts "welcome_charte_ok_cb" if DEBUG
+		Bot.log.info "welcome_charte_ok_cb"
 		@users.update_settings(user[:id],{'legal'=>{'charte'=> true}})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_email(msg,user,screen)
-		puts "welcome_enter_email" if DEBUG
+		Bot.log.info "welcome_enter_email"
 		@users.next_answer(user[:id],'free_text',1,"welcome/save_email")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_save_email(msg,user,screen)
 		email=user['session']['buffer']
-		puts "welcome_save_email: #{email}" if DEBUG
+		Bot.log.info "welcome_save_email: #{email}"
 		if email.match(/\A[^@\s]+@([^@\s]+\.)+[^@\s]+\z/).nil? then
 			screen=self.find_by_name("welcome/email_error")
 			return self.get_screen(screen,user,msg) 
@@ -372,23 +372,23 @@ END
 	end
 
 	def welcome_email_optin_ok(msg,user,screen)
-		puts "welcome_email_optin_ok" if DEBUG
+		Bot.log.info "welcome_email_optin_ok"
 		@users.update_settings(user[:id],{'legal'=>{'email_optin'=> true}})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_country(msg,user,screen)
-		puts "welcome_enter_country" if DEBUG
+		Bot.log.info "welcome_enter_country"
 		@users.next_answer(user[:id],'free_text',1,"welcome/save_country")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_save_country(msg,user,screen)
 		country=user['session']['buffer']
-		answer=Bot::Geo.countries.search(country,{hitsPerPage:1})
+		answer=@geo.search_country(country,{hitsPerPage:1})
 		return self.get_screen(self.find_by_name("welcome/country_error"),user,msg) if answer["hits"].length==0
 		country=answer["hits"][0]["name"]
-		puts "welcome_save_country: #{country}" if DEBUG
+		Bot.log.info "welcome_save_country: #{country}"
 		@users.next_answer(user[:id],'answer')
 		@users.set(user[:id],{
 			:set=>'country',
@@ -399,16 +399,16 @@ END
 	end
 
 	def welcome_enter_city(msg,user,screen)
-		puts "welcome_enter_city" if DEBUG
+		Bot.log.info "welcome_enter_city"
 		@users.next_answer(user[:id],'free_text',1,"welcome/city_ask")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_city_ask(msg,user,screen,city=nil)
-		puts "welcome_city_ask" if DEBUG
+		Bot.log.info "welcome_city_ask"
 		city= city.nil? ? user['session']['buffer'] : city
 		country=user['country']
-		puts "welcome_city_ask: #{city}" if DEBUG
+		Bot.log.info "welcome_city_ask: #{city}"
 		@users.next_answer(user[:id],'answer')
 		args={
 			:set=>'city',
@@ -426,13 +426,13 @@ END
 	end
 
 	def welcome_city_ask_ko(msg,user,screen)
-		puts "welcome_city_ask_ko" if DEBUG
+		Bot.log.info "welcome_city_ask_ko"
 		screen= user['country']=="FRANCE" ? self.find_by_name("welcome/zipcode") : self.find_by_name("welcome/city")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def welcome_enter_zipcode(msg,user,screen)
-		puts "welcome_enter_zipcode" if DEBUG
+		Bot.log.info "welcome_enter_zipcode"
 		@users.set(user[:id],{
 			:set=>'country',
 			:value=>'FRANCE'
@@ -442,15 +442,15 @@ END
 	end
 
 	def welcome_save_zipcode(msg,user,screen)
-		puts "welcome_save_zipcode" if DEBUG
+		Bot.log.info "welcome_save_zipcode"
 		zipcode=user['session']['buffer'].delete(' ')
 		zipcode="0"+zipcode if zipcode.length==4
-		puts "welcome_save_zipcode: #{zipcode}" if DEBUG
+		Bot.log.info "welcome_save_zipcode: #{zipcode}"
 		@users.set(user[:id],{
 			:set=>'zipcode',
 			:value=>zipcode
 		})
-		res=@geo.search({
+		res=@geo.search_city({
 			:type=>'city',
 			:by=>'zipcode',
 			:target=>zipcode
@@ -482,18 +482,18 @@ END
 	end
 
 	def welcome_account_created_cb(msg,user,screen)
-		puts "welcome_account_created" if DEBUG
+		Bot.log.info "welcome_account_created"
 		slack_msg="Nouveau compte créé : #{user['firstname']} #{user['lastname']}"
 	       	slack_msg+=" (<https://telegram.me/#{user['username']}|@#{user['username']}>)" if user['username']
 		slack_msg+=" #{user['zipcode']}," if user['zipcode']
 		slack_msg+=" #{user['city']}, #{user['country']}"
 		Bot.slack_notification(slack_msg,"inscrits",":laprimaire:","LaPrimaire.org")
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_account_created') if PRODUCTION
-		Democratech::LaPrimaireBot.mixpanel.people.append(user[:id],{
+		Bot.log.event(user[:id],'user_account_created')
+		Bot.log.people(user[:id],'append',{
 			'city'=>user['city'],
 			'country'=>user['country'],
 			'zipcode'=>user['zipcode']
-		}) if PRODUCTION
+		})
 		return self.get_screen(screen,user,msg)
 	end
 end

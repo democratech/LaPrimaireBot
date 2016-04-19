@@ -20,7 +20,7 @@
 
 module About
 	def self.included(base)
-		puts "loading About add-on" if DEBUG
+		Bot.log.info "loading About add-on"
 		messages={
 			:fr=>{
 				:about=>{
@@ -98,7 +98,7 @@ END
 	end
 
 	def about_menu_cb(msg,user,screen)
-		puts "about_menu_cb" if DEBUG
+		Bot.log.info "about_menu_cb"
 		res=@users.get_total()
 		nb=res[0]['nb_citizens'].to_i
 		percentage=(100*(nb.to_f/100000.to_f)).to_i
@@ -107,7 +107,7 @@ END
 	end
 
 	def about_intro(msg,user,screen)
-		puts "about_intro" if DEBUG
+		Bot.log.info "about_intro"
 		return self.get_screen(screen,user,msg)
 	end
 end

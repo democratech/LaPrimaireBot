@@ -24,11 +24,16 @@ module Bot
 		@@queries={}
 
 		def self.init
+			pgpwd=DEBUG ? PGPWD_TEST : PGPWD_LIVE
+			pgname=DEBUG ? PGNAME_TEST : PGNAME_LIVE
+			pguser=DEBUG ? PGUSER_TEST : PGUSER_LIVE
+			pghost=DEBUG ? PGHOST_TEST : PGHOST_LIVE
+			Bot.log.debug "connect to database : #{pgname} with user : #{pguser}"
 			@@db=PG.connect(
-				"dbname"=>PGNAME,
-				"user"=>PGUSER,
-				"password"=>PGPWD,
-				"host"=>PGHOST, 
+				"dbname"=>pgname,
+				"user"=>pguser,
+				"password"=>pgpwd,
+				"host"=>pghost, 
 				"port"=>PGPORT
 			)
 		end
@@ -48,7 +53,7 @@ module Bot
 		end
 
 		def self.query(name,params)
-			puts "db query: #{name} / values: #{params}" if DEBUG
+			Bot.log.info "db query: #{name} / values: #{params}"
 			@@db.exec_params(@@queries[name],params)
 		end
 	end

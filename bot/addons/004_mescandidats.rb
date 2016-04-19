@@ -22,7 +22,7 @@ module MesCandidats
 	# is being called when the module is included
 	# here you need to update the Bot with your Add-on screens and hook your entry point into the Bot's menu
 	def self.included(base)
-		puts "loading MesCandidats add-on" if DEBUG
+		Bot.log.info "loading MesCandidats add-on"
 		messages={
 			:fr=>{
 				:mes_candidats=>{
@@ -324,7 +324,7 @@ END
 	end
 
 	def mes_candidats_voir_candidat_cb(msg,user,screen)
-		puts "mes_candidats_voir_candidat_cb" if DEBUG
+		Bot.log.info "mes_candidats_voir_candidat_cb"
 		candidate=@candidates.next_candidate(user[:id])
 		mon_soutien=candidate['mon_soutien']
 		name=candidate['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
@@ -340,7 +340,7 @@ END
 		screen[:text]=screen[:text] % {name: name, candidate_id: candidate['candidate_id'], soutiens_txt: soutiens_txt}
 		screen[:parse_mode]='HTML'
 		@users.update_session(user[:id],{'candidate'=>candidate})
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'view_candidate',{'name'=>candidate['name']}) if PRODUCTION
+		Bot.log.event(user[:id],'view_candidate',{'name'=>candidate['name']})
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -353,12 +353,12 @@ END
 	def mes_candidats_trouver_candidat_cb(msg,user,screen)
 		candidate=user['session']['candidate']
 		name=candidate ? candidate["name"] : user['session']['buffer']
-		puts "mes_candidats_trouver_candidat_cb : #{name}" if DEBUG
+		Bot.log.info "mes_candidats_trouver_candidat_cb : #{name}"
 		return self.get_screen(self.find_by_name("mes_candidats/inconnu"),user,msg) if not name
 		return self.get_screen(self.find_by_name("mes_candidats/too_large"),user,msg) if name.length<4
 		# immediately send a message to acknowledge we got the request as the search might take time
-		Democratech::LaPrimaireBot.tg_client.api.sendChatAction(chat_id: user[:id], action: "typing")
-		Democratech::LaPrimaireBot.tg_client.api.sendMessage({
+		Democratech::TelegramBot.client.api.sendChatAction(chat_id: user[:id], action: "typing")
+		Democratech::TelegramBot.client.api.sendMessage({
 			:chat_id=>user[:id],
 			:text=>"Ok, je recherche...",
 			:reply_markup=>Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
@@ -387,7 +387,7 @@ END
 	end
 
 	def mes_candidats_show(msg,user,screen,candidate=nil)
-		puts "mes_candidats_show" if DEBUG
+		Bot.log.info "mes_candidats_show"
 		if candidate.nil? then
 			buffer=user['session']['buffer']
 			return self.get_screen(self.find_by_name("mes_candidats/error"),user,msg) unless buffer
@@ -416,7 +416,7 @@ END
 		end
 		screen[:text]=screen[:text] % {name: name, candidate_id: candidate['candidate_id'], soutiens_txt: soutiens_txt}
 		screen[:parse_mode]='HTML'
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'view_candidate',{'name'=>candidate['name']}) if PRODUCTION
+		Bot.log.event(user[:id],'view_candidate',{'name'=>candidate['name']})
 		@users.update_session(user[:id],{'candidate'=>candidate})
 		@users.clear_session(user[:id],'delete_candidates')
 		@users.next_answer(user[:id],'answer')
@@ -424,7 +424,7 @@ END
 	end
 
 	def mes_candidats_soutenir_cb(msg,user,screen)
-		puts "mes_candidats_soutenir_cb" if DEBUG
+		Bot.log.info "mes_candidats_soutenir_cb"
 		res=@candidates.supported_by(user[:id])
 		if res.num_tuples>4 then
 			@users.clear_session(user[:id],'candidate')
@@ -435,23 +435,23 @@ END
 		@candidates.add_supporter(user[:id],candidate['candidate_id'])
 		screen[:text]=screen[:text] % {name: name}
 		@users.clear_session(user[:id],'candidate')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'support_candidate',{'name'=>name}) if PRODUCTION
+		Bot.log.event(user[:id],'support_candidate',{'name'=>name})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def mes_candidats_retirer_soutien_cb(msg,user,screen)
-		puts "mes_candidats_retirer_soutien_cb" if DEBUG
+		Bot.log.info "mes_candidats_retirer_soutien_cb"
 		candidate=user['session']['candidate']
 		name=candidate['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
 		@candidates.remove_supporter(user[:id],candidate['candidate_id'])
 		screen[:text]=screen[:text] % {name: name}
 		@users.clear_session(user[:id],'candidate')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'remove_support',{'name'=>name}) if PRODUCTION
+		Bot.log.event(user[:id],'remove_support',{'name'=>name})
 		return self.get_screen(screen,user,msg)
 	end
 
 	def mes_candidats_mes_candidats_cb(msg,user,screen)
-		puts "mes_candidats_mes_candidats" if DEBUG
+		Bot.log.info "mes_candidats_mes_candidats"
 		res=@candidates.supported_by(user[:id])
 		res.each_with_index do |r,i|
 			name=r['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
@@ -482,7 +482,7 @@ END
 	end
 
 	def mes_candidats_back_cb(msg,user,screen)
-		puts "mes_candidats_back" if DEBUG
+		Bot.log.info "mes_candidats_back"
 		from=user['session']['previous_session']['current']
 		case from
 		when "mes_candidats/voir_candidat"
@@ -507,7 +507,7 @@ END
 	end
 
 	def mes_candidats_new(msg,user,screen)
-		puts "mes_candidats_new" if DEBUG
+		Bot.log.info "mes_candidats_new"
 		@users.next_answer(user[:id],'free_text',1,"mes_candidats/search")
 		@users.clear_session(user[:id],'candidate')
 		return self.get_screen(screen,user,msg)
@@ -516,11 +516,11 @@ END
 	def mes_candidats_search(msg,user,screen)
 		candidate=user['session']['candidate']
 		name=candidate ? candidate["name"] : user['session']['buffer']
-		puts "mes_candidats_search : #{name}" if DEBUG
+		Bot.log.info "mes_candidats_search : #{name}"
 		return self.get_screen(self.find_by_name("mes_candidats/not_found"),user,msg) if not name
 		# immediately send a message to acknowledge we got the request as the search might take time
-		Democratech::LaPrimaireBot.tg_client.api.sendChatAction(chat_id: user[:id], action: "typing")
-		Democratech::LaPrimaireBot.tg_client.api.sendMessage({
+		Democratech::TelegramBot.client.api.sendChatAction(chat_id: user[:id], action: "typing")
+		Democratech::TelegramBot.client.api.sendMessage({
 			:chat_id=>user[:id],
 			:text=>"Ok, je recherche...",
 			:reply_markup=>Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
@@ -529,7 +529,7 @@ END
 		res=@candidates.search_index(name) if candidate.nil?
 		@users.next_answer(user[:id],'answer')
 		if candidate.nil? and res['hits'].length>0  then
-			puts "mes_candidats_search: index hit" if DEBUG
+			Bot.log.info "mes_candidats_search: index hit"
 			candidate=res['hits'][0]
 			if candidate['photo'] then
 				photo=CANDIDATS_DIR+candidate['photo']
@@ -541,7 +541,7 @@ END
 			@users.next_answer(user[:id],'answer')
 			return self.get_screen(self.find_by_name("moi_candidat/start"),user,msg)
 		else
-			puts "mes_candidats_search: web" if DEBUG
+			Bot.log.info "mes_candidats_search: web"
 			tags=name.scan(/#(\w+)/).flatten
 			name=name.gsub(/#\w+/,'').strip if tags
 			if name and tags then
@@ -597,7 +597,7 @@ END
 
 	def mes_candidats_confirm_no(msg,user,screen)
 		candidate=user['session']['candidate']
-		puts "mes_candidats_confirm_no : #{candidate}" if DEBUG
+		Bot.log.info "mes_candidats_confirm_no : #{candidate}"
 		image=candidate['photo']
 		File.delete(image) if (!image.nil? and File.exists?(image))
 		idx=candidate['idx'].nil? ? 1 : candidate['idx']
@@ -606,7 +606,7 @@ END
 
 	def mes_candidats_confirm_yes(msg,user,screen)
 		candidate=user['session']['candidate']
-		puts "mes_candidats_confirm_yes : #{candidate}" if DEBUG
+		Bot.log.info "mes_candidats_confirm_yes : #{candidate}"
 		if candidate then
 			image=candidate['photo']
 			if candidate['candidate_id'] then # candidate already exists in db
@@ -636,7 +636,7 @@ END
 
 	def mes_candidats_real_candidate_cb(msg,user,screen)
 		candidate=user['session']['candidate']
-		puts "mes_candidates_real_candidate_cb : #{candidate}" if DEBUG
+		Bot.log.info "mes_candidates_real_candidate_cb : #{candidate}"
 		real_candidate = screen[:real]
 		if not real_candidate then
 			@candidates.delete(candidate['candidate_id'])
@@ -644,8 +644,8 @@ END
 		else
 			slack_msg="Nouveau candidat(e) proposé(e) : #{candidate['name']} (<https://laprimaire.org/candidat/#{candidate['candidate_id']}|voir sa page>) par #{user['firstname']} #{user['lastname']}"
 			Bot.slack_notification(slack_msg,"candidats",":man:","LaPrimaire.org")
-			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'new_candidate_supported',{'name'=>candidate['name']}) if PRODUCTION
-			Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'nb_candidates_proposed'=>1}) if PRODUCTION
+			Bot.log.event(user[:id],'new_candidate_supported',{'name'=>candidate['name']})
+			Bot.log.people(user[:id],'increment',{'nb_candidates_proposed'=>1})
 		end
 		return self.get_screen(screen,user,msg)
 	end
@@ -659,7 +659,7 @@ END
 	end
 
 	def mes_candidats_del_ask(msg,user,screen)
-		puts "mes_candidats_del_ask" if DEBUG
+		Bot.log.info "mes_candidats_del_ask"
 		res=@candidates.supported_by(user[:id])
 		return self.get_screen(self.find_by_name("mes_candidats/error"),user,msg) if res.num_tuples.zero?
 		@users.clear_session(user[:id],'delete_candidates')
@@ -678,7 +678,7 @@ END
 
 	def mes_candidats_del(msg,user,screen)
 		buffer=user['session']['buffer']
-		puts "mes_candidats_del : #{buffer}" if DEBUG
+		Bot.log.info "mes_candidats_del : #{buffer}"
 		return self.get_screen(self.find_by_name("mes_candidats/error"),user,msg) unless buffer
 		idx,name=buffer.split('. ')
 		name=name.strip.split(' ').each{|n| n.capitalize!}.join(' ') if name

@@ -20,6 +20,10 @@
 
 module Bot
 	class Navigation
+		class << self
+			attr_accessor :nav
+		end
+
 		# loads all screens
 		def self.load_addons
 			Dir[File.expand_path('../../bot/addons/*.rb', __FILE__)].sort.each do |f|
@@ -90,7 +94,7 @@ module Bot
 				@users.next_answer(user[:id],'free_text',1,api_cb)
 				session=@users.update_session(user[:id],{'api_payload'=>api_payload}) if !api_payload.nil?
 			end
-			puts "user read session : #{user}" if DEBUG
+			Bot.log.info "user read session : #{user}"
 			input=session['expected_input']
 			session['current']="home/welcome" if RESET_WORDS.include?(msg.text)
 			if (input=='answer' or RESET_WORDS.include?(msg.text)) then # we expect the user to have used the proposed keyboard to answer
@@ -148,14 +152,14 @@ module Bot
 				end
 			end
 			res,options=self.dont_understand(user,msg) if res.nil? # something is fishy
-			puts "user save session : #{@users.get_session(user[:id])}" if DEBUG
+			Bot.log.info "user save session : #{@users.get_session(user[:id])}"
 			@users.save_user_session(user[:id])
 			return res,options
 		end
 
 		def dont_understand(user,msg,reset=false)
 			# dedicated method to not affect user session
-			puts "dont_understand: #{msg}" if DEBUG
+			Bot.log.info "dont_understand: #{msg}"
 			if not user['settings']['actions']['first_help_given'] then
 				screen=self.find_by_name("help/first_help")
 				res,options=self.format_answer(screen,user)
@@ -169,7 +173,7 @@ module Bot
 		end
 
 		def get_screen(screen,user,msg)
-			puts "get_screen: #{screen}" if DEBUG
+			Bot.log.info "get_screen: #{screen}"
 			res,options=nil
 			return nil,nil if screen.nil?
 			callback=self.to_callback(screen[:callback].to_s) unless screen[:callback].nil?
@@ -192,7 +196,7 @@ module Bot
 		end
 
 		def find_by_name(name)
-			puts "find_by_name: #{name}" if DEBUG
+			Bot.log.info "find_by_name: #{name}"
 			n1,n2=self.nodes(name)
 			begin
 				screen=@screens[n1][n2]
@@ -207,7 +211,7 @@ module Bot
 		end
 
 		def find_by_answer(answer,ctx=nil)
-			puts "find_by_answer: #{answer} context: #{ctx}" if DEBUG
+			Bot.log.info "find_by_answer: #{answer} context: #{ctx}"
 			tmp=@answers[answer]
 			return nil if tmp.nil?
 			if tmp.length==1
@@ -215,7 +219,7 @@ module Bot
 			else
 				screen_id=tmp[ctx.to_sym]
 			end
-			STDERR.puts "Something looks wrong here" if screen_id.nil?
+			Bot.log.error("Something looks wrong here") if screen_id.nil?
 			screen=@screens[ctx.to_sym][screen_id] 
 			if screen then
 				screen[:id]=self.path([ctx,screen_id])
@@ -225,7 +229,7 @@ module Bot
 		end
 
 		def format_answer(screen,user)
-			puts "format_answer: #{screen[:id]}" if DEBUG
+			Bot.log.info "format_answer: #{screen[:id]}"
 			res=screen[:text] % {firstname: user['firstname'],lastname: user['lastname'],id: user[:id],username: user['username']} unless screen.nil? or screen[:text].nil?
 			options={}
 			kbd=@keyboards[screen[:id]].clone if @keyboards[screen[:id]]

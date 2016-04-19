@@ -20,7 +20,7 @@
 
 module Api
 	def self.included(base)
-		puts "loading Api add-on" if DEBUG
+		Bot.log.info "loading Api add-on"
 		messages={
 			:fr=>{
 				:api=>{
@@ -109,55 +109,55 @@ END
 	end
 
 	def api_access_granted(msg,user,screen)
-		puts "api_access_granted" if DEBUG
+		Bot.log.info "api_access_granted"
 		@users.remove_from_waiting_list(user)
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_grant_beta_access') if PRODUCTION
+		Bot.log.event(user[:id],'api_grant_beta_access')
 		return self.get_screen(screen,user,msg)
 	end
 
 	def api_allow_user(msg,user,screen)
-		puts "api_allow_user" if DEBUG
+		Bot.log.info "api_allow_user"
 		@users.update_settings(user[:id],{'blocked'=>{'not_allowed'=>false }})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_reallow_user') if PRODUCTION
+		Bot.log.event(user[:id],'api_reallow_user')
 		return self.get_screen(screen,user,msg)
 	end
 
 	def api_block_candidate_proposals(msg,user,screen)
-		puts "api_block_candidate_proposals" if DEBUG
+		Bot.log.info "api_block_candidate_proposals"
 		@users.update_settings(user[:id],{'blocked'=>{'add_candidate'=>true }})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_block_add_candidate') if PRODUCTION
+		Bot.log.event(user[:id],'api_block_add_candidate')
 		return self.get_screen(screen,user,msg)
 	end
 
 	def api_block_candidate_reviews(msg,user,screen)
-		puts "api_block_candidate_reviews" if DEBUG
+		Bot.log.info "api_block_candidate_reviews"
 		@users.update_settings(user[:id],{'blocked'=>{'reviews'=>true }})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_block_candidate_reviews') if PRODUCTION
+		Bot.log.event(user[:id],'api_block_candidate_reviews')
 		return self.get_screen(screen,user,msg)
 	end
 
 	def api_ban_user(msg,user,screen)
-		puts "api_ban_user" if DEBUG
+		Bot.log.info "api_ban_user"
 		@users.update_settings(user[:id],{'blocked'=>{'abuse'=>true }})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_ban_user') if PRODUCTION
+		Bot.log.event(user[:id],'api_ban_user')
 		return self.get_screen(screen,user,msg)
 	end
 
 	def api_reset_user(msg,user,screen)
-		puts "api_reset_user" if DEBUG
+		Bot.log.info "api_reset_user"
 		@users.reset(user)
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_reset_user') if PRODUCTION
+		Bot.log.event(user[:id],'api_reset_user')
 		return self.get_screen(screen,user,msg)
 	end
 
 	def api_unblock_user(msg,user,screen)
-		puts "api_unblock_user" if DEBUG
+		Bot.log.info "api_unblock_user"
 		@users.update_settings(user[:id],{'blocked'=>{
 			'add_candidate'=>false,
 			'abuse'=>false,
@@ -165,12 +165,12 @@ END
 			'review'=>false
 		}})
 		@users.next_answer(user[:id],'answer')
-		Democratech::LaPrimaireBot.mixpanel.track(user[:id],'api_unblock_user') if PRODUCTION
+		Bot.log.event(user[:id],'api_unblock_user')
 		return self.get_screen(screen,user,msg)
 	end
 
 	def api_broadcast(msg,user,screen)
-		puts "api_broadcast" if DEBUG
+		Bot.log.info "api_broadcast"
 		if screen[:save_session] then
 			current= user['session']['current'].nil? ? "home/welcome" :user['session']['current']
 			broadcast_msg=user['session']['api_payload']

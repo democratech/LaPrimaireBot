@@ -20,7 +20,7 @@
 
 module Beta
 	def self.included(base)
-		puts "loading Beta add-on" if DEBUG
+		Bot.log.info "loading Beta add-on"
 		messages={
 			:fr=>{
 				:beta=>{
@@ -109,26 +109,26 @@ END
 	end
 
 	def beta_welcome(msg,user,screen)
-		puts "beta_welcome" if DEBUG
+		Bot.log.info "beta_welcome"
 		return self.get_screen(screen,user,msg)
 	end
 
 	def beta_enter_code(msg,user,screen)
-		puts "beta_enter_code" if DEBUG
+		Bot.log.info "beta_enter_code"
 		@users.next_answer(user[:id],'free_text',1,"beta/verify_code_cb")
 		return self.get_screen(screen,user,msg)
 	end
 
 	def beta_verify_code_cb(msg,user,screen)
 		code=user['session']['buffer']
-		puts "beta_verify_code : #{code}" if DEBUG
+		Bot.log.info "beta_verify_code : #{code}"
 		@users.next_answer(user[:id],'answer')
 		if (@users.beta_code_ok(code) or BETA_CODES.include?(code)) then
 			screen=self.find_by_name("beta/code_ok")
 			@users.remove_from_waiting_list(user)
 			@users.update_settings(user[:id],{'roles'=>{'betatester'=> true}})
-			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_enters_beta_test',{'with_code'=>code}) if PRODUCTION
-			Democratech::LaPrimaireBot.mixpanel.people.append(user[:id],{'betatest_code'=>code}) if PRODUCTION
+			Bot.log.event(user[:id],'user_enters_beta_test',{'with_code'=>code})
+			Bot.log.people(user[:id],'append',{'betatest_code'=>code})
 		else
 			screen=self.find_by_name("beta/code_wrong")
 		end
@@ -142,7 +142,7 @@ END
 			@users.add_to_waiting_list(user)
 			res=@users.get_position_on_wait_list(user[:id])
 			pos=res['position'].to_i
-			Democratech::LaPrimaireBot.mixpanel.track(user[:id],'user_added_to_waiting_list',{'position'=>pos.to_s}) if PRODUCTION
+			Bot.log.event(user[:id],'user_added_to_waiting_list',{'position'=>pos.to_s})
 		end
 		pos= (pos==1) ? "1er" : "#{pos}ème"
 		screen[:text] = screen[:text] % {position: pos}
@@ -156,11 +156,11 @@ END
 		behind=(tot-pos).to_s
 		nb_times=user['settings']['actions']['beta_nb_position_checked'].to_i+1
 		@users.update_settings(user[:id],{'actions'=>{'beta_nb_position_checked'=>nb_times}})
-		Democratech::LaPrimaireBot.mixpanel.people.increment(user[:id],{'beta_waiting_list_pos_checked'=>1}) if PRODUCTION
+		Bot.log.people(user[:id],'increment',{'beta_waiting_list_pos_checked'=>1})
 		pos= (pos==1) ? "1er" : "#{pos}ème"
 		screen[:text] = screen[:text] % {position: pos, behind: behind}
 		return self.get_screen(screen,user,msg)
 	end
 end
 
-include Beta
+#include Beta

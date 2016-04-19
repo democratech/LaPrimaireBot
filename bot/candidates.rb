@@ -20,10 +20,6 @@
 
 module Bot
 	class Candidates
-		class << self
-			attr_accessor :index
-		end
-
 		def self.load_queries
 			queries={
 			'register_candidate'=><<END,
@@ -210,18 +206,20 @@ END
 		end
 
 		def initialize()
-			@candidates={}
+			index_candidats=DEBUG ? "search_test" : "search"
+			Bot.log.info "using index #{index_candidats}"
+			@index=Algolia::Index.new(index_candidats)
 		end
 
 		def add(candidat,skip_index=false)
 			uuid=candidat['candidate_id'] ? candidat['candidate_id'] : ((rand()*1000000000000).to_i).to_s
 			profile_pic="#{uuid}"+File.extname(candidat['photo'])
-			Bot::Candidates.index.add_object({"objectID"=>uuid,"candidate_id"=>uuid,"name"=>candidat['name'],"photo"=>profile_pic}) unless skip_index
+			@index.add_object({"objectID"=>uuid,"candidate_id"=>uuid,"name"=>candidat['name'],"photo"=>profile_pic}) unless skip_index
 			return Bot::Db.query("register_candidate",[uuid,candidat['name'],profile_pic])[0]
 		end
 
 		def delete(candidate_id)
-			Bot::Candidates.index.delete_object(candidate_id)
+			@index.delete_object(candidate_id)
 			res=Bot::Db.query("delete_candidate",[candidate_id])
 			return res.num_tuples.zero? ? nil : res[0]
 		end
@@ -288,11 +286,12 @@ END
 		end
 
 		def search_index(name)
-			return Bot::Candidates.index.search(name,{hitsPerPage:1})
+			return @index.search(name,{hitsPerPage:1})
 		end
 
 		def search_candidate(name,limit=6)
-			return Bot::Db.query("search_candidate_by_name",[name,limit]) 
+			return @index.search(name,{hitsPerPage:1})
+			#return Bot::Db.query("search_candidate_by_name",[name,limit]) 
 		end
 
 		def search(query)

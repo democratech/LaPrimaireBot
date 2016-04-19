@@ -20,7 +20,7 @@
 
 module MoiCandidat
 	def self.included(base)
-		puts "loading MoiCandidat add-on" if DEBUG
+		Bot.log.info "loading MoiCandidat add-on"
 		messages={
 			:fr=>{
 				:moi_candidat=>{

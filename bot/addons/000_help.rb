@@ -20,7 +20,7 @@
 
 module Help
 	def self.included(base)
-		puts "loading Help add-on" if DEBUG
+		Bot.log.info "loading Help add-on"
 		messages={
 			:fr=>{
 				:help=>{
@@ -60,7 +60,7 @@ END
 	end
 
 	def help_first_help_cb(msg,user,screen)
-		puts "help_first_help_cb" if DEBUG
+		Bot.log.info "help_first_help_cb"
 		if screen[:save_session] then
 			@users.next_answer(user[:id],'answer')
 		else

@@ -20,10 +20,6 @@
 
 module Bot
 	class Geo
-		class << self
-			attr_accessor :countries
-		end
-
 		def self.load_queries
 			queries={
 			'get_city_by_zipcode'=><<END,
@@ -33,10 +29,16 @@ END
 			queries.each { |k,v| Bot::Db.prepare(k,v) }
 		end
 
-		def search(query)
-			return Bot::Db.query("get_"+query[:type]+"_by_"+query[:by],[query[:target]]) 
+		def intialize
+			@countries=Algolia::Index.new("countries")
 		end
 
+		def search_city(query)
+			return Bot::Db.query("get_city_by_zipcode",[query[:target]]) 
+		end
+
+		def search_country(country,options)
+			return @countries.search(country,options)
+		end
 	end
 end
-

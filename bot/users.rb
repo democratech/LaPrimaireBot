@@ -117,7 +117,7 @@ END
 		end
 
 		def reset(user)
-			puts "reset user #{user}"
+			Bot.log.info "reset user #{user}"
 			bot_session={
 				'last_update_id'=>nil,
 				'current'=>nil,
@@ -212,8 +212,8 @@ END
 						'beta_waiting_list_pos_checked'=>0,
 						'nb_candidates_proposed'=>0
 					}
-					Democratech::LaPrimaireBot.mixpanel.track(user_info.id,'new_user') if PRODUCTION
-					Democratech::LaPrimaireBot.mixpanel.people.set(user_info.id,tag) if PRODUCTION
+					Bot.log.event(user_info.id,'new_user')
+					Bot.log.people(user_info.id,'set',tag)
 				end
 				user=self.add(user_info)
 			else
