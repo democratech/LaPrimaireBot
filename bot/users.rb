@@ -200,7 +200,7 @@ END
 			})
 			if res.num_tuples.zero? then # new user
 				slack_msg="Nouveau participant : #{user_info.first_name} #{user_info.last_name} (<https://telegram.me/#{user_info.username}|@#{user_info.username}>)"
-				Bot.slack_notification(slack_msg,"inscrits",":telegram:","telegram")
+				Bot.log.slack_notification(slack_msg,"inscrits",":telegram:","telegram")
 				if date then
 					tag={
 						'firstname'=>user_info.first_name,

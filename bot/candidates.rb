@@ -153,8 +153,6 @@ SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
        ) as z
     ON (z.candidate_id = ca.candidate_id)
 END
-
-
 			'get_next_candidate_by_user_id'=><<END,
 SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
   FROM candidates as ca
@@ -209,6 +207,8 @@ END
 			index_candidats=DEBUG ? "search_test" : "search"
 			Bot.log.info "using index #{index_candidats}"
 			@index=Algolia::Index.new(index_candidats)
+			@citizens_idx=Algolia::Index.new('citizens')
+			@candidates_idx=Algolia::Index.new('candidates')
 		end
 
 		def add(candidat,skip_index=false)
@@ -233,7 +233,8 @@ END
 		end
 
 		def find(candidate_id,user_id)
-			res=Bot::Db.query("get_verified_candidate_by_id",[candidate_id,user_id])
+			#res=Bot::Db.query("get_verified_candidate_by_id",[candidate_id,user_id])
+			res=Bot::Db.query("get_candidate_by_id",[candidate_id,user_id])
 			return nil if res.num_tuples.zero?
 			candidate=res[0]
 			self.add_viewer(candidate['candidate_id'].to_i,user_id) if candidate['nb_views'].to_i==0
@@ -267,16 +268,28 @@ END
 			res=Bot::Db.query("get_candidate_by_id",[candidate_id,user_id])
 			return nil if res.num_tuples.zero?
 			candidate=res[0]
-			res= candidate['verified'].to_b ? self.supported_by(user_id) : self.proposed_by(user_id)
+			res=self.supported_by(user_id)
 			if not res.num_tuples.zero? then
 				res.each do |r|
+					# citizen already supports this candidate
 					return if r['candidate_id'].to_i==candidate_id.to_i
 				end
 			end
+			nb_candidates_supported=0;
+			nb_citizens_supported=0;
+			if not res.num_tuples.zero? then
+				res.each do |r|
+					if r['verified'].to_b then
+						nb_candidates_supported+=1;
+					else
+						nb_citizens_supported+=1;
+					end
+				end
+			end
 			if candidate['verified'].to_b then
-				return if res.num_tuples>4
+				return if nb_candidates_supported>4
 			else
-				return if res.num_tuples>9
+				return if nb_citizens_supported>4
 			end
 			return Bot::Db.query("add_supporter_to_candidate",[user_id,candidate_id])
 		end
@@ -290,8 +303,7 @@ END
 		end
 
 		def search_candidate(name,limit=6)
-			return @index.search(name,{hitsPerPage:1})
-			#return Bot::Db.query("search_candidate_by_name",[name,limit]) 
+			return @candidates_idx.search(name,{hitsPerPage:1})
 		end
 
 		def search(query)

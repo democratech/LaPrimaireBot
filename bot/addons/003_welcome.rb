@@ -487,7 +487,7 @@ END
 	       	slack_msg+=" (<https://telegram.me/#{user['username']}|@#{user['username']}>)" if user['username']
 		slack_msg+=" #{user['zipcode']}," if user['zipcode']
 		slack_msg+=" #{user['city']}, #{user['country']}"
-		Bot.slack_notification(slack_msg,"inscrits",":laprimaire:","LaPrimaire.org")
+		Bot.log.slack_notification(slack_msg,"inscrits",":laprimaire:","LaPrimaire.org")
 		Bot.log.event(user[:id],'user_account_created')
 		Bot.log.people(user[:id],'append',{
 			'city'=>user['city'],

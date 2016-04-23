@@ -36,7 +36,7 @@ no_preview:Vous pouvez également proposer votre propre candidat à LaPrimaire.o
 Que voulez-vous faire ? 
 END
 					:show=><<-END,
-<b>%{name}</b> (<a href='https://laprimaire.org/candidat/%{candidate_id}'>voir sa page</a>) a %{soutiens_txt} sur 500 nécessaires pour se qualifier
+<a href='https://laprimaire.org/candidat/%{candidate_id}'>%{name}</a> a %{soutiens_txt} sur 500 nécessaires pour se qualifier
 END
 					:voir_candidat=><<-END,
 <b>%{name}</b> (<a href='https://laprimaire.org/candidat/%{candidate_id}'>voir sa page</a>) a %{soutiens_txt} sur 500 nécessaires
@@ -61,10 +61,11 @@ END
 Quel(le) candidat(e) souhaitez-vous soutenir ?
 END
 					:mes_candidats=><<-END,
-Voici les candidats que vous soutenez :
+A l'heure actuelle, vous avez soutenu %{candidates} et vous avez plébsicité %{citizens} :
 END
 					:empty=><<-END,
-Pour le moment, vous ne soutenez aucun candidat
+Pour le moment, vous n'avez encore soutenu aucun(e) candidat(e). La liste des candidat(e)s officiellement déclaré(e)s est visible sur <a href="https://laprimaire.org/candidats/">la page des candidats</a>.
+Une fois que vous savez quel(le) candidat(e) soutenir, cliquez sur le bouton <i>#{Bot.emoticons[:thumbs_up]} Soutenir un candidat</i> pour lui apporter votre soutien.
 END
 					:how=><<-END,
 Vous avez la possibilité de soutenir jusqu'à 5 candidats sur LaPrimaire.org.
@@ -121,6 +122,12 @@ END
 					:max_reached=><<-END,
 Désolé mais ce candidat est inconnu et vous avez atteint le maximum de candidats inconnus que vous pouvez proposer #{Bot.emoticons[:crying_face]}
 END
+					:mes_candidats_actions=><<-END,
+Cliquez sur <i>#{Bot.emoticons[:cross_mark]} Retirer un soutien</i> pour retirer votre soutien à un(e) citoyen(ne) ou <i>#{Bot.emoticons[:back]} Retour</i> pour revenir à l'accueil
+END
+					:max_candidates=><<-END,
+Vous avez atteint le nombre maximum de candidat(e)s que vous pouvez soutenir (5) et de citoyens que vous pouvez plébisiciter (5). Si vous voulez soutenir une autre personne, vous devez au préalable retirer votre soutien à l'un des citoyens ci-dessus.
+END
 					:max_support=><<-END,
 Désolé, vous avez atteint le nombre maximum de candidat(e)s que vous pouvez soutenir (5) #{Bot.emoticons[:crying_face]}. Si vous souhaitez soutenir ce(te) candidat(e), il vous faut d'abord retirer votre soutien à un(e) autre candidat(e).
 END
@@ -141,7 +148,7 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:mes_candidats=>{
-					:answer=>"#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats",
+					:answer=>"#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Voir mes candidats",
 					:text=>messages[:fr][:mes_candidats][:mes_candidats],
 					:callback=>"mes_candidats/mes_candidats_cb",
 					:kbd=>["mes_candidats/del_ask","mes_candidats/back"],
@@ -195,11 +202,8 @@ END
 				},
 				:aucun_soutien=>{
 					:text=>messages[:fr][:mes_candidats][:empty],
-					:jump_to=>"mes_candidats/menu"
-				},
-				:empty=>{
-					:text=>messages[:fr][:mes_candidats][:empty],
-					:kbd=>["mes_candidats/new","mes_candidats/how","home/menu"],
+					:parse_mode=>"HTML",
+					:kbd=>["mes_candidats/back"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:how=>{
@@ -224,7 +228,7 @@ END
 				},
 				:del=>{
 					:text=>messages[:fr][:mes_candidats][:del],
-					:jump_to=>"mes_candidats/mes_candidats"
+					:jump_to=>"home/menu"
 				},
 				:confirm=>{
 					:text=>messages[:fr][:mes_candidats][:confirm],
@@ -440,7 +444,7 @@ END
 	end
 
 	def mes_candidats_retirer_soutien_cb(msg,user,screen)
-		Bot.log.info "mes_candidats_retirer_soutien_cb"
+		Bot.log.info "#{__method__}"
 		candidate=user['session']['candidate']
 		name=candidate['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
 		@candidates.remove_supporter(user[:id],candidate['candidate_id'])
@@ -451,8 +455,10 @@ END
 	end
 
 	def mes_candidats_mes_candidats_cb(msg,user,screen)
-		Bot.log.info "mes_candidats_mes_candidats"
+		Bot.log.info "#{__method__}"
 		res=@candidates.supported_by(user[:id])
+		nb_candidates=0
+		nb_citizens=0
 		res.each_with_index do |r,i|
 			name=r['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
 			soutiens=r['nb_supporters'].to_i
@@ -461,21 +467,31 @@ END
 			i+=1
 			fig="nb_"+i.to_s
 			if r['verified'].to_b then
+				nb_candidates+=1
 				soutiens_txt= soutiens>1 ? "#{soutiens} soutiens" : "#{soutiens} soutien"
 				days_verified=nb_days_verified>1 ? "#{nb_days_verified} jours" : "#{nb_days_verified} jour"
-				screen[:text]+="*  <a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>#{name}</a> a reçu #{soutiens_txt} depuis #{days_verified}\n"
+				candidat_genre= r['gender']=='M' ? "candidat déclaré" : "candidate déclarée"
+				screen[:text]+="<a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>#{name}</a>, #{candidat_genre}, a reçu #{soutiens_txt} depuis #{days_verified}\n"
 			else
+				nb_citizens+=1
 				soutiens_txt= soutiens>1 ? "#{soutiens} plébiscites" : "#{soutiens} plébiscite"
+				candidat_genre= r['gender']=='M' ? "citoyen plébiscité" : "citoyenne plébiscitée"
 				days_added=nb_days_added>1 ? "#{nb_days_added} jours" : "#{nb_days_added} jour"
-				screen[:text]+="*  <a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>#{name}</a> a reçu #{soutiens_txt} depuis #{days_added}\n"
+				screen[:text]+="<a href='https://laprimaire.org/candidat/#{r['candidate_id']}'>#{name}</a>, #{candidat_genre}, a reçu #{soutiens_txt} depuis #{days_added}\n"
 			end
 			screen[:parse_mode]='HTML'
 		end
+		candidates= nb_candidates>1 ? "#{nb_candidates} candidat(e)s déclaré(e)s" : "#{nb_candidates} candidat(e) déclaré(e)"
+		citizens= nb_citizens>1 ? "#{nb_citizens} citoyen(ne)s" : "#{nb_citizens} citoyen(ne)"
+		screen[:text]=screen[:text] % {candidates: candidates, citizens: citizens}
 		if res.num_tuples<1 then # no candidates supported yet
 			screen=self.find_by_name("mes_candidats/aucun_soutien")
 		elsif res.num_tuples>9 then # not allowed to chose more candidates
 			screen[:kbd_del]=["mes_candidats/new"]
-			screen[:text]+="Vous avez atteint le nombre maximum de candidat(e)s que vous pouvez soutenir (10). Si vous voulez soutenir un(e) autre candidat(e), vous devez au préalable retirer votre soutien à l'un(e) des candidat(e)s ci-dessus.\n"
+			screen[:text]+=Bot.messages[:fr][:mes_candidats][:max_candidates]
+			screen[:text]+=Bot.messages[:fr][:mes_candidats][:mes_candidats_actions]
+		else
+			screen[:text]+=Bot.messages[:fr][:mes_candidats][:mes_candidats_actions]
 		end
 		@users.next_answer(user[:id],'answer')
 		return self.get_screen(screen,user,msg)
@@ -643,7 +659,7 @@ END
 			File.delete(CANDIDATS_DIR+candidate['photo']) if File.exists?(CANDIDATS_DIR+candidate['photo'])
 		else
 			slack_msg="Nouveau candidat(e) proposé(e) : #{candidate['name']} (<https://laprimaire.org/candidat/#{candidate['candidate_id']}|voir sa page>) par #{user['firstname']} #{user['lastname']}"
-			Bot.slack_notification(slack_msg,"candidats",":man:","LaPrimaire.org")
+			Bot.log.slack_notification(slack_msg,"candidats",":man:","LaPrimaire.org")
 			Bot.log.event(user[:id],'new_candidate_supported',{'name'=>candidate['name']})
 			Bot.log.people(user[:id],'increment',{'nb_candidates_proposed'=>1})
 		end
@@ -659,11 +675,12 @@ END
 	end
 
 	def mes_candidats_del_ask(msg,user,screen)
-		Bot.log.info "mes_candidats_del_ask"
+		Bot.log.info "#{__method__}"
 		res=@candidates.supported_by(user[:id])
 		return self.get_screen(self.find_by_name("mes_candidats/error"),user,msg) if res.num_tuples.zero?
 		@users.clear_session(user[:id],'delete_candidates')
 		screen[:kbd_add]=[]
+		screen[:kbd_add].push(@screens[:mes_candidats][:back][:answer])
 		candidates_list={}
 		res.each_with_index do |r,i|
 			i+=1
@@ -678,7 +695,8 @@ END
 
 	def mes_candidats_del(msg,user,screen)
 		buffer=user['session']['buffer']
-		Bot.log.info "mes_candidats_del : #{buffer}"
+		Bot.log.info "#{__method__} : #{buffer}"
+		return self.get_screen(self.find_by_name("home/menu"),user,msg) if buffer==@screens[:mes_candidats][:back][:answer]
 		return self.get_screen(self.find_by_name("mes_candidats/error"),user,msg) unless buffer
 		idx,name=buffer.split('. ')
 		name=name.strip.split(' ').each{|n| n.capitalize!}.join(' ') if name
