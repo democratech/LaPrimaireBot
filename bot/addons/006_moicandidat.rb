@@ -25,45 +25,7 @@ module MoiCandidat
 			:fr=>{
 				:moi_candidat=>{
 					:menu=><<-END,
-La possibilité de se déclarer candidat depuis l'application sera disponible très prochainement. En attendant, n'hésitez pas à <a href='https://laprimaire.org/contact/'>nous contacter</a> si vous souhaitez vous déclarer candidat.
-END
-					:start=><<-END,
-Mais... c'est vous %{firstname} %{lastname} !
-Merci beaucoup pour votre intérêt à devenir candidat(e).
-La possibilité de se déclarer candidat sur LaPrimaire.org sera mise en ligne très bientôt !
-END
-					:charte=><<-END,
-Pour être candidat, il vous faut accepter la Charte du candidat.
-END
-					:charte_ok=><<-END,
-Bien enregistré !
-END
-					:charte_ko=><<-END,
-Désolé vous devez accepter la Charte du candidat pour pouvoir être candidat.
-END
-					:gender=><<-END,
-Etes-vous un homme ou une femme ?
-END
-					:phone=><<-END,
-Quel est votre numéro de téléphone ?
-END
-					:scope=><<-END,
-Avez-vous un programme complet ou bien êtes-vous focalisé sur une thématique précise ?
-END
-					:team=><<-END,
-Avez-vous déjà une équipe qui travaille avec vous ?
-END
-					:political_party=><<-END,
-Avez-vous déjà été membre d'un parti politique ?
-END
-					:already_candidate=><<-END,
-Avez-vous déjà été candidat(e) à une élection publique ?
-END
-					:already_elected=><<-END,
-Avez-vous déjà exercé un mandat public ?
-END
-					:website=><<-END,
-Merci pour votre intérêt à devenir
+Si vous souhaitez être candidat, merci de remplir le formulaire d'<a href="https://laprimaire.org/inscription-candidat/">inscription candidat(e)</a>, en vous assurant au  préalable que vous êtes en accord avec la <a href="https://laprimaire.org/charte/">charte du candidat</a>.
 END
 				}
 			}
@@ -73,51 +35,33 @@ END
 				:menu=>{
 					:answer=>"#{Bot.emoticons[:raising_hand]} Etre candidat",
 					:text=>messages[:fr][:moi_candidat][:menu],
-					:jump_to=>"mes_citoyens/menu",
-					:parse_mode=>"HTML"
-				},
-				:start=>{
-					:text=>messages[:fr][:moi_candidat][:start],
-					:callback=>"moi_candidat/intro",
-					:disable_web_page_preview=>true,
-					:kbd=>["mes_candidats/back"],
+					:parse_mode=>"HTML",
+					:kbd=>["moi_candidat/retour"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
-				:gender=>{
-					:text=>messages[:fr][:moi_candidat][:gender],
-					:kbd=>["moi_candidat/gender_m","moi_candidat/gender_f"],
-					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true},
-					:jump_to=>"moi_candidat/scope"
+				:retour=>{
+					:answer=>"#{Bot.emoticons[:back]} Retour",
+					:callback=>"moi_candidat/retour_cb"
 				},
-				:gender_m=>{
-					:answer=>"Un homme",
-					:callback=>"moi_candidat/gender_m",
-					:jump_to=>"moi_candidat/scope"
-				},
-				:gender_f=>{
-					:answer=>"Une femme",
-					:callback=>"moi_candidat/gender_f",
-					:jump_to=>"moi_candidat/scope"
-				}
 			}
 		}
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"moi_candidat/menu"}}})
 	end
 
-	def moi_candidat_intro(msg,user,screen)
-		return self.get_screen(screen,user,msg)
-	end
-
-	def moi_candidat_gender_m(msg,user,screen)
-		@candidates.set(user[:id],{:set=> 'gender',:value=>'M'})
-		return self.get_screen(screen,user,msg)
-	end
-
-	def moi_candidat_gender_f(msg,user,screen)
-		@candidates.set(user[:id],{:set=> 'gender',:value=>'F'})
+	def moi_candidat_retour_cb(msg,user,screen)
+		Bot.log.info "#{__method__}"
+		from=user['session']['previous_session']['current']
+		case from
+		when "moi_candidat/menu"
+			screen=self.find_by_name("home/menu")
+		else
+			screen=self.find_by_name("home/menu")
+		end
+		@users.next_answer(user[:id],'answer')
 		return self.get_screen(screen,user,msg)
 	end
 end
 
-include MoiCandidat
+#include MoiCandidat

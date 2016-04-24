@@ -72,7 +72,8 @@ module Bot
 		:inbox=>"\u{1F4E5}",
 		:trash=>"\u{1F5D1}",
 		:back=>"\u{21A9}",
-		:loupe=>"\u{1F50E}"
+		:loupe=>"\u{1F50E}",
+		:scroll=>"\u{1F4DC}"
 	}
 	@@messages={
 		:fr=>{

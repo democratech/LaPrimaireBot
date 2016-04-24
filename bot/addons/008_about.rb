@@ -26,24 +26,34 @@ module About
 				:about=>{
 					:menu=><<-END,
 no_preview:LaPrimaire.org est une initiative citoyenne qui vise à faire émerger des candidats crédibles et représentatifs pour l’élection présidentielle de 2017, en dehors du cadre des partis politiques.
-A l’issue de la Primaire, un nouveau parti politique sera créé et une campagne de financement participatif lancée afin de permettre au candidat issu de LaPrimaire.org de concourir à l'élection présidentielle.
+no_preview:A l’issue de la Primaire, un nouveau parti politique sera créé et une campagne de financement participatif lancée afin de permettre au candidat issu de LaPrimaire.org de concourir à l'élection présidentielle.
 no_preview:L'objectif est de parvenir à rassembler au minimum 100.000 citoyens pour donner du poids au candidat qui sera issu de LaPrimaire.org. Nous sommes actuellement %{nb} participants (soit %{percentage}/100 de l'objectif).
-no_preview:<i>PS: Si le nombre de participants est plus petit que celui affiché sur le site web, c'est parce que l'application vient d'etre lancée et il faut laisser un peu de temps aux 22.000 citoyens pré-inscrits sur le site pour s'enregistrer sur l'application LaPrimaire.org #{Bot.emoticons[:smile]}</i>
 END
 					:deroulement=><<-END,
-Cliquez pour voir <a href="https://laprimaire.org/deroulement">le déroulement de LaPrimaire</a>
+La page <a href="https://laprimaire.org/deroulement">le déroulement de LaPrimaire</a> a la réponse à toutes vos interrogations sur le déroulement de LaPrimaire.org : Quel est le processus de sélection de LaPrimaire.org ? Quelles sont les grandes étapes ? Comment le candidat final sera-t-il sélectionné ? 
 END
 					:equipe=><<-END,
-Cliquez pour voir <a href="https://laprimaire.org/equipe">l'équipe derrière LaPrimaire.org</a>
+LaPrimaire.org est organisée par <a href="https://laprimaire.org/equipe/">des citoyens et des citoyennes ordinaires</a>, indépendants de tout parti politique, ayant pris un engagement de neutralité et ayant interdiction d'être candidats.
 END
 					:info=><<-END,
-Cliquez pour <a href="https://laprimaire.org">découvrir LaPrimaire.org</a>
+no_preview:<b>Qu'est-ce que LaPrimaire.org ?</b> LaPrimaire.org est une primaire ouverte, organisée pour permettre aux Français de choisir librement, de manière transparente et démocratique, les candidats qu'ils souhaitent voir se présenter à l'élection présidentielle de 2017 (voir <a href="https://laprimaire.org/manifeste/">notre manifeste</a>).
+no_preview:<b>Quel intérêt ?</b> Aujourd'hui en France, les partis politiques (365,000 personnes soit moins de 1 pourcent de la population) désignent les candidats aux élections alors que les citoyens les rejettent massivement. L'objectif de LaPrimaire.org est d'insuffler un nouvel élan démocratique à notre pays en favorisant le renouvellement de notre classe politique.
+no_preview:<b>Comment ça marche ?</b> Un processus de sélection des candidats (voir <a href="https://laprimaire.org/deroulement/">le déroulement</a>) a été spécifiquement mis au point pour permettre une primaire démocratique à laquelle toute personne peut se présenter et au sein de laquelle toutes les idées peuvent s'exprimer.
+no_preview:<b>Comment participer ?</b> En tant que citoyen, vous pouvez soit participer en tant que votant et choisir / plébisciter les citoyens français que vous souhaiteriez voir plus impliquer dans la vie politique de notre pays. Vous également participer en tant que candidat si vous souhaitez porter vos idées et les présenter aux français. L'objectif est qu'au moins 100.000 citoyens participent à la primaire pour que celle-ci puisse avoir lieu.
+no_preview:<b>Qui organise ?</b> LaPrimaire.org est organisée de manière entièrement bénévole par des citoyens ordinaires indépendants des partis politiques via une association loi 1901.
+no_preview:<b>Qui finance ?</b> Pour financer LaPrimaire.org, nous avons ouvert une campagne de financement participatif. Si vous estimez que ce projet est utile pour l'avenir de notre démocratie, n'hésitez pas à <a href="https://laprimaire.org/financer/">faire un don</a>, selon vos moyens, peu importe le montant. Chaque don compte afin que la primaire puisse avoir lieu.
 END
 					:chiffres=><<-END,
-Accédez à tous les  <a href="https://laprimaire.org/transparence">les chiffres de LaPrimaire.org</a>
+Parce que sans transparence, il ne peut pas y avoir de confiance, et parce que ce sont vos dons qui financent la primaire, il nous paraissait normal, en retour, que nos chiffres et comptes soient <a href="https://laprimaire.org/transparence">totalement transparents</a>.
 END
 					:don=><<-END,
-Cliquez ici pour  <a href="https://laprimaire.org/financer">soutenir financièrement LaPrimaire.org</a>
+La participation à La Primaire est entièrement gratuite et son organisation ne repose que sur vos dons. Aidez-nous à faire de La Primaire un succès en <a href="https://laprimaire.org/financer/">soutenant financièrement LaPrimaire.org</a>.
+END
+					:etre_candidat=><<-END,
+Si vous souhaitez être candidat, merci de remplir le formulaire <a href="https://laprimaire.org/inscription-candidat/">inscription candidat(e)</a>, en vous assurant au  préalable d'être en accord avec la <a href="https://laprimaire.org/charte/">charte du candidat</a>.
+END
+					:nous_contacter=><<-END,
+N'hésitez à <a href='https://laprimaire.org/contact/'>nous contacter</a> si jamais vous avez des questions ou bien si quelque chose ne fonctionne pas. Nous essaierons de vous répondre dans les plus brefs délais.
 END
 				}
 			}
@@ -56,20 +66,21 @@ END
 					:disable_web_page_preview=>true,
 					:callback=>"about/menu_cb",
 					:parse_mode=>"HTML",
-					:kbd=>["about/deroulement","about/equipe","about/info","about/chiffres","about/don","home/menu"],
+					:kbd=>["about/deroulement","about/equipe","about/info","about/chiffres","about/don","about/etre_candidat","about/nous_contacter","about/retour"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:deroulement=>{
-					:answer=>"Déroulement",
+					:answer=>"Le déroulement",
 					:text=>messages[:fr][:about][:deroulement],
 					:keep_kbd=>true,
 					:parse_mode=>"HTML"
 				},
 				:info=>{
-					:answer=>"Principe",
+					:answer=>"Le principe",
 					:text=>messages[:fr][:about][:info],
-					:keep_kbd=>true,
-					:parse_mode=>"HTML"
+					:parse_mode=>"HTML",
+					:kbd=>["about/deroulement","about/equipe","about/info","about/chiffres","about/don","home/menu"],
+					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:chiffres=>{
 					:answer=>"Nos chiffres",
@@ -88,13 +99,28 @@ END
 					:text=>messages[:fr][:about][:don],
 					:keep_kbd=>true,
 					:parse_mode=>"HTML"
+				},
+				:etre_candidat=>{
+					:answer=>"#{Bot.emoticons[:raising_hand]} Etre candidat",
+					:text=>messages[:fr][:about][:etre_candidat],
+					:keep_kbd=>true,
+					:parse_mode=>"HTML"
+				},
+				:nous_contacter=>{
+					:answer=>"#{Bot.emoticons[:envelope]} Nous contacter",
+					:text=>messages[:fr][:about][:nous_contacter],
+					:keep_kbd=>true,
+					:parse_mode=>"HTML"
+				},
+				:retour=>{
+					:answer=>"#{Bot.emoticons[:back]} Retour",
+					:callback=>"about/retour_cb"
 				}
 			}
 		}
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"about/menu"}}})
-		Bot.addMenu({:home=>{:menu=>{:kbd=>"home/nous_contacter"}}})
 	end
 
 	def about_menu_cb(msg,user,screen)
@@ -106,8 +132,16 @@ END
 		return self.get_screen(screen,user,msg)
 	end
 
-	def about_intro(msg,user,screen)
-		Bot.log.info "about_intro"
+	def about_retour_cb(msg,user,screen)
+		Bot.log.info "#{__method__}"
+		from=user['session']['previous_session']['current']
+		case from
+		when "about/menu"
+			screen=self.find_by_name("home/menu")
+		else
+			screen=self.find_by_name("home/menu")
+		end
+		@users.next_answer(user[:id],'answer')
 		return self.get_screen(screen,user,msg)
 	end
 end

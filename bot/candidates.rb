@@ -73,9 +73,9 @@ END
 UPDATE candidates SET gender=$1 WHERE candidate_id=$2
 END
 			'get_stats_by_user_id'=><<END,
-SELECT count(c.user_id) as total, sum(
+SELECT count(cr.candidate_id) as recent, count(c.candidate_id) as total, sum(
 	       case
-	       when verified then 1
+	       when c.verified then 1
 	       else 0
 	       end
        ) AS verified, count(cv.user_id) AS viewed
@@ -85,7 +85,12 @@ SELECT count(c.user_id) as total, sum(
 	       cv.candidate_id = c.candidate_id
 	   AND cv.user_id=$1
        )
- WHERE c.user_id IS NOT null;
+  LEFT JOIN candidates AS cr
+     ON (
+	cr.candidate_id=c.candidate_id
+	AND cr.date_verified>(now()::date-7)
+	)
+  WHERE c.verified;
 END
 			'get_verified_candidate_by_id'=><<END,
 SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
@@ -94,8 +99,7 @@ SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
 		SELECT c.candidate_id, (
 			       case
 			       when cv.nb_views is null then 0
-			       else cv.nb_views
-			       end
+			       else cv.nb_views end
 		       ) as nb_views, count(s.user_id) as nb_soutiens, (
 			       case
 			       when s2.user_id is not null then true
@@ -154,13 +158,18 @@ SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
     ON (z.candidate_id = ca.candidate_id)
 END
 			'get_next_candidate_by_user_id'=><<END,
-SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
+SELECT ca.candidate_id,ca.user_id,ca.name,ca.verified,
+       ca.date_added::DATE as date_added,
+       date_part('day',now()-ca.date_added) as nb_days_added,
+       ca.date_verified::DATE as date_verified,
+       date_part('day',now() - ca.date_verified) as nb_days_verified,
+       z.nb_views, z.nb_soutiens, z.mon_soutien
   FROM candidates as ca
  INNER JOIN (
 		SELECT c.candidate_id, (
 			       case
 			       when cv.nb_views is null then 0
-			       else cv.nb_views
+			       else 1
 			       end
 		       ) as nb_views, count(s.user_id) as nb_soutiens, (
 			       case
@@ -185,7 +194,7 @@ SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
 		 GROUP BY c.candidate_id, cv.nb_views, s2.user_id
        ) as z
     ON (z.candidate_id = ca.candidate_id)
-    ORDER BY z.nb_views ASC, z.nb_soutiens DESC
+ ORDER BY z.nb_views ASC, ca.date_verified DESC
 END
 			'update_views_by_user_id'=><<END,
 UPDATE candidates_views SET nb_views=nb_views+1, last_view=now() WHERE candidate_id=$1 AND user_id=$2
@@ -323,16 +332,7 @@ END
 
 		def next_candidate(user_id)
 			res=Bot::Db.query('get_next_candidate_by_user_id',[user_id])
-			nb_views=res[0]['nb_views'].to_i
-			idx=0
-			candidates={}
-			random=[]
-			res.each_with_index do |r,i|
-				break if r['nb_views'].to_i>nb_views
-				candidates[r['candidate_id']]=r
-				random.push(r['candidate_id'])
-			end
-			candidate=candidates[random[rand(random.length)]]
+			candidate=res[0]
 			self.add_viewer(candidate['candidate_id'].to_i,user_id) if candidate['nb_views'].to_i==0
 			self.increment_view_count(candidate['candidate_id'].to_i,user_id)
 			return candidate
@@ -342,6 +342,7 @@ END
 			res=Bot::Db.query('get_stats_by_user_id',[user_id])
 			return nil if res.num_tuples.zero?
 			return {
+				'recent'=>res[0]['recent'],
 				'total'=>res[0]['total'],
 				'verified'=>res[0]['verified'],
 				'viewed'=>res[0]['viewed']

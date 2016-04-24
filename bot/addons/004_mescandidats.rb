@@ -27,20 +27,18 @@ module MesCandidats
 			:fr=>{
 				:mes_candidats=>{
 					:menu=><<-END,
-Il y a actuellement %{nb_candidats_complets} candidat(e)s dont le profil est complet (dont %{nb_candidats_non_vus} que vous n'avez pas encore %{vus}) et %{nb_candidats_incomplets} dont le profil est en cours de création. Pour se qualifier au deuxième tour de LaPrimaire.org, un candidat doit obtenir <b>500 soutiens</b> de citoyens.
-En tant que citoyen, vous ne pouvez soutenir que <b>5 candidats</b> au maximum. A tout moment vous êtes libre de retirer votre soutien à un candidat que vous aviez soutenu auparavant.
-no_preview:Vous pouvez également proposer votre propre candidat à LaPrimaire.org en proposant les citoyen(ne)s que vous souhaiteriez voir être candidat(e)s pour les inciter à se présenter.
-* <b>#{Bot.emoticons[:busts]} Voir les candidats</b> : consulter la fiche des candidats déjà déclarés
-* <b>#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats</b> : afficher les candidats que vous soutenez.
-* <b>#{Bot.emoticons[:loupe]} Chercher un candidat</b> : chercher un candidat spécifique parmi les candidats déjà déclarés.
-Que voulez-vous faire ? 
+Il y a actuellement %{nb_candidats_complets} candidat(e)s dont le profil est complet dont %{nb_candidats_non_vus} que vous n'avez pas encore %{vus} et %{nb_candidats_recents} inscrits dans les 7 derniers jours.
+Voulez-vous consulter la liste des candidats ou bien voir les candidats récemment inscrits que vous n'avez pas encore vus ? 
+END
+					:liste_candidats=><<-END,
+La liste des candidat(e)s au complet est visible en ligne, sur <a href="https://laprimaire.org/candidats/">la page candidats</a> ainsi que la <a href="https://laprimaire.org/citoyens/">liste des citoyen(ne)s plébiscité(e)s</a> pour participer à LaPrimaire.org. Une fois votre choix fait, cliquez sur <i>#{Bot.emoticons['thumbs_up']} Soutenir un candidat</i> pour lui apporter votre soutien.
 END
 					:show=><<-END,
 <a href='https://laprimaire.org/candidat/%{candidate_id}'>%{name}</a> a %{soutiens_txt} sur 500 nécessaires pour se qualifier
 END
 					:voir_candidat=><<-END,
-<b>%{name}</b> (<a href='https://laprimaire.org/candidat/%{candidate_id}'>voir sa page</a>) a %{soutiens_txt} sur 500 nécessaires
-no_preview:Vous souhaitez que %{name} participe à LaPrimaire.org pour y apporter ses idées et participe à la construction de l'avenir du pays ? Apportez lui votre soutien en cliquant sur le bouton <i>#{Bot.emoticons[:thumbs_up]} Soutenir</i> ci-dessous. Pour voir un autre candidat, cliquez sur <i>#{Bot.emoticons[:bust]} Voir un autre candidat</i>
+<a href='https://laprimaire.org/candidat/%{candidate_id}'>%{name}</a> est %{candidate_gender} depuis %{nb_days_txt} et a déjà reçu %{soutiens_txt} sur 500 nécessaires
+no_preview:Vous souhaitez que %{name} participe à LaPrimaire.org pour y apporter ses idées et participe à la construction de l'avenir du pays ? Apportez lui votre soutien en cliquant sur le bouton <i>#{Bot.emoticons[:thumbs_up]} Soutenir</i> ci-dessous. Pour voir le candidat suivant, cliquez sur <i>#{Bot.emoticons[:bust]} Candidat suivant</i>
 END
 					:chercher_candidat=><<-END,
 Quel(le) candidat(e) cherchez-vous ? (ou tapez '/start' pour revenir au menu)
@@ -140,15 +138,15 @@ END
 		screens={
 			:mes_candidats=>{
 				:menu=>{
-					:answer=>"#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Voir les candidats",
+					:answer=>"#{Bot.emoticons[:loupe]} Voir les candidats",
 					:text=>messages[:fr][:mes_candidats][:menu],
 					:callback=>"mes_candidats/menu_cb",
 					:disable_web_page_preview=>true,
-					:kbd=>["mes_candidats/voir_candidat","mes_candidats/chercher_candidat","mes_candidats/mes_candidats","home/menu"],
+					:kbd=>["mes_candidats/liste_candidats","mes_candidats/voir_candidat","mes_candidats/back"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:mes_candidats=>{
-					:answer=>"#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Voir mes candidats",
+					:answer=>"#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Mes candidats",
 					:text=>messages[:fr][:mes_candidats][:mes_candidats],
 					:callback=>"mes_candidats/mes_candidats_cb",
 					:kbd=>["mes_candidats/del_ask","mes_candidats/back"],
@@ -169,11 +167,17 @@ END
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:voir_candidat=>{
-					:answer=>"#{Bot.emoticons[:busts]} Voir les candidats",
+					:answer=>"#{Bot.emoticons[:busts]} Les candidats récents",
 					:text=>messages[:fr][:mes_candidats][:voir_candidat],
 					:callback=>"mes_candidats/voir_candidat_cb",
 					:kbd=>["mes_candidats/candidat_suivant","mes_candidats/back"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:liste_candidats=>{
+					:answer=>"#{Bot.emoticons[:scroll]} La liste des candidats",
+					:parse_mode=>"HTML",
+					:text=>messages[:fr][:mes_candidats][:liste_candidats],
+					:jump_to=>"home/menu"
 				},
 				:show=>{
 					:text=>messages[:fr][:mes_candidats][:show],
@@ -197,7 +201,7 @@ END
 					:jump_to=>"mes_candidats/menu"
 				},
 				:candidat_suivant=>{
-					:answer=>"#{Bot.emoticons[:bust]} Voir un autre candidat",
+					:answer=>"#{Bot.emoticons[:bust]} Candidat suivant",
 					:jump_to=>"mes_candidats/voir_candidat"
 				},
 				:aucun_soutien=>{
@@ -315,6 +319,7 @@ END
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"mes_candidats/mes_candidats"}}})
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"mes_candidats/menu"}}})
 	end
 
 	def mes_candidats_menu_cb(msg,user,screen)
@@ -322,18 +327,22 @@ END
 		non_vus=stats['verified'].to_i - stats['viewed'].to_i
 		incomplets=stats['total'].to_i - stats['verified'].to_i
 		vus= non_vus>1 ? "vus" : "vu"
-		screen[:text]=screen[:text] % {nb_candidats_complets: stats['verified'].to_s, nb_candidats_non_vus: non_vus.to_s, nb_candidats_incomplets: incomplets.to_s, vus: vus}
+		recent= stats['recent']
+		screen[:text]=screen[:text] % {nb_candidats_complets: stats['verified'].to_s, nb_candidats_non_vus: non_vus.to_s, nb_candidats_recents: recent.to_s, vus: vus}
 		screen[:parse_mode]='HTML'
 		return self.get_screen(screen,user,msg)
 	end
 
 	def mes_candidats_voir_candidat_cb(msg,user,screen)
-		Bot.log.info "mes_candidats_voir_candidat_cb"
+		Bot.log.info "#{__method__}"
 		candidate=@candidates.next_candidate(user[:id])
 		mon_soutien=candidate['mon_soutien']
 		name=candidate['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
+		nb_days=candidate['nb_days_verified'].to_i
+		nb_days_txt= nb_days>1 ? "#{nb_days} jours" : "#{nb_days} jour"
 		soutiens=candidate['nb_soutiens'].to_i
 		soutiens_txt= soutiens>1 ? "#{soutiens} soutiens" : "#{soutiens} soutien"
+		candidate_gender= candidate['gender']=='M' ? "candidat" : "candidate"
 		screen[:kbd_add]=[]
 		if mon_soutien.to_b then
 			soutiens_txt+= " (dont vous!)"
@@ -341,7 +350,7 @@ END
 		else
 			screen[:kbd_add].push(@screens[:mes_candidats][:soutenir][:answer])
 		end
-		screen[:text]=screen[:text] % {name: name, candidate_id: candidate['candidate_id'], soutiens_txt: soutiens_txt}
+		screen[:text]=screen[:text] % {name: name, candidate_id: candidate['candidate_id'], soutiens_txt: soutiens_txt, nb_days_txt: nb_days_txt, candidate_gender: candidate_gender}
 		screen[:parse_mode]='HTML'
 		@users.update_session(user[:id],{'candidate'=>candidate})
 		Bot.log.event(user[:id],'view_candidate',{'name'=>candidate['name']})
@@ -501,6 +510,8 @@ END
 		Bot.log.info "mes_candidats_back"
 		from=user['session']['previous_session']['current']
 		case from
+		when "mes_candidats/menu"
+			screen=self.find_by_name("home/menu")
 		when "mes_candidats/voir_candidat"
 			screen=self.find_by_name("mes_candidats/menu")
 		when "mes_candidats/show"

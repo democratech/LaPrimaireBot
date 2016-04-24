@@ -31,17 +31,10 @@ Mon rôle est de vous accompagner et de vous informer tout au long du dérouleme
 Mais assez discuté, commençons !
 END
 					:menu=><<-END,
-no_preview:Avec LaPrimaire.org, vous pouvez :
-* <b>#{Bot.emoticons[:woman]}#{Bot.emoticons[:man]} Voir les candidats</b> : voir et soutenir la candidature de candidats déjà déclarés
-* <b>#{Bot.emoticons[:speech_balloon]} Proposer un candidat</b> : suggérer des citoyens que vous souhaiteriez voir se présenter en tant que candidat
-* <b>#{Bot.emoticons[:raising_hand]} Etre candidat</b> : porter vous-mêmes les idées que vous défendez en vous déclarant candidat
-Que voulez-vous faire ?
+Que voulez-vous faire ? Utilisez les boutons du menu ci-dessous pour m'indiquer ce que vous souhaitez faire.
 END
 					:abuse=><<-END,
 Désolé votre comportement sur LaPrimaire.org est en violation de la Charte que vous avez acceptée et a entraîné votre exclusion  #{Bot.emoticons[:crying_face]}
-END
-					:nous_contacter=><<-END,
-N'hésitez à <a href='https://laprimaire.org/contact/'>nous contacter</a> si jamais vous avez des questions ou bien si quelque chose ne fonctionne pas. Nous essaierons de vous répondre dans les plus brefs délais.
 END
 					:not_allowed=><<-END,
 Désolé mais au vu des informations que vous nous avez fournies, vous ne remplissez pas les conditions pour pouvoir participer à LaPrimaire.org #{Bot.emoticons[:crying_face]}
@@ -69,13 +62,6 @@ END
 				:abuse=>{
 					:text=>messages[:fr][:home][:abuse],
 					:disable_web_page_preview=>true
-				},
-				:nous_contacter=>{
-					:answer=>"#{Bot.emoticons[:envelope]} Nous contacter",
-					:text=>messages[:fr][:home][:nous_contacter],
-					:parse_mode=>"HTML",
-					:kbd=>["home/menu"],
-					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
 				},
 				:not_allowed=>{
 					:text=>messages[:fr][:home][:not_allowed],
