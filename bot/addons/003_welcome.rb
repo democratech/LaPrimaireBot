@@ -450,6 +450,7 @@ END
 			:set=>'zipcode',
 			:value=>zipcode
 		})
+		user['zipcode']=zipcode
 		res=@geo.search_city({
 			:type=>'city',
 			:by=>'zipcode',

@@ -64,6 +64,9 @@ END
 			'delete_beta_code'=><<END,
 DELETE FROM beta_codes WHERE code=$1 RETURNING code
 END
+			'reset_bot_upgrade'=><<END,
+UPDATE citizens SET bot_upgrade=0 WHERE user_id=$1
+END
 			'count_citizens'=><<END,
 SELECT COUNT(*) as nb_citizens FROM citizens; 
 END
@@ -261,6 +264,10 @@ END
 
 		def get_position_on_wait_list(user_id)
 			return Bot::Db.query("get_user_position_in_wait_list",[user_id])[0]
+		end
+
+		def bot_upgrade_completed(user_id)
+			return Bot::Db.query("reset_bot_upgrade",[user_id])
 		end
 
 		def get_total()

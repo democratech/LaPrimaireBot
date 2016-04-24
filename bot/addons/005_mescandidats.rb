@@ -318,8 +318,8 @@ END
 		}
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
-		Bot.addMenu({:home=>{:menu=>{:kbd=>"mes_candidats/mes_candidats"}}})
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"mes_candidats/menu"}}})
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"mes_candidats/mes_candidats"}}})
 	end
 
 	def mes_candidats_menu_cb(msg,user,screen)
@@ -513,7 +513,7 @@ END
 		when "mes_candidats/menu"
 			screen=self.find_by_name("home/menu")
 		when "mes_candidats/voir_candidat"
-			screen=self.find_by_name("mes_candidats/menu")
+			screen=self.find_by_name("home/menu")
 		when "mes_candidats/show"
 			screen=self.find_by_name("mes_candidats/menu")
 		when "mes_candidats/chercher_candidat"

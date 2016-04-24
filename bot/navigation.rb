@@ -88,13 +88,18 @@ module Bot
 			# we check that this message has not already been answered (i.e. telegram sending a msg we already processed)
 			return nil,nil if @users.already_answered(user[:id],update_id)
 			session=user['session']
+			Bot.log.info "user read session : #{user}"
+			if user['bot_upgrade'].to_i==1 then
+				Bot.log.warn "Bot upgrade detected" 
+				update_id=-1
+				msg.text='api/bot_upgrade'
+			end
 			if update_id==-1 then # msg comes from api and not from telegram
 				api_cb,api_payload=msg.text.split("\n",2).each {|x| x.strip!}
 				raise "no callback given" if api_cb.nil?
 				@users.next_answer(user[:id],'free_text',1,api_cb)
 				session=@users.update_session(user[:id],{'api_payload'=>api_payload}) if !api_payload.nil?
 			end
-			Bot.log.info "user read session : #{user}"
 			input=session['expected_input']
 			session['current']="home/welcome" if RESET_WORDS.include?(msg.text)
 			if (input=='answer' or RESET_WORDS.include?(msg.text)) then # we expect the user to have used the proposed keyboard to answer

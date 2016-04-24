@@ -45,6 +45,9 @@ END
 					:reset_user=><<-END,
 %{firstname}, votre compte vient d'être remis à zéro. Tapez /start pour continuer.
 END
+					:bot_upgrade=><<-END,
+Ah, il semblerait que j'ai été mise à jour depuis la dernière fois que nous avons discuté, revenons au menu principal pour que je puisse appliquer la mise à jour automatiquement...
+END
 					:broadcast=><<-END,
 Excusez-moi pour cette interruption mais je viens de recevoir le message suivant de la part de LaPrimaire.org qu'on m'a chargé de vous transmettre :
 "%{broadcast_msg}"
@@ -73,6 +76,12 @@ END
 				:reset_user=>{
 					:text=>messages[:fr][:api][:reset_user],
 					:disable_web_page_preview=>true,
+					:jump_to=>"home/welcome"
+				},
+				:bot_upgrade=>{
+					:text=>messages[:fr][:api][:bot_upgrade],
+					:disable_web_page_preview=>true,
+					:callback=>"api/bot_upgrade",
 					:jump_to=>"home/welcome"
 				},
 				:unblock_user=>{
@@ -153,6 +162,13 @@ END
 		@users.reset(user)
 		@users.next_answer(user[:id],'answer')
 		Bot.log.event(user[:id],'api_reset_user')
+		return self.get_screen(screen,user,msg)
+	end
+
+	def api_bot_upgrade(msg,user,screen)
+		Bot.log.info "#{__method__}"
+		@users.bot_upgrade_completed(user[:id])
+		@users.next_answer(user[:id],'answer')
 		return self.get_screen(screen,user,msg)
 	end
 
