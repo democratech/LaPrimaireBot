@@ -303,6 +303,7 @@ END
 			:text=>"Ok, voyons si je peux trouver ce(te) citoyen(ne)...",
 			:reply_markup=>Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
 		})
+		Bot.log.event(user[:id],'search_candidate',{'name'=>name})
 		res=@candidates.search_index(name) if candidate.nil?
 		nb_results=res['hits'].length
 		if nb_results.zero? then
@@ -375,7 +376,6 @@ END
 				end
 			end
 		end
-		Bot.log.info "candidates #{nb_candidates_supported} citizens #{nb_citizens_supported}"
 		candidate=user['session']['candidate']
 		name=candidate['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
 		verified=candidate['verified'].to_b
@@ -383,7 +383,7 @@ END
 			Bot.log.event(user[:id],'support_candidate',{'name'=>name})
 			return soutenir_candidat_replace_ask_cb(msg,user,screen,verified) if nb_candidates_supported>4
 		else
-			Bot.log.event(user[:id],'support_citizen',{'name'=>name})
+			Bot.log.event(user[:id],'support_candidate',{'name'=>name,'citizen'=>1})
 			return soutenir_candidat_replace_ask_cb(msg,user,screen,verified) if nb_citizens_supported>4
 		end
 		@candidates.add_supporter(user[:id],candidate['candidate_id'])
@@ -430,6 +430,7 @@ END
 			:text=>wait_msg,
 			:reply_markup=>Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
 		})
+		Bot.log.event(user[:id],'search_citizen',{'name'=>name})
 		while (idx<5 and photo.nil? and !images[idx].nil?) do
 			img,type=images[idx]
 			begin
@@ -486,6 +487,7 @@ END
 			elsif !ADMINS.include?(user[:id]) && user['settings']['limits']['candidate_proposals'].to_i<=user['settings']['actions']['nb_candidates_proposed'].to_i # user has already added the maximum candidates he could add
 				screen=self.find_by_name("soutenir_candidat/max_reached")
 				File.delete(image) if (!image.nil? and File.exists?(image))
+				Bot.log.event(user[:id],'new_candidate_max_reached',{'name'=>name})
 			else # candidate needs to be registered in db
 				candidate=@candidates.add(candidate)
 				nb_candidates_proposed=user['settings']['actions']['nb_candidates_proposed']+1
@@ -518,6 +520,7 @@ END
 			slack_msg="Nouveau candidat(e) proposé(e) : #{candidate['name']} (<https://laprimaire.org/candidat/#{candidate['candidate_id']}|voir sa page>) par #{user['firstname']} #{user['lastname']}"
 			Bot.log.slack_notification(slack_msg,"candidats",":man:","LaPrimaire.org")
 			Bot.log.event(user[:id],'new_candidate_supported',{'name'=>candidate['name']})
+			Bot.log.event(user[:id],'support_candidate',{'name'=>name,'citizen'=>1})
 			Bot.log.people(user[:id],'increment',{'nb_candidates_proposed'=>1})
 		end
 		return self.get_screen(screen,user,msg)
@@ -574,6 +577,7 @@ END
 		@candidates.remove_supporter(user[:id],delcandidate_id)
 		@users.clear_session(user[:id],'delete_candidates')
 		@users.next_answer(user[:id],'answer')
+		Bot.log.event(user[:id],'remove_support',{'name'=>name})
 		return self.get_screen(screen,user,msg)
 	end
 
@@ -627,6 +631,8 @@ END
 		@users.clear_session(user[:id],'delete_candidates')
 		@users.clear_session(user[:id],'candidate')
 		@users.next_answer(user[:id],'answer')
+		Bot.log.event(user[:id],'remove_support',{'name'=>name})
+		Bot.log.event(user[:id],'support_candidate',{'name'=>name})
 		return self.get_screen(screen,user,msg)
 	end
 

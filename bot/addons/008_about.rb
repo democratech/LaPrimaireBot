@@ -27,7 +27,6 @@ module About
 					:menu=><<-END,
 no_preview:LaPrimaire.org est une initiative citoyenne qui vise à faire émerger des candidats crédibles et représentatifs pour l’élection présidentielle de 2017, en dehors du cadre des partis politiques.
 no_preview:A l’issue de la Primaire, un nouveau parti politique sera créé et une campagne de financement participatif lancée afin de permettre au candidat issu de LaPrimaire.org de concourir à l'élection présidentielle.
-no_preview:L'objectif est de parvenir à rassembler au minimum 100.000 citoyens pour donner du poids au candidat qui sera issu de LaPrimaire.org. Nous sommes actuellement %{nb} participants (soit %{percentage}/100 de l'objectif).
 END
 					:deroulement=><<-END,
 La page <a href="https://laprimaire.org/deroulement">le déroulement de LaPrimaire</a> a la réponse à toutes vos interrogations sur le déroulement de LaPrimaire.org : Quel est le processus de sélection de LaPrimaire.org ? Quelles sont les grandes étapes ? Comment le candidat final sera-t-il sélectionné ? 
@@ -55,6 +54,9 @@ END
 					:nous_contacter=><<-END,
 N'hésitez à <a href='https://laprimaire.org/contact/'>nous contacter</a> si jamais vous avez des questions ou bien si quelque chose ne fonctionne pas. Nous essaierons de vous répondre dans les plus brefs délais.
 END
+					:diffuser=><<-END,
+Rendez-vous sur la page <a href="https://laprimaire.org/partager/">Comment diffuser LaPrimaire.org ?</a> pour nous aider à atteindre <b>100.000 citoyens</b> et donner le plus de poids possible au candidat qui sortira de LaPrimaire.org. Nous sommes actuellement %{nb} participants (soit %{percentage}/100 de l'objectif). Aidez-nous à faire connaître LaPrimaire.org au plus grand nombre ! 
+END
 				}
 			}
 		}
@@ -64,7 +66,6 @@ END
 					:answer=>"#{Bot.emoticons[:info]} A propos",
 					:text=>messages[:fr][:about][:menu],
 					:disable_web_page_preview=>true,
-					:callback=>"about/menu_cb",
 					:parse_mode=>"HTML",
 					:kbd=>["about/deroulement","about/equipe","about/info","about/chiffres","about/don","about/etre_candidat","about/nous_contacter","about/retour"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
@@ -112,6 +113,13 @@ END
 					:keep_kbd=>true,
 					:parse_mode=>"HTML"
 				},
+				:diffuser=>{
+					:answer=>"#{Bot.emoticons[:speaker]} Inviter vos amis",
+					:text=>messages[:fr][:about][:diffuser],
+					:callback=>"about/diffuser_cb",
+					:keep_kbd=>true,
+					:parse_mode=>"HTML"
+				},
 				:retour=>{
 					:answer=>"#{Bot.emoticons[:back]} Retour",
 					:callback=>"about/retour_cb"
@@ -120,17 +128,19 @@ END
 		}
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"about/diffuser"}}})
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"about/menu"}}})
 	end
 
-	def about_menu_cb(msg,user,screen)
-		Bot.log.info "about_menu_cb"
+	def about_diffuser_cb(msg,user,screen)
+		Bot.log.info "#{__method__}"
 		res=@users.get_total()
 		nb=res[0]['nb_citizens'].to_i
 		percentage=(100*(nb.to_f/100000.to_f)).to_i
 		screen[:text]=screen[:text] % {nb:nb.to_s,percentage:percentage.to_s} 
 		return self.get_screen(screen,user,msg)
 	end
+
 
 	def about_retour_cb(msg,user,screen)
 		Bot.log.info "#{__method__}"

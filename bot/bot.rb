@@ -73,7 +73,8 @@ module Bot
 		:trash=>"\u{1F5D1}",
 		:back=>"\u{21A9}",
 		:loupe=>"\u{1F50E}",
-		:scroll=>"\u{1F4DC}"
+		:scroll=>"\u{1F4DC}",
+		:speaker=>"\u{1F4E2}"
 	}
 	@@messages={
 		:fr=>{
