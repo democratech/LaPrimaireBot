@@ -36,6 +36,9 @@ END
 					:recherche_trop_large=><<-END,
 Votre recherche n'est pas assez précise, soyez plus précis s'il vous plaît !
 END
+					:nom_trop_long=><<-END,
+Le nom de ce citoyen me semble un petit peu trop long #{Bot.emoticons[:rolling_eyes]} J'ai du mal à croire qu'un candidat puisse s'appeler comme cela.
+END
 					:show_candidate=><<-END,
 <a href='https://laprimaire.org/candidat/%{candidate_id}'>%{name}</a> est %{candidate} et a déjà obtenu %{soutiens_txt} sur les 500 nécessaires pour se qualifier.
 END
@@ -142,6 +145,10 @@ END
 				},
 				:recherche_trop_large=>{
 					:text=>messages[:fr][:soutenir_candidat][:recherche_trop_large],
+					:jump_to=>"soutenir_candidat/menu"
+				},
+				:nom_trop_long=>{
+					:text=>messages[:fr][:soutenir_candidat][:nom_trop_long],
 					:jump_to=>"soutenir_candidat/menu"
 				},
 				:show_candidate=>{
@@ -296,6 +303,7 @@ END
 		return self.get_screen(self.find_by_name("home/menu"),user,msg) if name==@screens[:soutenir_candidat][:retour][:answer]
 		return self.get_screen(self.find_by_name("soutenir_candidat/inconnu"),user,msg) if not name
 		return self.get_screen(self.find_by_name("soutenir_candidat/recherche_trop_large"),user,msg) if name.length<4
+		return self.get_screen(self.find_by_name("soutenir_candidat/nom_trop_long"),user,msg) if name.length>55
 		# immediately send a message to acknowledge we got the request as the search might take time
 		Democratech::TelegramBot.client.api.sendChatAction(chat_id: user[:id], action: "typing")
 		Democratech::TelegramBot.client.api.sendMessage({
@@ -369,7 +377,7 @@ END
 		nb_citizens_supported=0
 		if not res.num_tuples.zero? then
 			res.each do |r|
-				if r['verified'].to_b then
+				if not r['verified'].nil? and ]r['verified'].to_b then
 					nb_candidates_supported+=1
 				else
 					nb_citizens_supported+=1
@@ -520,7 +528,7 @@ END
 			slack_msg="Nouveau candidat(e) proposé(e) : #{candidate['name']} (<https://laprimaire.org/candidat/#{candidate['candidate_id']}|voir sa page>) par #{user['firstname']} #{user['lastname']}"
 			Bot.log.slack_notification(slack_msg,"candidats",":man:","LaPrimaire.org")
 			Bot.log.event(user[:id],'new_candidate_supported',{'name'=>candidate['name']})
-			Bot.log.event(user[:id],'support_candidate',{'name'=>name,'citizen'=>1})
+			Bot.log.event(user[:id],'support_candidate',{'name'=>candidate['name'],'citizen'=>1})
 			Bot.log.people(user[:id],'increment',{'nb_candidates_proposed'=>1})
 		end
 		return self.get_screen(screen,user,msg)

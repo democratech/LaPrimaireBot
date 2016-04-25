@@ -21,16 +21,16 @@
 module Bot
 	class Log < Logger
 		def initialize(*args)
-			super(DEBUG ? STDOUT : STDERR)
-			self.level = DEBUG ? Logger::DEBUG : Logger::ERROR
-			unless DEBUG then
+			super(::DEBUG ? STDOUT : STDERR)
+			self.level = ::DEBUG ? Logger::DEBUG : Logger::WARN
+			unless ::DEBUG then
 				@mixpanel=Mixpanel::Tracker.new(MIXPANEL_TOKEN)
 			end
 		end
 
 
 		def people(user_id,action,infos)
-			unless DEBUG then
+			unless ::DEBUG then
 				case action
 				when 'increment'
 					@mixpanel.people.increment(user_id,infos)
@@ -41,16 +41,20 @@ module Bot
 				else
 					Bot.log.error "Log.people: Unknown logging action received"
 				end
+			else
+				Bot.log.debug "unlogged people event : #{name}"
 			end
 		end
 
 		def event(user_id,name,infos=nil)
-			unless DEBUG then
+			unless ::DEBUG then
 				if infos.nil? then
 					@mixpanel.track(user,name)
 				else
 					@mixpanel.track(user,name,infos)
 				end
+			else
+				Bot.log.debug "unlogged event : #{name}"
 			end
 		end
 

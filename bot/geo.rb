@@ -29,15 +29,17 @@ END
 			queries.each { |k,v| Bot::Db.prepare(k,v) }
 		end
 
-		def intialize
+		def initialize
 			@countries=Algolia::Index.new("countries")
 		end
 
 		def search_city(query)
+			Bot.log.info "#{__method__}"
 			return Bot::Db.query("get_city_by_zipcode",[query[:target]]) 
 		end
 
 		def search_country(country,options)
+			Bot.log.info "#{__method__}"
 			return @countries.search(country,options)
 		end
 	end

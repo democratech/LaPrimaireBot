@@ -89,7 +89,7 @@ module Bot
 			return nil,nil if @users.already_answered(user[:id],update_id)
 			session=user['session']
 			Bot.log.info "user read session : #{user}"
-			if user['bot_upgrade'].to_i==1 then
+			if user['bot_upgrade'].to_i==1 and not update_id==-1 then
 				Bot.log.warn "Bot upgrade detected" 
 				update_id=-1
 				msg.text='api/bot_upgrade'
