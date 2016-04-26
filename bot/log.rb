@@ -49,9 +49,9 @@ module Bot
 		def event(user_id,name,infos=nil)
 			unless ::DEBUG then
 				if infos.nil? then
-					@mixpanel.track(user,name)
+					@mixpanel.track(user_id,name)
 				else
-					@mixpanel.track(user,name,infos)
+					@mixpanel.track(user_id,name,infos)
 				end
 			else
 				Bot.log.debug "unlogged event : #{name}"
