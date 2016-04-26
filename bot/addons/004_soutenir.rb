@@ -377,7 +377,7 @@ END
 		nb_citizens_supported=0
 		if not res.num_tuples.zero? then
 			res.each do |r|
-				if not r['verified'].nil? and ]r['verified'].to_b then
+				if not r['verified'].nil? and r['verified'].to_b then
 					nb_candidates_supported+=1
 				else
 					nb_citizens_supported+=1
