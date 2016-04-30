@@ -23,72 +23,108 @@ db=PG.connect(
 	"port"=>PGPORT
 )
 
-message= {  
-	:from_name=> "LaPrimaire.org",  
-	:subject=> "Préparez-vous : Ouverture de LaPrimaire.org le 4 avril prochain !",  
-	:to=>[  
-		{  
-			:email=> "thib@thib.fr",
-			:name=> "Thibauld"
-		}  
-	],
-        :merge_vars=>[
-		{
-			:rcpt=>"Jacques",
-			:vars=>[
-				{
-					:name=>"UUID",
-					:content=>"john"
-				},
-				{
-					:name=>"BETACODE",
-					:content=>"doe"
-				},
-			]
-		}
-	]
-}
-
-
-get_candidates="SELECT candidate_id,name,email FROM candidates WHERE email IS NOT NULL"
-res_candidats=db.exec(get_candidates)
-if not res_candidats.num_tuples.zero? then
-	nb_codes=res_candidats.num_tuples
-	puts res_candidats
-	puts res_candidats.num_tuples
-	codes=[]
-	query=[]
-	idx=1
-	nb_codes.to_i.times do
-		codes.push(generate_code())
-		query.push("($#{idx})")
-		idx+=1
+def email_candidat_trello(db,mandrill)
+	message= {  
+		:from_name=> "LaPrimaire.org",  
+		:subject=> "Préparez-vous : Ouverture de LaPrimaire.org le 4 avril prochain !",  
+		:to=>[  
+			{  
+				:email=> "thib@thib.fr",
+				:name=> "Thibauld"
+			}  
+		],
+		:merge_vars=>[
+			{
+				:rcpt=>"Jacques",
+				:vars=>[
+					{
+						:name=>"UUID",
+						:content=>"john"
+					},
+					{
+						:name=>"BETACODE",
+						:content=>"doe"
+					},
+				]
+			}
+		]
+	}
+	get_candidates="SELECT candidate_id,name,email FROM candidates WHERE email IS NOT NULL"
+	res_candidats=db.exec(get_candidates)
+	if not res_candidats.num_tuples.zero? then
+		nb_codes=res_candidats.num_tuples
+		puts res_candidats
+		puts res_candidats.num_tuples
+		codes=[]
+		query=[]
+		idx=1
+		nb_codes.to_i.times do
+			codes.push(generate_code())
+			query.push("($#{idx})")
+			idx+=1
+		end
+		query_str=query.join(',')+" RETURNING *"
+		insert_codes="INSERT INTO beta_codes (code) VALUES "+query_str
+		res_codes=db.exec_params(insert_codes,codes)
+		return "error adding codes" if res_codes.num_tuples.zero? 
+		emails={}
+		res_candidats.each_with_index do |r,i|
+			emails[r['email']]={"UUID"=>r['candidate_id'],"BETACODE"=>codes[i],"NAME"=>r['name']}
+		end
+		puts emails
 	end
-	query_str=query.join(',')+" RETURNING *"
-	insert_codes="INSERT INTO beta_codes (code) VALUES "+query_str
-	res_codes=db.exec_params(insert_codes,codes)
-	return "error adding codes" if res_codes.num_tuples.zero? 
-	emails={}
-	res_candidats.each_with_index do |r,i|
-		emails[r['email']]={"UUID"=>r['candidate_id'],"BETACODE"=>codes[i],"NAME"=>r['name']}
+	emails.each do |k,v|
+		begin
+			msg=message
+			msg[:to][0][:email]=k
+			msg[:to][0][:name]=v["NAME"]
+			msg[:merge_vars][0][:rcpt]=k
+			msg[:merge_vars][0][:vars][0][:content]=v["UUID"]
+			msg[:merge_vars][0][:vars][1][:content]=v["BETACODE"]
+			result=mandrill.messages.send_template("laprimaire-org-candidates-part-i-trello",[],message)
+			puts "sending email to #{v['NAME']} (#{k}) with UUID #{v['UUID']} and CODE #{v['BETACODE']}"
+			sleep(1)
+		rescue Mandrill::Error => e
+			msg="A mandrill error occurred: #{e.class} - #{e.message}"
+			puts msg
+		end
 	end
+end
+
+def email_candidat_formation(db,mandrill)
+	get_candidates="SELECT candidate_id,name,email FROM candidates WHERE email IS NOT NULL AND verified"
+	res_candidats=db.exec(get_candidates)
+	if not res_candidats.num_tuples.zero? then
+		emails=[]
+		res_candidats.each do |r|
+			message= {  
+				:from_name=> "LaPrimaire.org",  
+				:subject=> "Candidats à LaPrimaire.org : réservez votre samedi 21 mai prochain !",  
+				:to=>[  {  :email=> "#{r['email']}" }  ]
+			}
+			emails.push(message)
+		end
+	end
+=begin
+	message= {  
+		:from_name=> "LaPrimaire.org",  
+		:subject=> "Candidats et candidates à LaPrimaire.org : réservez votre samedi 21 mai prochain !",  
+		:to=>[  {  :email=> "tfavre@gmail.com" }  ]
+	}
+	emails=[message]
 	puts emails
-end
-
-emails.each do |k,v|
-	begin
-		msg=message
-		msg[:to][0][:email]=k
-		msg[:to][0][:name]=v["NAME"]
-		msg[:merge_vars][0][:rcpt]=k
-		msg[:merge_vars][0][:vars][0][:content]=v["UUID"]
-		msg[:merge_vars][0][:vars][1][:content]=v["BETACODE"]
-		result=mandrill.messages.send_template("laprimaire-org-candidates-part-i-trello",[],message)
-		puts "sending email to #{v['NAME']} (#{k}) with UUID #{v['UUID']} and CODE #{v['BETACODE']}"
-		sleep(1)
-	rescue Mandrill::Error => e
-		msg="A mandrill error occurred: #{e.class} - #{e.message}"
-		puts msg
+=end
+	emails.each do |k|
+		begin
+			result=mandrill.messages.send_template("laprimaire-org-candidates-part-ii-formation",[],k)
+			puts result.inspect
+			puts "sending email to #{k[:to][0][:email]}"
+			sleep(0.2)
+		rescue Mandrill::Error => e
+			msg="A mandrill error occurred: #{e.class} - #{e.message}"
+			puts msg
+		end
 	end
 end
 
+email_candidat_formation(db,mandrill)
