@@ -113,6 +113,10 @@ module Democratech
 			begin
 				Bot::Db.init()
 				update = Telegram::Bot::Types::Update.new(params)
+				if update.message.chat.type=="group" then
+					Bot.log.error "Message from group chat not supported:\n#{update.inspect}"
+					error! "Msg from group chat not supported: #{update.inspect}", 200 # if you put an error code here, telegram will keep sending you the same msg until you die
+				end
 				msg,options=Bot.nav.get(update.message,update.update_id)
 				send_msg(update.message.chat.id,msg,options) unless msg.nil?
 			rescue Exception=>e
