@@ -23,9 +23,15 @@ module Bot
 		def initialize
 			@cs=Google::Apis::CustomsearchV1::CustomsearchService.new
 			@cs.key=CSKEY
+			aws=Aws::S3::Resource.new(
+				credentials: Aws::Credentials.new(AWS_BOT_KEY,AWS_BOT_SECRET),
+				region: AWS_REGION
+			)
+			@bucket=aws.bucket(AWS_BUCKET)
 		end
 
 		def search_image(q)
+			Bot.log.info "#{__method__}"
 			res=@cs.list_cses(q,cx:CSID,cr:'countryFR', gl:'fr', hl:'fr', googlehost:'google.fr', img_type:'face', search_type:'image', num:5, safe:'high')
 			images=[]
 			if !res.items.nil? then
@@ -37,6 +43,36 @@ module Bot
 				end
 			end
 			return images
+		end
+
+		def upload_image(filename)
+			Bot.log.info "#{__method__} : #{filename}"
+			key=File.basename(filename)
+			obj=@bucket.object(key)
+			if @bucket.object(key).exists? then
+				Bot.log.info("#{key} already exists in S3 bucket. deleting previous object.")
+				obj.delete
+			end
+			Bot.log.info("upload #{key} (from #{filename}) to S3")
+			obj.upload_file(filename, acl:'public-read')
+			return key
+		end
+
+		def delete_image(filename)
+			Bot.log.info "#{__method__} : #{filename}"
+			File.delete(filename) if (!filename.nil? and File.exists?(filename))
+			key=File.basename(filename)
+			if @bucket.object(key).exists? then
+				obj=@bucket.object(key)
+				obj.delete
+				Bot.log.info("delete #{key} from S3")
+			else
+				Bot.log.info("#{key} does not exist in S3 bucket")
+			end
+		end
+
+		def image_url(key)
+			return AWS_S3_BUCKET_URL+key
 		end
 	end
 end

@@ -42,7 +42,7 @@ module Bot
 					Bot.log.error "Log.people: Unknown logging action received"
 				end
 			else
-				Bot.log.debug "unlogged people event : #{name}"
+				Bot.log.debug "unlogged people event : #{action}"
 			end
 		end
 

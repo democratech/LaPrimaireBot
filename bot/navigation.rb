@@ -224,7 +224,7 @@ module Bot
 			else
 				screen_id=tmp[ctx.to_sym]
 			end
-			Bot.log.error("Something looks wrong here") if screen_id.nil?
+			Bot.log.error("find_by_answer: screen for #{answer} not found") if screen_id.nil?
 			screen=@screens[ctx.to_sym][screen_id] 
 			if screen then
 				screen[:id]=self.path([ctx,screen_id])

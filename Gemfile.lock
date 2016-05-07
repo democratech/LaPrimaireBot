@@ -12,6 +12,12 @@ GEM
       httpclient (~> 2.4)
       json (>= 1.5.1)
     ast (2.2.0)
+    aws-sdk (2.3.2)
+      aws-sdk-resources (= 2.3.2)
+    aws-sdk-core (2.3.2)
+      jmespath (~> 1.0)
+    aws-sdk-resources (2.3.2)
+      aws-sdk-core (= 2.3.2)
     axiom-types (0.1.1)
       descendants_tracker (~> 0.0.4)
       ice_nine (~> 0.11.0)
@@ -72,7 +78,10 @@ GEM
     hurley (0.2)
     i18n (0.7.0)
     ice_nine (0.11.2)
+    jmespath (1.2.4)
+      json_pure (>= 1.8.1)
     json (1.8.3)
+    json_pure (1.8.3)
     jwt (1.5.2)
     kgio (2.10.0)
     little-plugger (1.1.4)
@@ -159,6 +168,7 @@ PLATFORMS
 
 DEPENDENCIES
   algoliasearch
+  aws-sdk
   bson (~> 3.0)
   bundler
   fastimage

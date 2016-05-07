@@ -446,6 +446,7 @@ END
 				web_img.resize "x300"
 				photo=TMP_DIR+'image'+user[:id].to_s+"."+type
 				web_img.write(photo)
+				@web.upload_image(photo)
 				break
 			rescue
 				photo=nil
@@ -464,7 +465,7 @@ END
 		candidate=user['session']['candidate']
 		Bot.log.info "#{__method__}"
 		image=candidate.nil? ? nil : candidate['photo']
-		File.delete(image) if (!image.nil? and File.exists?(image))
+		@web.delete_image(image) if !image.nil?
 		idx=candidate['idx'].nil? ? 1 : candidate['idx']
 		return idx==4 ? self.get_screen(self.find_by_name("soutenir_candidat/not_found"),user,msg) : soutenir_candidat_search_citoyen_cb(msg,user,screen)
 	end
@@ -491,10 +492,10 @@ END
 				screen=self.find_by_name("home/menu")
 			elsif user['settings']['blocked']['add_candidate'] # user is forbidden to add new candidates
 				screen=self.find_by_name("soutenir_candidat/blocked")
-				File.delete(image) if (!image.nil? and File.exists?(image))
+				@web.delete_image(image) if !image.nil?
 			elsif !ADMINS.include?(user[:id]) && user['settings']['limits']['candidate_proposals'].to_i<=user['settings']['actions']['nb_candidates_proposed'].to_i # user has already added the maximum candidates he could add
 				screen=self.find_by_name("soutenir_candidat/max_reached")
-				File.delete(image) if (!image.nil? and File.exists?(image))
+				@web.delete_image(image) if !image.nil?
 				Bot.log.event(user[:id],'new_candidate_max_reached',{'name'=>name})
 			else # candidate needs to be registered in db
 				candidate=@candidates.add(candidate)
@@ -502,6 +503,7 @@ END
 				@users.update_settings(user[:id],{'actions'=>{'nb_candidates_proposed'=>nb_candidates_proposed}})
 				user['session']['candidate']['candidate_id']=candidate['candidate_id']
 				FileUtils.mv(image,CANDIDATS_DIR+candidate['photo'])
+				@web.upload_image(CANDIDATS_DIR+candidate['photo'])
 				@candidates.add_supporter(user[:id],candidate['candidate_id'])
 			end
 		else
@@ -522,9 +524,11 @@ END
 		Bot.log.info "#{__method__}"
 		real_candidate = screen[:real]
 		if not real_candidate then
-			@candidates.delete(candidate['candidate_id'])
-			File.delete(CANDIDATS_DIR+candidate['photo']) if File.exists?(CANDIDATS_DIR+candidate['photo'])
+			del_candidate=@candidates.delete(candidate['candidate_id'])
+			@web.delete_image(candidate['photo']) if !candidate['photo'].nil?
+			@web.delete_image(del_candidate['photo']) if !del_candidate['photo'].nil?
 		else
+			@web.delete_image(candidate['photo']) if !candidate['photo'].nil?
 			slack_msg="Nouveau candidat(e) proposé(e) : #{candidate['name']} (<https://laprimaire.org/candidat/#{candidate['candidate_id']}|voir sa page>) par #{user['firstname']} #{user['lastname']}"
 			Bot.log.slack_notification(slack_msg,"candidats",":man:","LaPrimaire.org")
 			Bot.log.event(user[:id],'new_candidate_supported',{'name'=>candidate['name']})
