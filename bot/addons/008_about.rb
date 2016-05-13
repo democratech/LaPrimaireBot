@@ -57,6 +57,9 @@ END
 					:diffuser=><<-END,
 Rendez-vous sur la page <a href="https://laprimaire.org/partager/">Comment diffuser LaPrimaire.org ?</a> pour nous aider à atteindre <b>100.000 citoyens</b> et donner le plus de poids possible au candidat qui sortira de LaPrimaire.org. Nous sommes actuellement %{nb} participants (soit %{percentage}/100 de l'objectif). Aidez-nous à faire connaître LaPrimaire.org au plus grand nombre ! 
 END
+					:aide=><<-END,
+Si ne comprenez pas comment soutenir un candidat ou bien si vous vous posez des questions sur le fonctionnement de Victoire, nous avons réalisé <a href="https://www.youtube.com/watch?v=3UdeS0NCRec">un tutoriel vidéo</a> qui vous montrera pas-à-pas comment procéder.
+END
 				}
 			}
 		}
@@ -120,6 +123,12 @@ END
 					:keep_kbd=>true,
 					:parse_mode=>"HTML"
 				},
+				:aide=>{
+					:answer=>"#{Bot.emoticons[:crying_face]} Besoin d'aide ?",
+					:text=>messages[:fr][:about][:aide],
+					:keep_kbd=>true,
+					:parse_mode=>"HTML"
+				},
 				:retour=>{
 					:answer=>"#{Bot.emoticons[:back]} Retour",
 					:callback=>"about/retour_cb"
@@ -129,6 +138,7 @@ END
 		Bot.updateScreens(screens)
 		Bot.updateMessages(messages)
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"about/diffuser"}}})
+		Bot.addMenu({:home=>{:menu=>{:kbd=>"about/aide"}}})
 		Bot.addMenu({:home=>{:menu=>{:kbd=>"about/menu"}}})
 	end
 

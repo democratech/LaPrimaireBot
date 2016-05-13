@@ -23,7 +23,7 @@ module Bot
 		def self.load_queries
 			queries={
 			'register_candidate'=><<END,
-INSERT INTO candidates (candidate_id,name,photo) VALUES ($1,$2,$3) RETURNING *
+INSERT INTO candidates (candidate_id,name,photo,candidate_key) VALUES ($1,$2,$3,md5(random()::text)) RETURNING *
 END
 			'delete_candidate'=><<END,
 DELETE FROM candidates WHERE candidate_id=$1 RETURNING *
