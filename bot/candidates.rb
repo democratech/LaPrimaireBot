@@ -158,7 +158,7 @@ SELECT ca.*, z.nb_views, z.nb_soutiens, z.mon_soutien
     ON (z.candidate_id = ca.candidate_id)
 END
 			'get_next_candidate_by_user_id'=><<END,
-SELECT ca.candidate_id,ca.user_id,ca.name,ca.verified,
+SELECT ca.candidate_id,ca.gender,ca.user_id,ca.name,ca.verified,
        ca.date_added::DATE as date_added,
        date_part('day',now()-ca.date_added) as nb_days_added,
        ca.date_verified::DATE as date_verified,
