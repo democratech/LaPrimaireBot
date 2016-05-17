@@ -1,6 +1,7 @@
 require '../../config/keys.local.rb'
 require 'mandrill'
 require 'pg'
+require 'csv'
 
 DEBUG=false
 PGPWD=DEBUG ? PGPWD_TEST : PGPWD_LIVE
@@ -53,8 +54,6 @@ def email_candidat_trello(db,mandrill)
 	res_candidats=db.exec(get_candidates)
 	if not res_candidats.num_tuples.zero? then
 		nb_codes=res_candidats.num_tuples
-		puts res_candidats
-		puts res_candidats.num_tuples
 		codes=[]
 		query=[]
 		idx=1
@@ -71,7 +70,6 @@ def email_candidat_trello(db,mandrill)
 		res_candidats.each_with_index do |r,i|
 			emails[r['email']]={"UUID"=>r['candidate_id'],"BETACODE"=>codes[i],"NAME"=>r['name']}
 		end
-		puts emails
 	end
 	emails.each do |k,v|
 		begin
@@ -97,7 +95,7 @@ def email_candidat_formation(db,mandrill)
 	if not res_candidats.num_tuples.zero? then
 		emails=[]
 		res_candidats.each do |r|
-			message= {  
+			message= {
 				:from_name=> "LaPrimaire.org",  
 				:subject=> "Candidats à LaPrimaire.org : réservez votre samedi 21 mai prochain !",  
 				:to=>[  {  :email=> "#{r['email']}" }  ]
@@ -105,19 +103,9 @@ def email_candidat_formation(db,mandrill)
 			emails.push(message)
 		end
 	end
-=begin
-	message= {  
-		:from_name=> "LaPrimaire.org",  
-		:subject=> "Candidats et candidates à LaPrimaire.org : réservez votre samedi 21 mai prochain !",  
-		:to=>[  {  :email=> "tfavre@gmail.com" }  ]
-	}
-	emails=[message]
-	puts emails
-=end
 	emails.each do |k|
 		begin
 			result=mandrill.messages.send_template("laprimaire-org-candidates-part-ii-formation",[],k)
-			puts result.inspect
 			puts "sending email to #{k[:to][0][:email]}"
 			sleep(0.2)
 		rescue Mandrill::Error => e
@@ -127,4 +115,131 @@ def email_candidat_formation(db,mandrill)
 	end
 end
 
-email_candidat_formation(db,mandrill)
+def email_candidat_admin(db,mandrill)
+	get_candidates="SELECT candidate_id,candidate_key,name,email FROM candidates WHERE email IS NOT NULL AND verified"
+	res_candidats=db.exec(get_candidates)
+	if not res_candidats.num_tuples.zero? then
+		emails=[]
+		res_candidats.each do |r|
+			message= {
+				:to=>[{
+					:email=> "#{r['email']}",
+					:name=> "#{r['name']}"
+				}],
+				:merge_vars=>[{
+					:rcpt=>"#{r['email']}",
+					:vars=>[ {:name=>"CANDIDATE_KEY",:content=>"#{r['candidate_key']}"} ]
+				}]
+			}
+			emails.push(message)
+		end
+	end
+	emails.each do |k|
+		begin
+			result=mandrill.messages.send_template("laprimaire-org-candidates-part-iii-admin",[],k)
+			puts result.inspect
+			puts "sending email to #{k[:to][0][:email]}"
+			sleep(0.1)
+		rescue Mandrill::Error => e
+			msg="A mandrill error occurred: #{e.class} - #{e.message}"
+			puts msg
+		end
+	end
+end
+
+def email_donateurs_defisc(db,mandrill)
+	require 'date'
+	message= {
+		:to=>[
+			{
+				:email=> "thib@thib.fr",
+				:name=> "Thibauld"
+			}  
+		],
+		:merge_vars=>[
+			{
+				:vars=>[
+					{
+						:name=>"DON",
+						:content=>"10"
+					},
+					{
+						:name=>"DATE_DON",
+						:content=>"12.03.2015"
+					},
+					{
+						:name=>"PRENOM",
+						:content=>"Jacques"
+					},
+					{
+						:name=>"MOYEN",
+						:content=>"paypal"
+					},
+				]
+			}
+		]
+	}
+	donateurs_csv=CSV.read(ARGV[0])
+	donateurs=[] #donateurs
+	donateurs_csv.each do |d|
+		next if d[0]=='id'
+		donateurs.push({
+			:id=>d[0],
+			:from=>d[1],
+			:date=>d[3],
+			:amount=>d[4],
+			:firstname=>d[6],
+			:lastname=>d[7],
+			:email=>d[8]
+		})
+	end
+	donateurs.each do |k|
+		begin
+			from= k[:from]=='stripe' ? 'carte bleue' : k[:from]
+			msg=message
+			msg[:to][0][:email]=k[:email]
+			msg[:to][0][:name]="#{k[:firstname]} #{k[:lastname]}"
+			msg[:merge_vars][0][:rcpt]=k[:email]
+			msg[:merge_vars][0][:vars][0][:content]=k[:amount]
+			msg[:merge_vars][0][:vars][1][:content]=Date.parse(k[:date]).strftime("%d/%m/%Y")
+			msg[:merge_vars][0][:vars][2][:content]=k[:firstname]
+			msg[:merge_vars][0][:vars][3][:content]=from
+			result=mandrill.messages.send_template("laprimaire-org-email-aux-donateurs-i",[],message)
+			puts "sending email to #{k[:firstname]} #{k[:lastname]} (#{k[:email]}) pour un don de #{k[:amount]} le #{k[:date]} via #{from}"
+			sleep(0.1)
+		rescue Mandrill::Error => e
+			msg="A mandrill error occurred: #{e.class} - #{e.message}"
+			puts msg
+		end
+	end
+end
+
+def email_donateurs_defisc_update(db,mandrill)
+	donateurs_csv=CSV.read(ARGV[0])
+	emails=[] #donateurs
+	donateurs_csv.each do |d|
+		next if d[0]=='id'
+		message= {
+			:to=>[{
+				:email=> "#{d[8]}"
+			}]
+		}
+		emails.push(message)
+	end
+	emails.each do |k|
+		begin
+			result=mandrill.messages.send_template("laprimaire-org-email-aux-donateurs-i",[],k)
+			puts "sending email to #{k[:to][0][:email]}"
+			sleep(0.1)
+		rescue Mandrill::Error => e
+			msg="A mandrill error occurred: #{e.class} - #{e.message}"
+			puts msg
+		end
+	end
+end
+
+
+#email_donateurs_defisc_update(db,mandrill)
+#email_donateurs_defisc(db,mandrill)
+#email_candidat_admin(db,mandrill)
+#email_candidat_formation(db,mandrill)
