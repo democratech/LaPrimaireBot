@@ -65,6 +65,7 @@ CREATE TABLE citizens_tags (
 
 CREATE TABLE candidates (
 	candidate_id bigint PRIMARY KEY, -- the candidate official ID (used to construct URL)
+	candidate_key varchar(80) UNIQUE,
 	user_id integer REFERENCES citizens(user_id), -- if the candidate is also registered as a participating citizen
 	name varchar(60),
 	gender varchar(1) DEFAULT 'M',
@@ -93,6 +94,13 @@ CREATE TABLE candidates (
 	instagram varchar(250),
 	other_media text,
 	summary text,
+	birthday date,
+	departement varchar(80),
+	secteur varchar(80),
+	vision varchar(200),
+	prio1 varchar(100),
+	prio2 varchar(100),
+	prio3 varchar(100),
 	date_added timestamp DEFAULT CURRENT_TIMESTAMP, -- date when the candidate has been addeed
 	accepted boolean, -- the candidate has been accepted by the reviewers
 	date_accepted timestamp,
