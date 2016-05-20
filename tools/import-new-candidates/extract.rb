@@ -3,6 +3,7 @@ require 'csv'
 require 'pg'
 require 'mini_magick'
 require 'aws-sdk'
+require 'mimemagic'
 
 if ARGV[0].nil? then
 	puts "missing candidate number"
@@ -35,7 +36,8 @@ def upload_image(filename)
 		STDERR.puts "#{key} already exists in S3 bucket. deleting previous object."
 		obj.delete
 	end
-	obj.upload_file(filename, acl:'public-read', cache_control:'public, max-age=14400')
+	content_type=MimeMagic.by_magic(File.open(filename)).type
+	obj.upload_file(filename, acl:'public-read',cache_control:'public, max-age=14400', content_type:content_type)
 	return key
 end
 
@@ -47,7 +49,7 @@ db=PG.connect(
 	"port"=>PGPORT
 )
 
-a=CSV.read('new_candidates.csv')
+a=CSV.read('new_candidates.local.csv')
 c={} #candidats
 accepted_formats=['.jpg','.jpeg','.png']
 a.each do |l|

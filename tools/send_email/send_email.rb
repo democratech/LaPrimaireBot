@@ -228,8 +228,8 @@ def email_donateurs_defisc_update(db,mandrill)
 	end
 	emails.each do |k|
 		begin
-			result=mandrill.messages.send_template("laprimaire-org-email-aux-donateurs-i",[],k)
-			puts "sending email to #{k[:to][0][:email]}"
+			result=mandrill.messages.send_template("laprimaire-org-email-aux-donateurs-ii-bad-news",[],k)
+			puts "sending email to #{k[:to][0][:email]} #{result.inspect}"
 			sleep(0.1)
 		rescue Mandrill::Error => e
 			msg="A mandrill error occurred: #{e.class} - #{e.message}"
@@ -238,7 +238,67 @@ def email_donateurs_defisc_update(db,mandrill)
 	end
 end
 
+def email_candidat_programme(db,mandrill)
+	get_candidates="SELECT candidate_id,candidate_key,name,email FROM candidates WHERE email IS NOT NULL AND verified"
+	#get_candidates="SELECT candidate_id,candidate_key,name,email FROM candidates WHERE email IS NOT NULL AND email='tfavre@gmail.com'"
+	res_candidats=db.exec(get_candidates)
+	if not res_candidats.num_tuples.zero? then
+		emails=[]
+		res_candidats.each do |r|
+			message= {
+				:to=>[{
+					:email=> "#{r['email']}",
+					:name=> "#{r['name']}"
+				}]
+			}
+			emails.push(message)
+		end
+	end
+	emails.each do |k|
+		begin
+			result=mandrill.messages.send_template("laprimaire-org-candidates-iv-programme",[],k)
+			puts "sending email to #{k[:to][0][:email]} #{result.inspect}"
+			sleep(0.1)
+		rescue Mandrill::Error => e
+			msg="A mandrill error occurred: #{e.class} - #{e.message}"
+			puts msg
+		end
+	end
+end
 
+def email_candidat_urgent(db,mandrill)
+	#get_candidates="SELECT candidate_id,candidate_key,name,email FROM candidates WHERE email IS NOT NULL AND email='tfavre@gmail.com'"
+	get_candidates="SELECT candidate_id,candidate_key,name,email FROM candidates WHERE email IS NOT NULL AND verified AND vision is NULL"
+	res_candidats=db.exec(get_candidates)
+	if not res_candidats.num_tuples.zero? then
+		emails=[]
+		res_candidats.each do |r|
+			message= {
+				:to=>[{
+					:email=> "#{r['email']}",
+					:name=> "#{r['name']}"
+				}],
+				:merge_vars=>[{
+					:rcpt=>"#{r['email']}",
+					:vars=>[ {:name=>"CANDIDATE_KEY",:content=>"#{r['candidate_key']}"} ]
+				}]
+			}
+			emails.push(message)
+		end
+	end
+	emails.each do |k|
+		begin
+			result=mandrill.messages.send_template("laprimaire-org-candidates-part-v-urgent",[],k)
+			puts "sending email to #{k[:to][0][:email]} #{result.inspect}"
+			sleep(0.1)
+		rescue Mandrill::Error => e
+			msg="A mandrill error occurred: #{e.class} - #{e.message}"
+			puts msg
+		end
+	end
+end
+email_candidat_urgent(db,mandrill)
+#email_candidat_programme(db,mandrill)
 #email_donateurs_defisc_update(db,mandrill)
 #email_donateurs_defisc(db,mandrill)
 #email_candidat_admin(db,mandrill)

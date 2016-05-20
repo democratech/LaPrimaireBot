@@ -122,14 +122,14 @@ module Democratech
 			rescue Exception=>e
 				# Having external services called here was a VERY bad idea as exceptions would not be rescued, it would make the worker crash... good job stupid !
 				Bot.log.fatal "#{e.message}\n#{e.backtrace.inspect}\n#{update.inspect}"
-=begin
-				Democratech::TelegramBot.client.api.sendChatAction(chat_id: update.message.chat.id, action: "typing")
-				Democratech::TelegramBot.client.api.sendMessage({
-					:chat_id=>update.message.chat.id,
-					:text=>"Oops... il semblerait qu'une erreur soit survenue dans mon programme, il faut croire que j'ai encore quelques bugs #{Bot.emoticons[:confused]} Tapez /start pour réinitialiser notre discussion. Encore désolé, j'ai prévenu mes développeurs du problème. Normalement, ils devraient le résoudre rapidement !",
-					:reply_markup=>Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
-				})
-=end
+				if e.message.match(/blocked/).nil? and e.message.match(/kicked/).nil? then
+					Democratech::TelegramBot.client.api.sendChatAction(chat_id: update.message.chat.id, action: "typing")
+					Democratech::TelegramBot.client.api.sendMessage({
+						:chat_id=>update.message.chat.id,
+						:text=>"Oops... il semblerait qu'une erreur soit survenue dans mon programme, il faut croire que j'ai encore quelques bugs #{Bot.emoticons[:confused]} Tapez /start pour réinitialiser notre discussion. Encore désolé, j'ai prévenu mes développeurs du problème. Normalement, ils devraient le résoudre rapidement !",
+						:reply_markup=>Telegram::Bot::Types::ReplyKeyboardHide.new(hide_keyboard: true)
+					})
+				end
 				error! "Exception raised: #{e.message}", 200 # if you put an error code here, telegram will keep sending you the same msg until you die
 			ensure
 				Bot::Db.close()

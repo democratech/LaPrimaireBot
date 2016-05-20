@@ -86,7 +86,7 @@ module Bot
 			res,options=nil
 			user=@users.get(msg.from,msg.date)
 			# we check that this message has not already been answered (i.e. telegram sending a msg we already processed)
-			return nil,nil if @users.already_answered(user[:id],update_id)
+			return nil,nil if @users.already_answered(user[:id],update_id) and not DEBUG
 			session=user['session']
 			Bot.log.info "user read session : #{user}"
 			if user['bot_upgrade'].to_i==1 and not update_id==-1 then

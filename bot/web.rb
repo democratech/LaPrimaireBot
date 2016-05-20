@@ -54,7 +54,8 @@ module Bot
 				obj.delete
 			end
 			Bot.log.info("upload #{key} (from #{filename}) to S3")
-			obj.upload_file(filename, acl:'public-read',cache_control:'public, max-age=14400')
+			content_type=MimeMagic.by_magic(File.open(filename)).type
+			obj.upload_file(filename, acl:'public-read',cache_control:'public, max-age=14400', content_type:content_type)
 			return key
 		end
 
