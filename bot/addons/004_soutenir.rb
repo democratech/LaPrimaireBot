@@ -385,6 +385,10 @@ END
 			end
 		end
 		candidate=user['session']['candidate']
+		if candidate.nil? then
+			Bot.log.error "#{__method__}: candidate is undefined in session"
+			return self.get_screen(self.find_by_name("soutenir_candidat/error"),user,msg)
+		end
 		name=candidate['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
 		verified=candidate['verified'].to_b
 		if verified then

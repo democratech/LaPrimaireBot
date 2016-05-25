@@ -85,7 +85,7 @@ module Bot
 			request.body = "payload="+JSON.dump(msg)
 			res=http.request(request)
 			if not res.kind_of? Net::HTTPSuccess then
-				raise "An error occurred trying to send a Slack notification\n"
+				Bot.log.error "An error occurred trying to send a Slack notification"
 			end
 		end
 
