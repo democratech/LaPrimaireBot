@@ -455,6 +455,10 @@ END
 	def mes_candidats_retirer_soutien_cb(msg,user,screen)
 		Bot.log.info "#{__method__}"
 		candidate=user['session']['candidate']
+		if candidate.nil? then
+			Bot.log.error "#{__method__}: candidate from session is undefined"
+			return self.get_screen(self.find_by_name("mes_candidats/error"),user,msg)
+		end
 		name=candidate['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
 		@candidates.remove_supporter(user[:id],candidate['candidate_id'])
 		screen[:text]=screen[:text] % {name: name}
