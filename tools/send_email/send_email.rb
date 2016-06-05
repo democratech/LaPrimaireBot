@@ -297,7 +297,48 @@ def email_candidat_urgent(db,mandrill)
 		end
 	end
 end
-email_candidat_urgent(db,mandrill)
+
+def email_citoyens_appel_aux_maires(db,mandrill)
+	#get_citizens="SELECT candidate_id,candidate_key,name,email FROM candidates WHERE email IS NOT NULL AND email='tfavre@gmail.com' LIMIT 2"
+	#get_candidates="SELECT candidate_id,candidate_key,name,email FROM candidates WHERE email IS NOT NULL AND verified AND vision is NULL"
+	get_citizens="select c.email from citizens as c where c.email NOT IN (select ci.email from citizens as ci inner join mongo_supporteurs as su on (su.email=ci.email));"
+	res_citizens=db.exec(get_citizens)
+	if not res_citizens.num_tuples.zero? then
+		emails=[]
+		res_citizens.each do |r|
+			message= {
+				:to=>[{
+					:email=> "#{r['email']}"
+				}],
+				:merge_vars=>[{
+					:rcpt=>"#{r['email']}",
+					:vars=>[ 
+						{:name=>"EMAIL",:content=>"#{r['email']}"},
+						{:name=>"LNAME",:content=>"#{r['lastname']}"},
+						{:name=>"FNAME",:content=>"#{r['firstame']}"}
+					]
+				}]
+			}
+			emails.push(message)
+		end
+	end
+	results=[]
+	emails.each do |k|
+		begin
+			result=mandrill.messages.send_template("laprimaire-org-citoyens-appel-aux-maires-ii",[],k)
+			puts "sending email to #{k[:to][0][:email]} #{result.inspect}"
+			results.push({:email=>result[0]['email'], :status=>result[0]['status'],:reject_reason=>result[0]['reject_reason'],:id=>result[0]['_id']})
+			sleep(1/30)
+		rescue Mandrill::Error => e
+			msg="A mandrill error occurred: #{e.class} - #{e.message}"
+			puts msg
+		end
+	end
+	File.write("20160601_email_shoot.txt",JSON.dump(results))
+end
+
+email_citoyens_appel_aux_maires(db,mandrill)
+#email_candidat_urgent(db,mandrill)
 #email_candidat_programme(db,mandrill)
 #email_donateurs_defisc_update(db,mandrill)
 #email_donateurs_defisc(db,mandrill)
