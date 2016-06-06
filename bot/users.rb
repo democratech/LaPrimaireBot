@@ -70,8 +70,8 @@ END
 			'reset_bot_upgrade'=><<END,
 UPDATE citizens SET bot_upgrade=0 WHERE user_id=$1
 END
-			'count_citizens'=><<END,
-SELECT COUNT(*) as nb_citizens FROM citizens; 
+			'count_users'=><<END,
+SELECT COUNT(*) as nb_citizens FROM users;
 END
 			'get_user_position_in_wait_list'=><<END,
 SELECT a.position, b.total FROM (SELECT COUNT(w.user_id) AS position FROM waiting_list AS w, (SELECT user_id,registered FROM waiting_list WHERE user_id=$1) AS z WHERE w.registered<=z.registered) AS a, (SELECT count(*) AS total FROM waiting_list) AS b;
@@ -280,7 +280,7 @@ END
 		end
 
 		def get_total()
-			return Bot::Db.query("count_citizens",[]) 
+			return Bot::Db.query("count_users",[])
 		end
 
 		def beta_code_ok(code)
