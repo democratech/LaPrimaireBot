@@ -28,6 +28,9 @@ END
 			'get_user_by_email'=><<END,
 SELECT z.*,c.slug,c.zipcode,c.departement,c.lat_deg,c.lon_deg FROM citizens AS z LEFT JOIN cities AS c ON (c.city_id=z.city_id) WHERE z.email=$1
 END
+			'get_meta_user_by_email'=><<END,
+SELECT * FROM users AS u WHERE u.email=$1
+END
 			'get_user_by_user_id'=><<END,
 SELECT z.*,c.slug,c.zipcode,c.departement,c.lat_deg,c.lon_deg FROM citizens AS z LEFT JOIN cities AS c ON (c.city_id=z.city_id) WHERE z.user_id=$1
 END
@@ -72,6 +75,12 @@ SELECT COUNT(*) as nb_citizens FROM citizens;
 END
 			'get_user_position_in_wait_list'=><<END,
 SELECT a.position, b.total FROM (SELECT COUNT(w.user_id) AS position FROM waiting_list AS w, (SELECT user_id,registered FROM waiting_list WHERE user_id=$1) AS z WHERE w.registered<=z.registered) AS a, (SELECT count(*) AS total FROM waiting_list) AS b;
+END
+			'insert_meta_user_from_citizen'=><<END,
+insert into users (email,validation_level,firstname,lastname,registered,city,city_id,country,last_updated,telegram_id,zipcode) select c.email,2,c.firstname,c.lastname,c.registered,c.city,c.city_id,c.country,c.last_updated,c.user_id,ci.zipcode from citizens as c left join cities as ci on (ci.city_id=c.city_id) where c.user_id=$1 returning *;
+END
+			'update_meta_user_from_citizen'=><<END,
+update users set validation_level=2,city=c.city,city_id=c.city_id,country=c.country,last_updated=c.last_updated,telegram_id=c.user_id,zipcode=ci.zipcode from citizens as c left join cities as ci on (ci.city_id=c.city_id) where users.email=c.email AND c.user_id=$1 returning *;
 END
 			}
 			queries.each { |k,v| Bot::Db.prepare(k,v) }
@@ -288,6 +297,20 @@ END
 			screen[:kbd_options]=Hash[screen[:kbd_options].map{|(k,v)| [k.to_sym,v]}] unless screen[:kbd_options].nil?
 			@users[user_id]['session']=user['session']['previous_session'].clone unless user['session']['previous_session'].nil?
 			return screen
+		end
+
+		def account_created(user_id)
+			user=@users[user_id]
+			return if user['email'].nil?
+			res=Bot::Db.query("get_meta_user_by_email",[user['email'].downcase.strip])
+			if res.num_tuples.zero? then # meta user does not yet exists
+				res1=Bot::Db.query("insert_meta_user_from_citizen",[user_id])
+			else # meta user already exists
+				user=res[0]
+				if (user['validation_level'].to_i & 2)==0 then # meta user not up-to-date
+					res1=Bot::Db.query("update_meta_user_from_citizen",[user_id])
+				end
+			end
 		end
 	end
 end
