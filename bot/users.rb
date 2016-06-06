@@ -77,7 +77,7 @@ END
 SELECT a.position, b.total FROM (SELECT COUNT(w.user_id) AS position FROM waiting_list AS w, (SELECT user_id,registered FROM waiting_list WHERE user_id=$1) AS z WHERE w.registered<=z.registered) AS a, (SELECT count(*) AS total FROM waiting_list) AS b;
 END
 			'insert_meta_user_from_citizen'=><<END,
-insert into users (email,validation_level,firstname,lastname,registered,city,city_id,country,last_updated,telegram_id,zipcode) select c.email,2,c.firstname,c.lastname,c.registered,c.city,c.city_id,c.country,c.last_updated,c.user_id,ci.zipcode from citizens as c left join cities as ci on (ci.city_id=c.city_id) where c.user_id=$1 returning *;
+insert into users (email,validation_level,firstname,lastname,registered,city,city_id,country,last_updated,telegram_id,zipcode,tags) select c.email,2,c.firstname,c.lastname,c.registered,c.city,c.city_id,c.country,c.last_updated,c.user_id,ci.zipcode,ARRAY[]::text[] from citizens as c left join cities as ci on (ci.city_id=c.city_id) where c.user_id=$1 returning *;
 END
 			'update_meta_user_from_citizen'=><<END,
 update users set validation_level=2,city=c.city,city_id=c.city_id,country=c.country,last_updated=c.last_updated,telegram_id=c.user_id,zipcode=ci.zipcode from citizens as c left join cities as ci on (ci.city_id=c.city_id) where users.email=c.email AND c.user_id=$1 returning *;
