@@ -1,6 +1,6 @@
 CREATE TABLE users (
 	email varchar(60) PRIMARY KEY,
-	email_status integer DEFAULT 0, -- 0==unknown / 1==email valid / 2==email valid but declared spam / -1=email soft-bounced / -2=email bounced
+	email_status integer DEFAULT 0, -- 0==unknown / 1==email valid but declared spam / 2==email valid  / -1=email soft-bounced / -2=email bounced
 	email_detail text, -- bounce details provided by Mandrill
 	validation_level integer DEFAULT 0, -- bit1 email validated / bit2 phone validated / bit3 facebook validated / bit4 cb validated
 	firstname varchar(30),

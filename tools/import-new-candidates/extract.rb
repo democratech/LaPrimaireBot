@@ -49,7 +49,8 @@ db=PG.connect(
 	"port"=>PGPORT
 )
 
-a=CSV.read('new_candidates.local.csv')
+#a=CSV.read('new_candidates.local.csv')
+a=CSV.read('candidats.local.csv')
 c={} #candidats
 accepted_formats=['.jpg','.jpeg','.png']
 a.each do |l|
