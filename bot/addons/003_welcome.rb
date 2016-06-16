@@ -485,6 +485,7 @@ END
 
 	def welcome_account_created_cb(msg,user,screen)
 		Bot.log.info "welcome_account_created"
+		@users.account_created(user[:id])
 		slack_msg="Nouveau compte créé : #{user['firstname']} #{user['lastname']}"
 	       	slack_msg+=" (<https://telegram.me/#{user['username']}|@#{user['username']}>)" if user['username']
 		slack_msg+=" #{user['zipcode']}," if user['zipcode']
