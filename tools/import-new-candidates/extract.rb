@@ -49,7 +49,7 @@ db=PG.connect(
 	"port"=>PGPORT
 )
 
-a=CSV.read('new_candidates.local.csv')
+a=CSV.read(ARGV[1])
 c={} #candidats
 accepted_formats=['.jpg','.jpeg','.png']
 a.each do |l|
@@ -145,7 +145,7 @@ END
 	])
 	raise "candidate could not be created" if res.num_tuples.zero?
 	puts "candidat #{maj[:name]} importé !"
-rescue Exception=>e
+rescue PG::Error=>e
 	STDERR.puts "Exception raised : #{e.message}"
 	res=nil
 ensure
