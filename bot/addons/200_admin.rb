@@ -206,7 +206,6 @@ END
 
 	def admin_retour_cb(msg,user,screen)
 		Bot.log.info "#{__method__}"
-		return self.get_screen(self.find_by_name("admin/forbidden"),user,msg) if not ADMINS.include?(user[:id])
 		from=user['session']['previous_session']['current']
 		case from
 		when "admin/menu"

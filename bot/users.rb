@@ -35,10 +35,10 @@ END
 SELECT z.*,c.slug,c.zipcode,c.departement,c.lat_deg,c.lon_deg FROM citizens AS z LEFT JOIN cities AS c ON (c.city_id=z.city_id) WHERE z.user_id=$1
 END
 			'set_city'=><<END,
-UPDATE citizens SET city=$1, city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=$1 ORDER BY population DESC LIMIT 1) as city_id) AS v WHERE citizens.user_id=$2;
+UPDATE citizens SET city=upper($1), city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=upper($1) ORDER BY population DESC LIMIT 1) as city_id) AS v WHERE citizens.user_id=$2;
 END
 			'set_city_using_zipcode'=><<END,
-UPDATE citizens SET city=$1, city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=$1 AND b.zipcode=$3) as city_id) AS v WHERE citizens.user_id=$2;
+UPDATE citizens SET city=upper($1), city_id=v.city_id FROM (SELECT (SELECT b.city_id FROM cities AS b WHERE upper(b.name)=upper($1) AND b.zipcode=$3) as city_id) AS v WHERE citizens.user_id=$2;
 END
 			'set_session'=><<END,
 UPDATE citizens SET session=$1::jsonb WHERE user_id=$2;
@@ -77,10 +77,10 @@ END
 SELECT a.position, b.total FROM (SELECT COUNT(w.user_id) AS position FROM waiting_list AS w, (SELECT user_id,registered FROM waiting_list WHERE user_id=$1) AS z WHERE w.registered<=z.registered) AS a, (SELECT count(*) AS total FROM waiting_list) AS b;
 END
 			'insert_meta_user_from_citizen'=><<END,
-insert into users (email,validation_level,firstname,lastname,registered,city,city_id,country,last_updated,telegram_id,zipcode,tags,user_key) select c.email,2,c.firstname,c.lastname,c.registered,c.city,c.city_id,c.country,c.last_updated,c.user_id,ci.zipcode,ARRAY[]::text[] as tags,md5(random()::text) as user_key from citizens as c left join cities as ci on (ci.city_id=c.city_id) where c.user_id=$1 returning *;
+insert into users (email,validation_level,firstname,lastname,registered,city,city_id,country,last_updated,telegram_id,zipcode,tags,user_key) select c.email,2,c.firstname,c.lastname,c.registered,upper(c.city),c.city_id,c.country,c.last_updated,c.user_id,ci.zipcode,ARRAY[]::text[] as tags,md5(random()::text) as user_key from citizens as c left join cities as ci on (ci.city_id=c.city_id) where c.user_id=$1 returning *;
 END
 			'update_meta_user_from_citizen'=><<END,
-update users set validation_level=2,city=c.city,city_id=c.city_id,country=c.country,last_updated=c.last_updated,telegram_id=c.user_id,zipcode=ci.zipcode from citizens as c left join cities as ci on (ci.city_id=c.city_id) where users.email=c.email AND c.user_id=$1 returning *;
+update users set validation_level=2,city=upper(c.city),city_id=c.city_id,country=c.country,last_updated=c.last_updated,telegram_id=c.user_id,zipcode=ci.zipcode from citizens as c left join cities as ci on (ci.city_id=c.city_id) where users.email=c.email AND c.user_id=$1 returning *;
 END
 			}
 			queries.each { |k,v| Bot::Db.prepare(k,v) }

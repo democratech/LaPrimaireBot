@@ -439,7 +439,18 @@ END
 	def mes_candidats_soutenir_cb(msg,user,screen)
 		Bot.log.info "mes_candidats_soutenir_cb"
 		res=@candidates.supported_by(user[:id])
-		if res.num_tuples>4 then
+		nb_candidates_supported=0
+		nb_citizens_supported=0
+		if not res.num_tuples.zero? then
+			res.each do |r|
+				if not r['verified'].nil? and r['verified'].to_b then
+					nb_candidates_supported+=1
+				else
+					nb_citizens_supported+=1
+				end
+			end
+		end
+		if nb_candidates_supported>4 then
 			@users.clear_session(user[:id],'candidate')
 			return self.get_screen(self.find_by_name("mes_candidats/max_support"),user,msg)
 		end

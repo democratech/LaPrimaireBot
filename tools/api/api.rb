@@ -6,7 +6,7 @@ require 'json'
 require 'pg'
 require 'openssl'
 
-DEBUG=false
+DEBUG=true
 PGPWD=DEBUG ? PGPWD_TEST : PGPWD_LIVE
 PGNAME=DEBUG ? PGNAME_TEST : PGNAME_LIVE
 PGUSER=DEBUG ? PGUSER_TEST : PGUSER_LIVE
