@@ -32,7 +32,7 @@ END
 INSERT INTO candidates (user_id,candidate_id,name,zipcode,country,city_id,email,accepted,date_accepted) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *
 END
 			'add_supporter_to_candidate'=><<END,
-INSERT INTO supporters (user_id,candidate_id,email) SELECT $1,$2,c.email FROM citizens as c WHERE c.user_id=$1
+INSERT INTO supporters (user_id,candidate_id,email) SELECT $1,$2,c.email FROM citizens as c WHERE c.user_id=$1 AND NOT EXISTS (SELECT s.candidate_id FROM supporters AS s INNER JOIN citizens as d ON (s.user_id=$1 AND d.email=s.email AND s.candidate_id=$2));
 END
 			'remove_supporter_from_candidate'=><<END,
 DELETE FROM supporters WHERE user_id=$1 AND candidate_id=$2
@@ -349,6 +349,7 @@ END
 			else
 				return if nb_citizens_supported>4
 			end
+			# in the add_supporter_to_candidate, we make sure that the support is not already registered with (email,candidate_id)
 			return Bot::Db.query("add_supporter_to_candidate",[user_id,candidate_id])
 		end
 
