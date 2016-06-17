@@ -38,3 +38,8 @@ CREATE TABLE users (
 
 -- insert depuis les donateurs 
 -- insert into users (email,firstname,lastname,zipcode,donateur_id,registered,last_updated) select email,firstname,lastname,zipcode,donateur_id,created as registered,created as last_updated from donateurs where email not in (select u.email from users as u inner join donateurs as d on (d.email=u.email))
+
+-- ## mise a jour des emails de la table supporters
+-- update supporters set email=c.email from citizens as c where c.user_id=supporters.user_id and supporters.email is null;
+-- ## ajout not null a la colonne email de supporters
+-- alter table supporters alter column email set not null;

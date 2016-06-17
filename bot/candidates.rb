@@ -32,7 +32,7 @@ END
 INSERT INTO candidates (user_id,candidate_id,name,zipcode,country,city_id,email,accepted,date_accepted) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *
 END
 			'add_supporter_to_candidate'=><<END,
-INSERT INTO supporters (user_id,candidate_id) VALUES ($1,$2)
+INSERT INTO supporters (user_id,candidate_id,email) SELECT $1,$2,c.email FROM citizens as c WHERE c.user_id=$1
 END
 			'remove_supporter_from_candidate'=><<END,
 DELETE FROM supporters WHERE user_id=$1 AND candidate_id=$2
@@ -196,6 +196,51 @@ SELECT ca.candidate_id,ca.gender,ca.user_id,ca.name,ca.verified,
     ON (z.candidate_id = ca.candidate_id)
  ORDER BY z.nb_views ASC, ca.date_verified DESC
 END
+			'get_candidate_for_indexing'=><<END,
+SELECT ca.candidate_id,ca.user_id,ca.name,ca.gender,ca.birthday,ca.job,ca.departement,ca.secteur,ca.accepted,ca.verified,ca.date_added::DATE as date_added,date_part('day',now()-ca.date_added) as nb_days_added,ca.date_verified::DATE as date_verified,date_part('day',now() - ca.date_verified) as nb_days_verified,ca.qualified,ca.date_qualified,ca.official,ca.date_officialized,ca.vision,ca.prio1,ca.prio2,ca.prio3,ca.photo,ca.trello,ca.website,ca.twitter,ca.facebook,ca.youtube,ca.linkedin,ca.tumblr,ca.blog,ca.wikipedia,ca.instagram, z.nb_views, z.nb_soutiens, w.nb_soutiens_7j
+FROM candidates as ca
+LEFT JOIN (
+	SELECT y.candidate_id, y.nb_views, count(s.user_id) as nb_soutiens
+	FROM (
+		SELECT c.candidate_id, sum(cv.nb_views) as nb_views
+		FROM candidates as c
+		LEFT JOIN candidates_views as cv
+		ON (
+			cv.candidate_id=c.candidate_id
+		)
+		GROUP BY c.candidate_id
+	) as y
+	LEFT JOIN supporters as s
+	ON ( s.candidate_id=y.candidate_id)
+	GROUP BY y.candidate_id,y.nb_views
+) as z
+ON (z.candidate_id = ca.candidate_id)
+LEFT JOIN (
+	SELECT y.candidate_id, y.nb_views, count(s.user_id) as nb_soutiens_7j
+	FROM (
+		SELECT c.candidate_id, sum(cv.nb_views) as nb_views
+		FROM candidates as c
+		LEFT JOIN candidates_views as cv
+		ON (
+			cv.candidate_id=c.candidate_id
+		)
+		GROUP BY c.candidate_id
+	) as y
+	LEFT JOIN supporters as s
+	ON ( s.candidate_id=y.candidate_id)
+	WHERE s.support_date> (now()::date-7)
+	GROUP BY y.candidate_id,y.nb_views
+) as w
+ON (w.candidate_id = ca.candidate_id)
+WHERE ca.candidate_id=$1
+ORDER BY z.nb_soutiens DESC
+END
+			'accept_candidate'=><<END,
+UPDATE candidates SET accepted=TRUE,verified=TRUE,date_accepted=now(),date_verified=now() WHERE candidate_id=$1
+END
+			'unverify_candidate'=><<END,
+UPDATE candidates SET verified=FALSE WHERE candidate_id=$1
+END
 			'update_views_by_user_id'=><<END,
 UPDATE candidates_views SET nb_views=nb_views+1, last_view=now() WHERE candidate_id=$1 AND user_id=$2
 END
@@ -203,7 +248,7 @@ END
 INSERT INTO candidates_views (candidate_id,user_id) VALUES ($1,$2) RETURNING *
 END
 			'search_candidate_by_name'=><<END,
-SELECT c.* FROM candidates AS c WHERE c.name ~* $1 AND c.verified LIMIT $2
+SELECT c.* FROM candidates AS c WHERE c.name ~* $1
 END
 			'does_viewer_exists'=><<END,
 SELECT * FROM candidates_views WHERE candidate_id=$1 AND user_id=$2
@@ -213,11 +258,15 @@ END
 		end
 
 		def initialize()
-			index_candidats=DEBUG ? "search_test" : "search"
-			Bot.log.info "using index #{index_candidats}"
-			@index=Algolia::Index.new(index_candidats)
-			@citizens_idx=Algolia::Index.new('citizens')
-			@candidates_idx=Algolia::Index.new('candidates')
+			index_search=DEBUG ? "search_test" : "search"
+			index_candidats=DEBUG ? "candidates_test" : "candidates"
+			index_citoyens=DEBUG ? "citizens_test" : "citizens"
+			Bot.log.info "using search index #{index_search}"
+			Bot.log.info "using candidates index #{index_candidats}"
+			Bot.log.info "using citizen index #{index_citoyens}"
+			@index=Algolia::Index.new(index_search)
+			@citizens_idx=Algolia::Index.new(index_citoyens)
+			@candidates_idx=Algolia::Index.new(index_candidats)
 		end
 
 		def add(candidat,skip_index=false)
@@ -311,6 +360,10 @@ END
 			return @index.search(name,{hitsPerPage:1})
 		end
 
+		def search_candidate_db(name,limit=6)
+			return Bot::Db.query("search_candidate_by_name",[name])
+		end
+
 		def search_candidate(name,limit=6)
 			return @candidates_idx.search(name,{hitsPerPage:1})
 		end
@@ -347,6 +400,77 @@ END
 				'verified'=>res[0]['verified'],
 				'viewed'=>res[0]['viewed']
 			}
+		end
+
+		def unverify(candidate_id)
+			res=Bot::Db.query("unverify_candidate",[candidate_id])
+			@candidates_idx.delete_object("#{candidate_id}")
+		end
+
+		def accept(candidate_id)
+			res=Bot::Db.query("accept_candidate",[candidate_id])
+			res1=Bot::Db.query("get_candidate_for_indexing",[candidate_id])
+			r=res1[0]
+			qualified = r['qualified'].to_b ? "oui" : "non"
+			verified = r['verified'].to_b ? "verified" : "not_verified"
+			official= r['official'].to_b ? "official" : "not_official"
+			gender= r['gender']=='M' ? "Homme" : "Femme"
+			birthday=Date.parse(r['birthday'].split('?')[0]) unless r['birthday'].nil?
+			status="incomplete"
+			unless r['vision'].nil? or r['vision'].empty? then
+				status="complete"
+			end
+			age=nil
+			unless birthday.nil? then
+				now = Time.now.utc.to_date
+				age = now.year - birthday.year - ((now.month > birthday.month || (now.month == birthday.month && now.day >= birthday.day)) ? 0 : 1)
+			end
+			@candidates_idx.save_object({
+				"objectID"=>r['candidate_id'],
+				"candidate_id"=>r['candidate_id'],
+				"name"=>r['name'],
+				"photo"=>r['photo'],
+				"gender"=>gender,
+				"age"=>age,
+				"job"=>r['job'],
+				"secteur"=>r['secteur'],
+				"departement"=>r['departement'],
+				"vision"=>r['vision'],
+				"prio1"=>r['prio1'],
+				"prio2"=>r['prio2'],
+				"prio3"=>r['prio3'],
+				"trello"=>r['trello'],
+				"website"=>r['website'],
+				"twitter"=>r['twitter'],
+				"facebook"=>r['facebook'],
+				"youtube"=>r['youtube'],
+				"linkedin"=>r['linkedin'],
+				"tumblr"=>r['tumblr'],
+				"blog"=>r['blog'],
+				"wikipedia"=>r['wikipedia'],
+				"instagram"=>r['instagram'],
+				"date_added"=>r['date_added'],
+				"nb_days_added"=>r['nb_days_added'].to_i,
+				"verified"=>verified,
+				"date_verified"=>r['date_verified'],
+				"nb_days_verified"=>r['nb_days_verified'].to_i,
+				"qualified"=>qualified,
+				"date_qualified"=>r['date_qualified'],
+				"official"=>official,
+				"date_officializied"=>r['date_officializied'],
+				"nb_soutiens"=>r['nb_soutiens'].to_i,
+				"nb_soutiens_7j"=>r['nb_soutiens_7j'].to_i,
+				"nb_views"=>r['nb_views'].to_i,
+				"status"=>status
+			})
+			@index.save_object({
+				"objectID"=>r['candidate_id'],
+				"candidate_id"=>r['candidate_id'],
+				"name"=>r['name'],
+				"photo"=>r['photo'],
+				"level"=>3
+			})
+			@citizens_idx.delete_object("#{candidate_id}")
 		end
 	end
 end

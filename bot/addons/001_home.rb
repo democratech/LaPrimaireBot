@@ -75,7 +75,7 @@ END
 	end
 
 	def home_welcome(msg,user,screen)
-		Bot.log.info "home_welcome"
+		Bot.log.info "#{__method__}"
 		betatester=user['settings']['roles']['betatester'].to_b
 		can_vote=user['settings']['legal']['can_vote'].to_b
 		abuse=user['settings']['blocked']['abuse']
@@ -86,16 +86,20 @@ END
 			screen=self.find_by_name("home/not_allowed")
 		elsif not (can_vote and user['email'] and user['city'] and user['country']) then
 			screen=self.find_by_name("welcome/hello")
+		elsif user['email'].nil? or user['email'].empty?
+			screen=self.find_by_name("welcome/email")
 		else
 			screen=self.find_by_name("home/menu")
 			screen[:kbd_del]=["home/menu"]
+			screen[:kbd_del].push("admin/menu") unless ADMINS.include?(user[:id])
 		end
 		return self.get_screen(screen,user,msg)
 	end
 
 	def home_menu(msg,user,screen)
-		Bot.log.info "home_menu"
+		Bot.log.info "#{__method__}"
 		screen[:kbd_del]=["home/menu"]
+		screen[:kbd_del].push("admin/menu") unless ADMINS.include?(user[:id])
 		@users.next_answer(user[:id],'answer')
 		@users.clear_session(user[:id],'candidate')
 		@users.clear_session(user[:id],'delete_candidates')

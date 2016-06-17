@@ -74,7 +74,9 @@ module Bot
 		:back=>"\u{21A9}",
 		:loupe=>"\u{1F50E}",
 		:scroll=>"\u{1F4DC}",
-		:speaker=>"\u{1F4E2}"
+		:speaker=>"\u{1F4E2}",
+		:police_officer=>"\u{1F46E}",
+		:hourglass=>"\u{231B}"
 	}
 	@@messages={
 		:fr=>{
