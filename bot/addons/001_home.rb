@@ -88,6 +88,9 @@ END
 			screen=self.find_by_name("welcome/hello")
 		elsif user['email'].nil? or user['email'].empty?
 			screen=self.find_by_name("welcome/email")
+		elsif user['email_status'].to_i==-2
+			@users.next_answer(user[:id],'answer')
+			screen=self.find_by_name("profile/invalid_email")
 		else
 			screen=self.find_by_name("home/menu")
 			screen[:kbd_del]=["home/menu"]
@@ -98,6 +101,7 @@ END
 
 	def home_menu(msg,user,screen)
 		Bot.log.info "#{__method__}"
+		return self.get_screen(self.find_by_name("profile/invalid_email"),user,msg) if user['email_status']==-2
 		screen[:kbd_del]=["home/menu"]
 		screen[:kbd_del].push("admin/menu") unless ADMINS.include?(user[:id])
 		@users.next_answer(user[:id],'answer')

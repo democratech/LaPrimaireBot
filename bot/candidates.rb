@@ -322,7 +322,7 @@ END
 			return Bot::Db.query("get_citizens_supported_by_user_id",[user_id])
 		end
 
-		def add_supporter(user_id,candidate_id)
+		def add_supporter(user_id,candidate_id,email=nil)
 			res=Bot::Db.query("get_candidate_by_id",[candidate_id,user_id])
 			return nil if res.num_tuples.zero?
 			candidate=res[0]
@@ -349,8 +349,19 @@ END
 			else
 				return if nb_citizens_supported>4
 			end
+			email_vars={
+				'CANDIDATE_ID'=>candidate['candidate_id'],
+				'CANDIDATE_PHOTO'=>candidate['photo'],
+				'CANDIDATE_NAME'=>candidate['name'],
+				'CANDIDATE_NB_SOUTIENS'=>candidate['nb_soutiens'],
+				'NB_CANDIDATES_SUPPORTED'=>nb_candidates_supported,
+				'NB_CITIZENS_SUPPORTED'=>nb_citizens_supported
+			}
+			email_vars['CITOYEN']=1 unless candidate['verified'].to_b
 			# in the add_supporter_to_candidate, we make sure that the support is not already registered with (email,candidate_id)
-			return Bot::Db.query("add_supporter_to_candidate",[user_id,candidate_id])
+			res=Bot::Db.query("add_supporter_to_candidate",[user_id,candidate_id])
+			Bot::Email.send("transactional-support-candidate",email,email_vars)
+			return res 
 		end
 
 		def remove_supporter(user_id,candidate_id)

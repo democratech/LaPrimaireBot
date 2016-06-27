@@ -158,7 +158,7 @@ module Bot
 			end
 			res,options=self.dont_understand(user,msg) if res.nil? # something is fishy
 			Bot.log.info "user save session : #{@users.get_session(user[:id])}"
-			@users.save_user_session(user[:id])
+			@users.close_user_session(user[:id])
 			return res,options
 		end
 

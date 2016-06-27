@@ -376,7 +376,7 @@ END
 			if candidate['candidate_id'] then # candidate already exists in db
 				res=@candidates.search({:by=>'candidate_id',:target=>candidate['candidate_id']})
 				@candidates.add(candidate,true) if res.num_tuples.zero? # candidate in index but not in db (weird case)
-				@candidates.add_supporter(user[:id],candidate['candidate_id'])
+				@candidates.add_supporter(user[:id],candidate['candidate_id'],user['email'])
 				screen=self.find_by_name("mes_citoyens/menu")
 				if res[0]['verified'].to_b then
 					screen=self.find_by_name("mes_citoyens/already_candidate") 
@@ -397,7 +397,7 @@ END
 				@users.update_settings(user[:id],{'actions'=>{'nb_candidates_proposed'=>nb_candidates_proposed}})
 				user['session']['candidate']['candidate_id']=candidate['candidate_id']
 				FileUtils.mv(image,CANDIDATS_DIR+candidate['photo'])
-				@candidates.add_supporter(user[:id],candidate['candidate_id'])
+				@candidates.add_supporter(user[:id],candidate['candidate_id'],user['email'])
 			end
 		else
 			screen=self.find_by_name("mes_citoyens/error")

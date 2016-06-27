@@ -44,6 +44,18 @@ module Bot
 			Bot::Candidates.load_queries
 		end
 
+		def self.begin
+			@@db.exec("BEGIN;")
+		end
+
+		def self.commit
+			@@db.exec("COMMIT;")
+		end
+
+		def self.rollback
+			@@db.exec("ROLLBACK;")
+		end
+
 		def self.prepare(name,query)
 			@@queries[name]=query
 		end

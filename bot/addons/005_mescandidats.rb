@@ -456,7 +456,7 @@ END
 		end
 		candidate=user['session']['candidate']
 		name=candidate['name'].strip.split(' ').each{|n| n.capitalize!}.join(' ')
-		@candidates.add_supporter(user[:id],candidate['candidate_id'])
+		@candidates.add_supporter(user[:id],candidate['candidate_id'],user['email'])
 		screen[:text]=screen[:text] % {name: name}
 		@users.clear_session(user[:id],'candidate')
 		Bot.log.event(user[:id],'support_candidate',{'name'=>name})
@@ -654,7 +654,7 @@ END
 			if candidate['candidate_id'] then # candidate already exists in db
 				res=@candidates.search({:by=>'candidate_id',:target=>candidate['candidate_id']})
 				@candidates.add(candidate,true) if res.num_tuples.zero? # candidate in index but not in db (weird case)
-				@candidates.add_supporter(user[:id],candidate['candidate_id'])
+				@candidates.add_supporter(user[:id],candidate['candidate_id'],user['email'])
 				screen=self.find_by_name("mes_candidats/mes_candidats")
 			elsif user['settings']['blocked']['add_candidate'] # user is forbidden to add new candidates
 				screen=self.find_by_name("mes_candidats/blocked")
@@ -668,7 +668,7 @@ END
 				@users.update_settings(user[:id],{'actions'=>{'nb_candidates_proposed'=>nb_candidates_proposed}})
 				user['session']['candidate']['candidate_id']=candidate['candidate_id']
 				FileUtils.mv(image,CANDIDATS_DIR+candidate['photo'])
-				@candidates.add_supporter(user[:id],candidate['candidate_id'])
+				@candidates.add_supporter(user[:id],candidate['candidate_id'],user['email'])
 			end
 		else
 			screen=self.find_by_name("mes_candidats/error")

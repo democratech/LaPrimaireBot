@@ -398,7 +398,7 @@ END
 			Bot.log.event(user[:id],'support_candidate',{'name'=>name,'citizen'=>1})
 			return soutenir_candidat_replace_ask_cb(msg,user,screen,verified) if nb_citizens_supported>4
 		end
-		@candidates.add_supporter(user[:id],candidate['candidate_id'])
+		@candidates.add_supporter(user[:id],candidate['candidate_id'],user['email'])
 		screen[:text]=screen[:text] % {name: name}
 		@users.clear_session(user[:id],'candidate')
 		return self.get_screen(screen,user,msg)
@@ -492,7 +492,7 @@ END
 			if candidate['candidate_id'] then # candidate already exists in db / impossible case in theory
 				res=@candidates.search({:by=>'candidate_id',:target=>candidate['candidate_id']})
 				@candidates.add(candidate,true) if res.num_tuples.zero? # candidate in index but not in db (weird case)
-				@candidates.add_supporter(user[:id],candidate['candidate_id'])
+				@candidates.add_supporter(user[:id],candidate['candidate_id'],user['email'])
 				screen=self.find_by_name("home/menu")
 			elsif user['settings']['blocked']['add_candidate'] # user is forbidden to add new candidates
 				screen=self.find_by_name("soutenir_candidat/blocked")
@@ -508,7 +508,7 @@ END
 				user['session']['candidate']['candidate_id']=candidate['candidate_id']
 				FileUtils.mv(image,CANDIDATS_DIR+candidate['photo'])
 				@web.upload_image(CANDIDATS_DIR+candidate['photo'])
-				@candidates.add_supporter(user[:id],candidate['candidate_id'])
+				@candidates.add_supporter(user[:id],candidate['candidate_id'],user['email'])
 			end
 		else
 			screen=self.find_by_name("soutenir_candidat/error")
@@ -643,7 +643,7 @@ END
 		oldcandidate_id=user['session']['delete_candidates'][idx]['candidate_id'].to_i
 		screen[:text]=screen[:text] % {oldname:name, newname: newcandidate['name']} 
 		@candidates.remove_supporter(user[:id],oldcandidate_id)
-		@candidates.add_supporter(user[:id],newcandidate['candidate_id'])
+		@candidates.add_supporter(user[:id],newcandidate['candidate_id'],user['email'])
 		@users.clear_session(user[:id],'delete_candidates')
 		@users.clear_session(user[:id],'candidate')
 		@users.next_answer(user[:id],'answer')

@@ -364,10 +364,8 @@ END
 			return self.get_screen(screen,user,msg) 
 		end
 		@users.next_answer(user[:id],'answer')
-		@users.set(user[:id],{
-			:set=>'email',
-			:value=>email
-		})
+		@users.create_account(user[:id],email)
+		@users.set(user[:id],{ :set=>'email', :value=>email })
 		screen=self.find_by_name("welcome/email_optin")
 		return self.get_screen(screen,user,msg)
 	end
@@ -485,7 +483,7 @@ END
 
 	def welcome_account_created_cb(msg,user,screen)
 		Bot.log.info "welcome_account_created"
-		@users.account_created(user[:id])
+		@users.update_account(user[:id])
 		slack_msg="Nouveau compte créé : #{user['firstname']} #{user['lastname']}"
 	       	slack_msg+=" (<https://telegram.me/#{user['username']}|@#{user['username']}>)" if user['username']
 		slack_msg+=" #{user['zipcode']}," if user['zipcode']

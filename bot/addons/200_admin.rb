@@ -18,9 +18,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 =end
 
-module About
+module Admin
 	def self.included(base)
-		Bot.log.info "loading About add-on"
+		Bot.log.info "loading Admin add-on"
 		messages={
 			:fr=>{
 				:admin=>{
@@ -219,4 +219,4 @@ END
 	end
 end
 
-include About
+include Admin

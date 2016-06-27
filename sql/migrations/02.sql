@@ -31,13 +31,16 @@ CREATE TABLE users (
 -- insert into users (email,firstname,lastname,registered,country,zipcode,tags) select email,firstname,lastname,created,country,zipcode,tags from mongo_supporteurs
 
 -- insert depuis les utilisateur telegram
--- insert into users (email,validation_level,firstname,lastname,registered,city,city_id,country,last_updated,telegram_id) select email,2,firstname,lastname,registered,city,city_id,country,last_updated,user_id from citizens where email not in (select c.email from citizens as c inner join users as u on (u.email=c.email))
+-- insert into users (email,email_status,validation_level,firstname,lastname,registered,city,city_id,country,last_updated,telegram_id,user_key) select email,0,2,firstname,lastname,registered,city,city_id,country,last_updated,user_id,md5(random()::text) from citizens where email not in (select c.email from citizens as c inner join users as u on (u.email=c.email))
 
 -- insert depuis les signataires de l'appel_aux_maires
 -- insert into users (email,firstname,lastname,registered,last_updated,tags) select email,firstname,lastname,min(signed) as registered, min(signed) as last_updated,ARRAY['appel_aux_maires']::text[] from appel_aux_maires where email not in (select u.email from users as u inner join appel_aux_maires as a on (a.email=u.email)) group by email,firstname,lastname;
 
 -- insert depuis les donateurs 
 -- insert into users (email,firstname,lastname,zipcode,donateur_id,registered,last_updated) select email,firstname,lastname,zipcode,donateur_id,created as registered,created as last_updated from donateurs where email not in (select u.email from users as u inner join donateurs as d on (d.email=u.email))
+
+-- insert depuis les candidats
+-- update users set tags=array_append(tags,'candidat') where email IN (select ca.email from candidates as ca inner join users as u on (u.email=ca.email) where ca.verified);
 
 -- ## mise a jour des emails de la table supporters
 -- update supporters set email=c.email from citizens as c where c.user_id=supporters.user_id and supporters.email is null;
