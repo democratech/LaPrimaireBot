@@ -59,14 +59,8 @@ END
 			'set_zipcode'=><<END,
 UPDATE citizens SET city_id=v.city_id FROM cities AS v WHERE v.zipcode=$1 AND citizens.user_id=$2;
 END
-			'update_email_by_user_id'=><<END,
-UPDATE citizens SET email=$1 WHERE user_id=$2 RETURNING *
-END
 			'reset_email_by_user_id'=><<END,
 UPDATE users SET reset_email=$1 WHERE telegram_id=$2 RETURNING *
-END
-			'reset_email_status_by_user_id'=><<END,
-UPDATE users SET email=$1, email_status=0 WHERE telegram_id=$2 RETURNING *
 END
 			'remove_user'=><<END,
 DELETE FROM citizens WHERE user_id=$1
@@ -272,24 +266,20 @@ END
 			return if email.nil?
 			email=email.downcase.strip
 			user=@users[user_id]
-			Bot::Db.query("reset_email_by_user_id",[email,user_id]) 
-			return Bot::Email.send("transactional-reset-email",email,{'USER_KEY'=>user['user_key']})
-		end
+			self.set(user_id,{ :set=>'email', :value=>email }) if user['email'].nil? # Immediately save email if previous email (in 'citizens' table) was null
+			reset_ok=true
+			res=Bot::Db.query("reset_email_by_user_id",[email,user_id]) 
+			if res.num_tuples.zero? then # case where citizen had incomplete subscription => no email (null) => no account was created
+				self.create_account(user_id,email)
+				res1=Bot::Db.query("reset_email_by_user_id",[email,user_id])
+				if res1.num_tuples.zero? then
+					reset_ok=false
+					Bot.log.error("Could not reset user_id #{user_id} with email #{email} after new account creation")
+				end
 
-		def update_email(user_id,email)
-			begin
-				Bot::Db.begin
-				Bot::Db.query("update_email_by_user_id",[email,user_id]) 
-				Bot::Db.query("reset_email_status_by_user_id",[email,user_id]) 
-				user=@users[user_id]
-				sent=Bot::Email.send("reset_email",user,{'USER_KEY'=>user['user_key']})
-			rescue PG::Error=>e
-				Bot.log.error("Email #{email} could not be update : #{e.message}")
-				Bot::Db.rollback
-				return false
 			end
-			Bot::Db.commit
-			return sent
+			Bot::Email.send("transactional-reset-email",email,{'USER_KEY'=>user['user_key']}) if reset_ok
+			return reset_ok
 		end
 
 		def set(user_id,query)
@@ -345,14 +335,18 @@ END
 			return if email.nil?
 			email=email.downcase.strip
 			res=Bot::Db.query("get_meta_user_by_email",[email])
+			account_ok=true
 			if res.num_tuples.zero? then # meta user does not yet exists
 				res1=Bot::Db.query("insert_meta_user_from_citizen",[user_id,email])
+				account_ok=!res1.num_tuples.zero?
 			else # meta user already exists // should not happen
 				user=res[0]
 				if (user['validation_level'].to_i & 2)==0 then # meta user not up-to-date
 					res1=Bot::Db.query("update_meta_user_from_citizen",[user_id])
+					account_ok=!res1.num_tuples.zero?
 				end
 			end
+			return account_ok
 			# Bot::Email.send("transactional-validate-email",email,{'USER_KEY'=>user['user_key']}) # NOT YET READY
 		end
 

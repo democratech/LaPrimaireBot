@@ -37,7 +37,7 @@ END
 Ok pas de souci mais n'oubliez pas que votre vote ne sera pas pris en compte tant que votre email ne sera pas validé...
 END
 					:update_email_yes=><<-END,
-Top ! Quelle est votre adresse email ?
+Quelle est votre adresse email ?
 END
 					:update_email_ok=><<-END,
 Parfait ! Je viens de vous envoyer un email à %{email}. Merci de cliquer sur ce lien inclus dans cet email pour mettre à jour votre adresse email.
@@ -102,13 +102,15 @@ END
 
 	def profile_invalid_email_cb(msg,user,screen)
 		Bot.log.info "#{__method__}"
-		screen[:text]=screen[:text] % {:email=>user['email']}
+		email= user['email'].nil? ? 'aucun email' : user['email']
+		screen[:text]=screen[:text] % {:email=>email}
 		return self.get_screen(screen,user,msg)
 	end
 
 	def profile_update_email_cb(msg,user,screen)
 		Bot.log.info "#{__method__}"
-		screen[:text]=screen[:text] % {:email=>user['email']}
+		email= user['email'].nil? ? 'inconnu' : user['email']
+		screen[:text]=screen[:text] % {:email=>email}
 		return self.get_screen(screen,user,msg)
 	end
 

@@ -121,6 +121,9 @@ END
 					:error=><<-END,
 Hmmmm.... je n'ai pas compris, il va falloir recommencer s'il vous plaît. Désolé #{Bot.emoticons[:confused]}
 END
+					:email_required=><<-END,
+Hmmm... il me semble que vous ne m'avez pas dit quel était votre email. Votre email est indispensable pour pouvoir soutenir un ou une candidat(e). Cliquez sur <i>#{Bot.emoticons[:memo]} Mon profil</i> pour renseigner votre email.
+END
 				}
 			}
 		}
@@ -133,6 +136,11 @@ END
 					:parse_mode=>"HTML",
 					:kbd=>["soutenir_candidat/retour"],
 					:kbd_options=>{:resize_keyboard=>true,:one_time_keyboard=>false,:selective=>true}
+				},
+				:email_required=>{
+					:text=>messages[:fr][:soutenir_candidat][:email_required],
+					:parse_mode=>"HTML",
+					:jump_to=>"home/menu"
 				},
 				:retour=>{
 					:answer=>"#{Bot.emoticons[:back]} Retour",
@@ -291,6 +299,7 @@ END
 
 	def soutenir_candidat_menu_cb(msg,user,screen)
 		Bot.log.info "#{__method__}"
+		return self.get_screen(self.find_by_name("soutenir_candidat/email_required"),user,msg) if user['email'].nil?
 		@users.next_answer(user[:id],'free_text',1,"soutenir_candidat/trouver_candidat_cb")
 		@users.clear_session(user[:id],'candidate')
 		return self.get_screen(screen,user,msg)
