@@ -27,14 +27,14 @@ module Profile
 					:menu=>"Que souhaitez-vous mettre à jour ?",
 					:invalid_email=><<-END,
 Hmmm... il semblerait que votre email (%{email}) soit erroné car je n'arrive pas à vous envoyer un email #{Bot.emoticons[:crying_face]}
-Pour que votre vote soit pris en compte, il est <b>nécessaire</b> que votre email soit validé.
+Un email valide est indispensable pour pouvoir soutenir un ou une candidat(e).
 Souhaitez-vous mettre à jour votre email maintenant ?
 END
 					:update_email=><<-END,
 Votre email est %{email}, souhaitez-vous le mettre à jour ?
 END
 					:update_email_no=><<-END,
-Ok pas de souci mais n'oubliez pas que votre vote ne sera pas pris en compte tant que votre email ne sera pas validé...
+Ok pas de souci mais n'oubliez pas qu'un email valide est indispensable pour pouvoir soutenir un ou une candidat(e)...
 END
 					:update_email_yes=><<-END,
 Quelle est votre adresse email ?

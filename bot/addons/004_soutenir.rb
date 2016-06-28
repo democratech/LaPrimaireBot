@@ -300,6 +300,7 @@ END
 	def soutenir_candidat_menu_cb(msg,user,screen)
 		Bot.log.info "#{__method__}"
 		return self.get_screen(self.find_by_name("soutenir_candidat/email_required"),user,msg) if user['email'].nil?
+		return self.get_screen(self.find_by_name("profile/invalid_email"),user,msg) if user['email_status'].to_i==-2
 		@users.next_answer(user[:id],'free_text',1,"soutenir_candidat/trouver_candidat_cb")
 		@users.clear_session(user[:id],'candidate')
 		return self.get_screen(screen,user,msg)

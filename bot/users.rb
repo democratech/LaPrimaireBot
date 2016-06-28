@@ -264,7 +264,7 @@ END
 
 		def reset_email(user_id,email)
 			return if email.nil?
-			email=email.downcase.strip
+			email=email.downcase.gsub(/\A\p{Space}*|\p{Space}*\z/, '')
 			user=@users[user_id]
 			self.set(user_id,{ :set=>'email', :value=>email }) if user['email'].nil? # Immediately save email if previous email (in 'citizens' table) was null
 			reset_ok=true
@@ -333,7 +333,7 @@ END
 
 		def create_account(user_id,email)
 			return if email.nil?
-			email=email.downcase.strip
+			email=email.downcase.gsub(/\A\p{Space}*|\p{Space}*\z/, '')
 			res=Bot::Db.query("get_meta_user_by_email",[email])
 			account_ok=true
 			if res.num_tuples.zero? then # meta user does not yet exists
@@ -352,7 +352,7 @@ END
 
 		def update_account(user_id)
 			user=@users[user_id]
-			email=user['email'].downcase.strip
+			email=user['email'].downcase.gsub(/\A\p{Space}*|\p{Space}*\z/, '')
 			return if user['email'].nil?
 			res=Bot::Db.query("get_meta_user_by_email",[email])
 			if res.num_tuples.zero? then # meta user does not yet exists // should not happen
