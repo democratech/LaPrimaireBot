@@ -357,7 +357,7 @@ END
 			screen=self.find_by_name("welcome/email_error")
 			return self.get_screen(screen,user,msg) 
 		end
-		email=email.downcase
+		email=email.downcase.gsub(/\A\p{Space}*|\p{Space}*\z/, '')
 		res=@users.search({:by=>'email',:target=>email})
 		if res.num_tuples > 0 and res[0]['user_id']!=user[:id] then
 			screen=self.find_by_name("welcome/email_used")
