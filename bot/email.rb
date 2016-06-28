@@ -54,7 +54,7 @@ module Bot
 				Bot.log.error("A mandrill error occurred: #{e.class} - #{e.message}")
 			end
 			Bot.log.error("Email could not be sent: #{res.inspect}") unless res[:status]=="sent"
-			return sent
+			return res[:status]=="sent"
 		end
 	end
 end
