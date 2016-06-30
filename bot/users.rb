@@ -212,7 +212,7 @@ END
 			})
 		end
 
-		def get(user_info,date)
+		def open_user_session(user_info,date)
 			res=self.search({
 				:by=>"user_id",
 				:target=>user_info.id
