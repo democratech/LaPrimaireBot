@@ -1,1 +1,0 @@
-update candidates set user_id=z.user_id from (select ca.name, ca.candidate_id, c.user_id from candidates as ca inner join citizens as c on (ca.name ILIKE c.firstname || '  ' || c.lastname)) as z where z.candidate_id=candidates.candidate_id
