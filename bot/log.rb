@@ -22,14 +22,14 @@ module Bot
 		def initialize(*args)
 			super(::DEBUG ? STDOUT : STDERR)
 			self.level = ::DEBUG ? Logger::DEBUG : Logger::WARN
-			unless ::DEBUG then
+			if not ::DEBUG and MIXPANEL then
 				@mixpanel=Mixpanel::Tracker.new(MIXPANEL_TOKEN)
 			end
 		end
 
 
 		def people(user_id,action,infos)
-			unless ::DEBUG then
+			if not ::DEBUG and MIXPANEL then
 				case action
 				when 'increment'
 					@mixpanel.people.increment(user_id,infos)
@@ -41,50 +41,54 @@ module Bot
 					Bot.log.error "Log.people: Unknown logging action received"
 				end
 			else
-				Bot.log.debug "unlogged people event : #{action}"
+				Bot.log.debug "MIXPANEL disabled: unlogged people event: #{action}"
 			end
 		end
 
 		def event(user_id,name,infos=nil)
-			unless ::DEBUG then
+			if not ::DEBUG and MIXPANEL then
 				if infos.nil? then
 					@mixpanel.track(user_id,name)
 				else
 					@mixpanel.track(user_id,name,infos)
 				end
 			else
-				Bot.log.debug "unlogged event : #{name}"
+				Bot.log.debug "MIXPANEL disabled: unlogged event: #{name}"
 			end
 		end
 
 		def slack_notification(msg,channel="supporteurs",icon=":ghost:",from="democratech",attachment=nil)
-			uri = URI.parse(SLCKHOST)
-			http = Net::HTTP.new(uri.host, uri.port)
-			http.use_ssl = true
-			http.verify_mode = OpenSSL::SSL::VERIFY_NONE
-			request = Net::HTTP::Post.new(SLCKPATH)
-			msg={
-				"channel"=> channel,
-				"username"=> from,
-				"text"=> msg,
-				"icon_emoji"=>icon
-			}
-			if attachment then
-				msg["attachments"]=[{
-					"fallback"=>attachment["fallback"]
-				}]
-				msg["attachments"][0]["color"]=attachment["color"] if attachment["color"]
-				msg["attachments"][0]["pretext"]=attachment["pretext"] if attachment["pretext"]
-				msg["attachments"][0]["title"]=attachment["title"] if attachment["title"]
-				msg["attachments"][0]["title_link"]=attachment["title_link"] if attachment["title_link"]
-				msg["attachments"][0]["text"]=attachment["text"] if attachment["text"]
-				msg["attachments"][0]["image_url"]=attachment["image_url"] if attachment["image_url"]
-				msg["attachments"][0]["thumb_url"]=attachment["image_url"] if attachment["thumb_url"]
-			end
-			request.body = "payload="+JSON.dump(msg)
-			res=http.request(request)
-			if not res.kind_of? Net::HTTPSuccess then
-				Bot.log.error "An error occurred trying to send a Slack notification"
+			if SLACK then
+				uri = URI.parse(SLCKHOST)
+				http = Net::HTTP.new(uri.host, uri.port)
+				http.use_ssl = true
+				http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+				request = Net::HTTP::Post.new(SLCKPATH)
+				msg={
+					"channel"=> channel,
+					"username"=> from,
+					"text"=> msg,
+					"icon_emoji"=>icon
+				}
+				if attachment then
+					msg["attachments"]=[{
+						"fallback"=>attachment["fallback"]
+					}]
+					msg["attachments"][0]["color"]=attachment["color"] if attachment["color"]
+					msg["attachments"][0]["pretext"]=attachment["pretext"] if attachment["pretext"]
+					msg["attachments"][0]["title"]=attachment["title"] if attachment["title"]
+					msg["attachments"][0]["title_link"]=attachment["title_link"] if attachment["title_link"]
+					msg["attachments"][0]["text"]=attachment["text"] if attachment["text"]
+					msg["attachments"][0]["image_url"]=attachment["image_url"] if attachment["image_url"]
+					msg["attachments"][0]["thumb_url"]=attachment["image_url"] if attachment["thumb_url"]
+				end
+				request.body = "payload="+JSON.dump(msg)
+				res=http.request(request)
+				if not res.kind_of? Net::HTTPSuccess then
+					Bot.log.error "An error occurred trying to send a Slack notification"
+				end
+			else
+				Bot.log.debug "SLACK disabled: sent slack notification in channel #{channel} : #{msg}"
 			end
 		end
 

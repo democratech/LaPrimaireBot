@@ -22,38 +22,44 @@ module Bot
 		@@mandrill=nil
 
 		def self.init
-			Bot.log.debug "initializing Mandrill"
-			@@mandrill=Mandrill::API.new(MANDRILLKEY)
+			if MANDRILL then
+				Bot.log.debug "initializing Mandrill"
+				@@mandrill=Mandrill::API.new(MANDRILLKEY)
+			end
 		end
 
 		def self.send(name,email,vars)
-			message= {
-				:to=>[{
-					:email=> "#{email}"
-				}],
-				:merge_vars=>[{
-					:rcpt=>"#{email}",
-					:vars=>[]
-				}]
-			}
-			if not vars.nil? then
-				vars.each do |k,v|
-					message[:merge_vars][0][:vars].push({:name=>k,:content=>v})
-				end
-			end
-			begin
-				result=@@mandrill.messages.send_template(name,[],message)
-				res={
-					:email=>result[0]['email'],
-					:status=>result[0]['status'],
-					:reject_reason=>result[0]['reject_reason'],
-					:id=>result[0]['_id']
+			if MANDRILL then
+				message= {
+					:to=>[{
+						:email=> "#{email}"
+					}],
+					:merge_vars=>[{
+						:rcpt=>"#{email}",
+						:vars=>[]
+					}]
 				}
-			rescue Mandrill::Error => e
-				Bot.log.error("A mandrill error occurred: #{e.class} - #{e.message}")
+				if not vars.nil? then
+					vars.each do |k,v|
+						message[:merge_vars][0][:vars].push({:name=>k,:content=>v})
+					end
+				end
+				begin
+					result=@@mandrill.messages.send_template(name,[],message)
+					res={
+						:email=>result[0]['email'],
+						:status=>result[0]['status'],
+						:reject_reason=>result[0]['reject_reason'],
+						:id=>result[0]['_id']
+					}
+				rescue Mandrill::Error => e
+					Bot.log.error("A mandrill error occurred: #{e.class} - #{e.message}")
+				end
+				Bot.log.error("Email could not be sent: #{res.inspect}") unless res[:status]=="sent"
+				return res[:status]=="sent"
+			else
+				Bot.log.debug "MANDRILL disabled: email #{name} to #{emails} not sent"
 			end
-			Bot.log.error("Email could not be sent: #{res.inspect}") unless res[:status]=="sent"
-			return res[:status]=="sent"
 		end
 	end
 end
