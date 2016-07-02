@@ -1,13 +1,13 @@
 [![OpenCollective](https://opencollective.com/laprimaire/badge/backers.svg)](https://opencollective.com/laprimaire#support)
 
 ![LaPrimaire logo](https://s3.eu-central-1.amazonaws.com/laprimaire/laprimaire-small-logo.png)
-# Pages
+# LaPrimaireBot
 
 This is the code of LaPrimaire's [Telegram Bot](https://web.laprimaire.org). It uses the [Giskard Bot Engine](https://github.com/telegraph-ai/giskard) and rely on a PostgreSQL database. The bot is served through the [unicorn web server](http://unicorn.bogomips.org/). To better understand how LaPrimaireBot works, please refer to the [Giskard Bot Engine](https://github.com/telegraph-ai/giskard).
 
 ## Setup
 
-### Register your bot on Telegram
+### Register your Telegram bot
 You need to create your Telegram Bot by following [these instructions](https://core.telegram.org/bots#3-how-do-i-create-a-bot) provided by Telegram.
 
 ### Clone the repository
@@ -150,7 +150,7 @@ You can use ```curl``` to do it in a straightforward manner:
 curl -s -X POST https://api.telegram.org/bot<TGTOKEN>/setWebhook?url=<yoursubdomain>.ngrok.io/<WEBHOOK_PREFIX>
 ```
 
-### Talk to your bot through Telegram
+### Say 'Hi' to your bot
 You should now be able to talk to your bot through Telegram and get answers. Troubleshooting potential errors should be easy thanks to ngrok.
 
 ## Contributing
