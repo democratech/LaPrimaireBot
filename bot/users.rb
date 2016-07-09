@@ -59,7 +59,7 @@ END
 UPDATE citizens SET city_id=v.city_id FROM cities AS v WHERE v.zipcode=$1 AND citizens.user_id=$2;
 END
 			'reset_email_by_user_id'=><<END,
-UPDATE users SET reset_email=$1 WHERE telegram_id=$2 RETURNING *
+UPDATE users SET reset_email=$1, reset_code=$3 WHERE telegram_id=$2 RETURNING *
 END
 			'remove_user'=><<END,
 DELETE FROM citizens WHERE user_id=$1
@@ -267,17 +267,17 @@ END
 			user=@users[user_id]
 			self.set(user_id,{ :set=>'email', :value=>email }) if user['email'].nil? # Immediately save email if previous email (in 'citizens' table) was null
 			reset_ok=true
-			res=Bot::Db.query("reset_email_by_user_id",[email,user_id]) 
+			reset_code=(rand()*10000).to_i
+			res=Bot::Db.query("reset_email_by_user_id",[email,user_id,reset_code])
 			if res.num_tuples.zero? then # case where citizen had incomplete subscription => no email (null) => no account was created
 				self.create_account(user_id,email)
-				res1=Bot::Db.query("reset_email_by_user_id",[email,user_id])
+				res1=Bot::Db.query("reset_email_by_user_id",[email,user_id,reset_code])
 				if res1.num_tuples.zero? then
 					reset_ok=false
 					Bot.log.error("Could not reset user_id #{user_id} with email #{email} after new account creation")
 				end
-
 			end
-			Bot::Email.send("transactional-reset-email",email,{'USER_KEY'=>user['user_key']}) if reset_ok
+			Bot::Email.send("transactional-reset-email",email,{'USER_KEY'=>user['user_key'],'RESET_CODE'=>reset_code.to_s}) if reset_ok
 			return reset_ok
 		end
 

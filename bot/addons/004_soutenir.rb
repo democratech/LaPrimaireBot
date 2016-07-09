@@ -57,7 +57,7 @@ END
 Plusieurs candidat(e)s correspondent à votre recherche, lequel cherchez-vous ?
 END
 					:soutenir=><<-END,
-Bien noté ! Vous avez apporté votre soutien à %{name}
+Bien noté ! Vous avez apporté votre soutien à <a href='https://laprimaire.org/candidat/%{candidate_id}'>%{name}</a>
 END
 					:retirer_soutien=><<-END,
 Bien noté ! Vous avez retiré votre soutien à %{name}
@@ -72,7 +72,7 @@ END
 A quel(le) citoyen(ne) souhaitez-vous retirer votre soutien pour pouvoir soutenir %{name} ?
 END
 					:replace_soutien_cb=><<-END,
-%{oldname} n'a désormais plus votre soutien, il a été remplacé par %{newname} !
+%{oldname} n'a désormais plus votre soutien, il a été remplacé par <a href='https://laprimaire.org/candidat/%{candidate_id}'>%{newname}</a> !
 END
 					:confirm=><<-END,
 %{media}
@@ -100,7 +100,7 @@ END
 Ce citoyen(ne) est-il un homme ou une femme ?
 END
 					:gender_ok=><<-END,
-Parfait, merci !
+Parfait, merci ! Vous avez apporté votre soutien à <a href='https://laprimaire.org/candidat/%{candidate_id}'>%{name}</a>
 END
 					:not_found=><<-END,
 Malheureusement, je ne trouve personne avec ce nom #{Bot.emoticons[:crying_face]}. Pour affiner la recherche, n'hésitez pas à réessayer en ajoutant des mots-clés derrière le nom de la personne que vous souhaitez soutenir. Exemple: Prénom Nom #motclé1 #motclé2
@@ -178,12 +178,14 @@ END
 				:plebisciter=>{
 					:answer=>"#{Bot.emoticons[:thumbs_up]} Plébisciter ce citoyen",
 					:text=>messages[:fr][:soutenir_candidat][:soutenir],
+					:parse_mode=>"HTML",
 					:callback=>"soutenir_candidat/soutenir_cb",
 					:jump_to=>"home/menu"
 				},
 				:soutenir=>{
 					:answer=>"#{Bot.emoticons[:thumbs_up]} Soutenir ce candidat",
 					:text=>messages[:fr][:soutenir_candidat][:soutenir],
+					:parse_mode=>"HTML",
 					:callback=>"soutenir_candidat/soutenir_cb",
 					:jump_to=>"home/menu"
 				},
@@ -219,6 +221,7 @@ END
 				},
 				:replace_soutien_cb=>{
 					:text=>messages[:fr][:soutenir_candidat][:replace_soutien_cb],
+					:parse_mode=>"HTML",
 					:jump_to=>"home/menu"
 				},
 				:confirm=>{
@@ -267,6 +270,7 @@ END
 					:answer=>"#{Bot.emoticons[:man]} un homme",
 					:text=>messages[:fr][:soutenir_candidat][:gender_ok],
 					:man=>true,
+					:parse_mode=>"HTML",
 					:callback=>"soutenir_candidat/gender_cb",
 					:jump_to=>"home/menu"
 				},
@@ -274,6 +278,7 @@ END
 					:answer=>"#{Bot.emoticons[:woman]} une femme",
 					:text=>messages[:fr][:soutenir_candidat][:gender_ok],
 					:woman=>true,
+					:parse_mode=>"HTML",
 					:callback=>"soutenir_candidat/gender_cb",
 					:jump_to=>"home/menu"
 				},
@@ -408,7 +413,7 @@ END
 			return soutenir_candidat_replace_ask_cb(msg,user,screen,verified) if nb_citizens_supported>4
 		end
 		@candidates.add_supporter(user[:id],candidate['candidate_id'],user['email'])
-		screen[:text]=screen[:text] % {name: name}
+		screen[:text]=screen[:text] % {name: name, candidate_id: candidate['candidate_id'] }
 		@users.clear_session(user[:id],'candidate')
 		return self.get_screen(screen,user,msg)
 	end
@@ -557,6 +562,7 @@ END
 		@users.clear_session(user[:id],'candidate')
 		return self.get_screen(self.find_by_name("soutenir_candidat/error"),user,msg) if candidate.nil?
 		gender = screen[:man] ? 'M':'F'
+		screen[:text]=screen[:text] % {name: candidate['name'], candidate_id: candidate['candidate_id'] }
 		@candidates.set(candidate['candidate_id'],{:set=> 'gender',:value=> gender})
 		return self.get_screen(screen,user,msg)
 	end
@@ -650,7 +656,7 @@ END
 		oldcandidate=user['session']['delete_candidates'][idx]
 		return self.get_screen(self.find_by_name("soutenir_candidat/error"),user,msg) if oldcandidate.nil?
 		oldcandidate_id=user['session']['delete_candidates'][idx]['candidate_id'].to_i
-		screen[:text]=screen[:text] % {oldname:name, newname: newcandidate['name']} 
+		screen[:text]=screen[:text] % {oldname:name, newname: newcandidate['name'], candidate_id: newcandidate['candidate_id'] } 
 		@candidates.remove_supporter(user[:id],oldcandidate_id)
 		@candidates.add_supporter(user[:id],newcandidate['candidate_id'],user['email'])
 		@users.clear_session(user[:id],'delete_candidates')
