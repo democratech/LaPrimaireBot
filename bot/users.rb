@@ -30,6 +30,9 @@ END
 			'get_meta_user_by_email'=><<END,
 SELECT * FROM users AS u WHERE u.email=$1
 END
+			'get_meta_user_by_user_id'=><<END,
+SELECT * FROM users AS u WHERE u.telegram_id=$1
+END
 			'get_user_by_user_id'=><<END,
 SELECT z.*,c.slug,c.zipcode,c.departement,c.lat_deg,c.lon_deg, u.email_status, u.user_key
 FROM citizens AS z
@@ -85,8 +88,11 @@ END
 			'insert_meta_user_from_citizen'=><<END,
 insert into users (email,email_status,validation_level,firstname,lastname,registered,city,city_id,country,last_updated,telegram_id,zipcode,tags,user_key) select $2,0,2,c.firstname,c.lastname,c.registered,upper(c.city),c.city_id,c.country,c.last_updated,c.user_id,ci.zipcode,ARRAY[]::text[] as tags,md5(random()::text) as user_key from citizens as c left join cities as ci on (ci.city_id=c.city_id) where c.user_id=$1 returning *;
 END
-			'update_meta_user_from_citizen'=><<END,
+			'update_meta_user_from_citizen_with_email'=><<END,
 update users set validation_level=(validation_level | 2),city=upper(c.city),city_id=c.city_id,country=c.country,last_updated=c.last_updated,telegram_id=c.user_id,zipcode=ci.zipcode from citizens as c left join cities as ci on (ci.city_id=c.city_id) where users.email=c.email AND c.user_id=$1 returning *;
+END
+			'update_meta_user_from_citizen_with_user_id'=><<END,
+update users set validation_level=(validation_level | 2),city=upper(c.city),city_id=c.city_id,country=c.country,last_updated=c.last_updated,email=c.email,zipcode=ci.zipcode from citizens as c left join cities as ci on (ci.city_id=c.city_id) where users.telegram_id=c.user_id AND c.user_id=$1 returning *;
 END
 			}
 			queries.each { |k,v| Bot::Db.prepare(k,v) }
@@ -335,14 +341,20 @@ END
 			email=email.downcase.gsub(/\A\p{Space}*|\p{Space}*\z/, '')
 			res=Bot::Db.query("get_meta_user_by_email",[email])
 			account_ok=true
-			if res.num_tuples.zero? then # meta user does not yet exists
-				res1=Bot::Db.query("insert_meta_user_from_citizen",[user_id,email])
-				account_ok=!res1.num_tuples.zero?
+			if res.num_tuples.zero? then # let's see if the telegram_id (user_id) exists
+				res1=Bot::Db.query("get_meta_user_by_user_id",[user_id])
+				if res1.num_tuples.zero? then # meta user does not yet exists
+					res2=Bot::Db.query("insert_meta_user_from_citizen",[user_id,email])
+					account_ok=!res2.num_tuples.zero?
+				end
 			else # meta user already exists // should not happen
 				user=res[0]
 				if (user['validation_level'].to_i & 2)==0 then # meta user not up-to-date
-					res1=Bot::Db.query("update_meta_user_from_citizen",[user_id])
-					account_ok=!res1.num_tuples.zero?
+					res1=Bot::Db.query("update_meta_user_from_citizen_with_email",[user_id])
+					if res1.num_tuples.zero? then # let's try with telegram_id
+						res2=Bot::Db.query("update_meta_user_from_citizen_with_user_id",[user_id])
+						account_ok=!res2.num_tuples.zero?
+					end
 				end
 			end
 			return account_ok
@@ -355,10 +367,16 @@ END
 			return if user['email'].nil?
 			res=Bot::Db.query("get_meta_user_by_email",[email])
 			if res.num_tuples.zero? then # meta user does not yet exists // should not happen
-				res1=Bot::Db.query("insert_meta_user_from_citizen",[user_id,email])
+				res1=Bot::Db.query("get_meta_user_by_user_id",[user_id])
+				if res1.num_tuples.zero? then # let's see if the telegram_id (user_id) exists
+					res2=Bot::Db.query("insert_meta_user_from_citizen",[user_id,email])
+				end
 			else # meta user already exists
 				user=res[0]
-				res1=Bot::Db.query("update_meta_user_from_citizen",[user_id])
+				res1=Bot::Db.query("update_meta_user_from_citizen_with_email",[user_id])
+				if res1.num_tuples.zero? then # let's try with telegram_id
+					res2=Bot::Db.query("update_meta_user_from_citizen_with_user_id",[user_id])
+				end
 			end
 		end
 	end
